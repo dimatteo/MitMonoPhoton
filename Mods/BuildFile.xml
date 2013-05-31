@@ -1,0 +1,18 @@
+<!-- flags CPPDEFINES="ELECTRON_CORRECTIONS_HEADER=${ELECTRON_CORRECTIONS_HEADER}"/--> 
+<!-- flags CPPDEFINES="PHOSPHOR_CORRECTIONS_HEADER=${PHOSPHOR_CORRECTIONS_HEADER}"/-->
+<!-- flags CPPDEFINES="PHOSPHOR_CORRECTIONS_SRC=${PHOSPHOR_CORRECTIONS_SRC}"/-->
+<use   name="MitCommon/MathTools"/>
+<use   name="MitAna/TreeMod"/>
+<use   name="MitPhysics/Init"/>
+<use   name="MitPhysics/Utils"/>
+<use   name="MitPhysics/ElectronLikelihood"/>
+<use   name="CondFormats/JetMETObjects"/>
+<use   name="FWCore/ParameterSet"/>
+<use   name="lhapdf"/>
+<use   name="root"/>
+<use   name="roottmva"/>
+<use   root=""/>
+<lib   name="EG"/>
+<export>
+  <lib   name="1"/>
+</export>
