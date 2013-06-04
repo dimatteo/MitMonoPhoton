@@ -1,9 +1,9 @@
-// $Id: MitPhysicsSelModsLinkDef.h,v 1.8 2010/12/22 13:39:36 ceballos Exp $
+// $Id: MitMonoPhotonSelModsLinkDef.h,v 1.1 2013/05/31 18:20:57 dimatteo Exp $
 
 #ifndef MITMONOPHOTON_SELMODS_LINKDEF_H
 #define MITMONOPHOTON_SELMODS_LINKDEF_H
 
-#include "MitPhysics/SelMods/interface/MonoPhotonAnalysisMod.h"
+#include "MitMonoPhoton/SelMods/interface/MonoPhotonAnalysisMod.h"
 #endif
  
 #ifdef __CINT__
