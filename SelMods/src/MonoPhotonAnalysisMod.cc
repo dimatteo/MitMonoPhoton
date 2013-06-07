@@ -89,9 +89,7 @@ void MonoPhotonAnalysisMod::Process()
   //***********************************************************************************************
   //Discard events with no identified photons
   //***********************************************************************************************
-  if (fPhotons->GetEntries() < 1)
-	  return;
-  passCut[0] = true;
+  if (fPhotons->GetEntries() > 0)  passCut[0] = true;
 
   //***********************************************************************************************
   //Discard events with soft photons
@@ -103,26 +101,17 @@ void MonoPhotonAnalysisMod::Process()
 	  if ( ph->Et() < 30 ) continue; 
 	  nHardPh ++;
   }
-  if ( nHardPh == 0 )
-      return;
-  passCut[1] = true;
+  if ( nHardPh > 0 ) passCut[1] = true;
 
   //***********************************************************************************************
   //Discard events with soft met
   //***********************************************************************************************
   const Met *stdMet = fMet->At(0);
-  if ( stdMet->Pt() < 30 )
-      return;
-  passCut[2] = true;
+  if ( stdMet->Pt() > 30 )  passCut[2] = true;
 	  
   //*********************************************************************************************
   //Make Selection Histograms. Number of events passing each level of cut
   //*********************************************************************************************  
-  bool passAllCuts = true;
-  for(int c=0; c<nCuts; c++) passAllCuts = passAllCuts & passCut[c];
-  if(passAllCuts) fNEventsSelected++;
-  else this->SkipEvent(); //skip the event if does not passes the cuts
-
   //Cut Selection Histograms
   fHWWSelection->Fill(-1,1);
 
@@ -137,12 +126,21 @@ void MonoPhotonAnalysisMod::Process()
     if (pass)
       fHWWSelection->Fill(k,1);
   }
+
   
-  //*****************************************************************************************
-  //Make Preselection Histograms  
-  //*****************************************************************************************
-  fPhotonEt->Fill(fPhotons->At(0)->Et()); 
-  fMetEt->Fill(fMet->At(0)->Et()); 
+  bool passAllCuts = true;
+  for(int c=0; c<nCuts; c++) passAllCuts = passAllCuts & passCut[c];
+  if(passAllCuts) {
+	  fNEventsSelected++;
+      //*****************************************************************************************
+	  //Make Preselection Histograms  
+	  //*****************************************************************************************
+	  fPhotonEt->Fill(fPhotons->At(0)->Et()); 
+	  fMetEt->Fill(fMet->At(0)->Et()); 
+  }
+  else 
+	  this->SkipEvent(); //skip the event if does not passes the cuts
+  
   return;
 }
 
