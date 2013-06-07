@@ -57,7 +57,11 @@ void MonoPhotonAnalysisMod::SlaveBegin()
   //*************************************************************************************************
   // Selection Histograms
   //*************************************************************************************************
-  AddTH1(fHWWSelection,"hHWWSelection", ";Cut Number;Number of Events",             17, -1.5, 15.5);
+  AddTH1(fHWWSelection,"hHWWSelection", ";Cuts;Number of Events",             5, 0, 5);
+  fHWWSelection->GetXaxis()->TAxis::SetBinLabel(1, "All Events");
+  fHWWSelection->GetXaxis()->TAxis::SetBinLabel(2, "N Photons > 0");
+  fHWWSelection->GetXaxis()->TAxis::SetBinLabel(3, "N Hard Photons > 0");
+  fHWWSelection->GetXaxis()->TAxis::SetBinLabel(4, "Met > 30 GeV");
 
   //***********************************************************************************************
   // Histograms after preselection
