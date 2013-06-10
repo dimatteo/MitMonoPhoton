@@ -223,12 +223,37 @@ void MonoPhotonTreeWriter::Process()
 
         
   //PHOTONS  
-  if ( fPhotons->GetEntries() > 0 ) {
-	  const Photon *photon = fPhotons->At(0);
-	  fMonoPhotonEvent->photonE   = photon->E();
-	  fMonoPhotonEvent->photonPt  = photon->Pt();
-	  fMonoPhotonEvent->photonEta = photon->Eta();
-	  fMonoPhotonEvent->photonPhi = photon->Phi();
+  fMonoPhotonEvent->nPhotons = fPhotons->GetEntries();
+  for ( int arrayIndex=0; arrayIndex<fMonoPhotonEvent->kMaxPh; arrayIndex++ ) {
+	  if ( fPhotons->GetEntries() > 0 && arrayIndex < (int) fPhotons->GetEntries() ) {
+		  const Photon *photon = fPhotons->At(arrayIndex);
+		  //kin
+		  fMonoPhotonEvent->a_photonE[arrayIndex] = photon->E();
+		  fMonoPhotonEvent->a_photonEt[arrayIndex] = photon->Et();
+		  fMonoPhotonEvent->a_photonEta[arrayIndex] = photon->Eta();
+		  fMonoPhotonEvent->a_photonPhi[arrayIndex] = photon->Phi();
+		  //iso
+		  fMonoPhotonEvent->a_photonHCALisoDR03[arrayIndex] = photon->HcalTowerSumEtDr03();
+		  fMonoPhotonEvent->a_photonECALisoDR03[arrayIndex] = photon->EcalRecHitIsoDr03();
+		  fMonoPhotonEvent->a_photonHollowConeTKisoDR03[arrayIndex] = photon->HollowConeTrkIsoDr03();
+		  fMonoPhotonEvent->a_photonHCALisoDR04[arrayIndex] = photon->HcalTowerSumEtDr04();
+		  fMonoPhotonEvent->a_photonECALisoDR04[arrayIndex] = photon->EcalRecHitIsoDr04();
+		  fMonoPhotonEvent->a_photonHollowConeTKisoDR04[arrayIndex] = photon->HollowConeTrkIsoDr04();
+	  }
+	  else {
+		  //kin
+		  fMonoPhotonEvent->a_photonE[arrayIndex] = -1;
+		  fMonoPhotonEvent->a_photonEt[arrayIndex] = -1;
+		  fMonoPhotonEvent->a_photonEta[arrayIndex] = -100;
+		  fMonoPhotonEvent->a_photonPhi[arrayIndex] = -100;
+		  //iso
+		  fMonoPhotonEvent->a_photonHCALisoDR03[arrayIndex] = -1;
+		  fMonoPhotonEvent->a_photonECALisoDR03[arrayIndex] = -1;
+		  fMonoPhotonEvent->a_photonHollowConeTKisoDR03[arrayIndex] = -1;
+		  fMonoPhotonEvent->a_photonHCALisoDR04[arrayIndex] = -1;
+		  fMonoPhotonEvent->a_photonECALisoDR04[arrayIndex] = -1;
+		  fMonoPhotonEvent->a_photonHollowConeTKisoDR04[arrayIndex] = -1;
+	  }
   }
   
   hMonoPhotonTuple -> Fill();
@@ -343,6 +368,7 @@ void MonoPhotonTreeWriter::SlaveBegin()
   for (int i=0; i<elist->GetEntries(); ++i) {
     const TDataMember *tdm = static_cast<const TDataMember*>(elist->At(i));//ming
     if (!(tdm->IsBasic() && tdm->IsPersistent())) continue;
+    if (TString(tdm->GetName()).BeginsWith("kMax")) continue;
     TString typestring;
     if (TString(tdm->GetTypeName()).BeginsWith("Char_t")) typestring = "B";
     else if (TString(tdm->GetTypeName()).BeginsWith("UChar_t")) typestring = "b";
@@ -356,11 +382,16 @@ void MonoPhotonTreeWriter::SlaveBegin()
     else if (TString(tdm->GetTypeName()).BeginsWith("ULong64_t")) typestring = "l";
     else if (TString(tdm->GetTypeName()).BeginsWith("Bool_t")) typestring = "O";
     else continue;
+    //determine if the data member is an array
+    bool dataMemberIsArray = false;
+    if (TString(tdm->GetName()).BeginsWith("a_")) dataMemberIsArray = true;
     //printf("%s %s: %i\n",tdm->GetTypeName(),tdm->GetName(),int(tdm->GetOffset()));
     Char_t *addr = (Char_t*)fMonoPhotonEvent;//ming:?
     assert(sizeof(Char_t)==1);
-    hMonoPhotonTuple->Branch(tdm->GetName(),addr + tdm->GetOffset(),TString::Format("%s/%s",tdm->GetName(),typestring.Data()));
+    if ( dataMemberIsArray ) hMonoPhotonTuple->Branch(tdm->GetName(),addr + tdm->GetOffset(),TString::Format("%s[10]/%s",tdm->GetName(),typestring.Data()));
+    else hMonoPhotonTuple->Branch(tdm->GetName(),addr + tdm->GetOffset(),TString::Format("%s/%s",tdm->GetName(),typestring.Data()));
   }
+//  hMonoPhotonTuple->Branch("photonE",&photonE);
   
   AddOutput(hMonoPhotonTuple);
   

@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------------------------
-// $Id: MonoPhotonTreeWriter.h,v 1.28 2012/11/09 21:38:04 mingyang Exp $
+// $Id: MonoPhotonTreeWriter.h,v 1.1 2013/05/31 18:20:56 dimatteo Exp $
 //
 // MonoPhotonTreeWriter
 //
@@ -47,11 +47,19 @@ namespace mithep
   {
     public:  
       // ------------ PHOTON STUFF -------------------
-      Float_t photonE;
-      Float_t photonPt;
-      Float_t photonEta;
-      Float_t photonPhi;
-      
+      static const Int_t kMaxPh = 10;
+	  Int_t   nPhotons;
+      Float_t a_photonE[kMaxPh];
+      Float_t a_photonEt[kMaxPh];
+      Float_t a_photonEta[kMaxPh];
+      Float_t a_photonPhi[kMaxPh];
+      Float_t a_photonHCALisoDR03[kMaxPh];
+      Float_t a_photonECALisoDR03[kMaxPh];
+      Float_t a_photonHollowConeTKisoDR03[kMaxPh];
+      Float_t a_photonHCALisoDR04[kMaxPh];
+      Float_t a_photonECALisoDR04[kMaxPh];
+      Float_t a_photonHollowConeTKisoDR04[kMaxPh];
+            
       // ------------ VERTEX STUFF -------------------
       Float_t bsX;
       Float_t bsY;
