@@ -14,6 +14,9 @@
 #include "MitAna/DataTree/interface/ParticleCol.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "TMath.h"
+#include <iostream>
+#include <sstream>
 
 using namespace mithep;
 ClassImp(mithep::MonoPhotonAnalysisMod)
@@ -21,14 +24,18 @@ ClassImp(mithep::MonoPhotonAnalysisMod)
 //--------------------------------------------------------------------------------------------------
 MonoPhotonAnalysisMod::MonoPhotonAnalysisMod(const char *name, const char *title) : 
   BaseMod(name,title),
-  // define all the Branches to load
+  // Define all the Branches to load
   fPhotonBranchName              (Names::gkPhotonBrn),
-  fMetBranchName              ("PFMet"),
+  fMetBranchName                 ("PFMet"),
   // ----------------------------------------
-  // collections....
+  // Collections....
   fPhotons                       (0),
-  fMet                       (0),
-  // counters....
+  fMet                           (0),
+  fMinNumPhotons                 (1),
+  fMinPhotonEt                   (30),
+  fMaxPhotonEta                  (2.4),
+  fMinMetEt                      (30),
+  // Counters....
   fNEventsSelected(0)
 {
   // Constructor.
@@ -52,16 +59,41 @@ void MonoPhotonAnalysisMod::SlaveBegin()
   ReqEventObject(fPhotonBranchName,   fPhotons,      true);
   ReqEventObject(fMetBranchName,   fMet,      true);
 
-  //Create your histograms here
+  // Create your histograms here
 
   //*************************************************************************************************
   // Selection Histograms
   //*************************************************************************************************
   AddTH1(fHWWSelection,"hHWWSelection", ";Cuts;Number of Events",             5, 0, 5);
+  
+  // Create const char* labels with cut values
+  std::ostringstream os1;
+  std::string s1;
+  os1<<"N Photons >= "<<fMinNumPhotons;
+  s1 = os1.str();
+  const char* labelCut1 = s1.c_str();
+  std::ostringstream os2;
+  std::string s2;
+  os2<<"Photon Et >= "<<fMinPhotonEt;
+  s2 = os2.str();
+  const char* labelCut2 = s2.c_str();
+  std::ostringstream os3;
+  std::string s3;
+  os3<<"Photon Eta <= "<<fMaxPhotonEta;
+  s3 = os3.str();
+  const char* labelCut3 = s3.c_str();
+  std::ostringstream os4;
+  std::string s4;
+  os4<<"Met >= "<<fMinMetEt;
+  s4 = os4.str();
+  const char* labelCut4 = s4.c_str();
+  
+  // Set selection histogram bin labels
   fHWWSelection->GetXaxis()->TAxis::SetBinLabel(1, "All Events");
-  fHWWSelection->GetXaxis()->TAxis::SetBinLabel(2, "N Photons > 0");
-  fHWWSelection->GetXaxis()->TAxis::SetBinLabel(3, "N Hard Photons > 0");
-  fHWWSelection->GetXaxis()->TAxis::SetBinLabel(4, "Met > 30 GeV");
+  fHWWSelection->GetXaxis()->TAxis::SetBinLabel(2, labelCut1);
+  fHWWSelection->GetXaxis()->TAxis::SetBinLabel(3, labelCut2);
+  fHWWSelection->GetXaxis()->TAxis::SetBinLabel(4, labelCut3);
+  fHWWSelection->GetXaxis()->TAxis::SetBinLabel(5, labelCut4);
 
   //***********************************************************************************************
   // Histograms after preselection
@@ -81,43 +113,56 @@ void MonoPhotonAnalysisMod::Process()
   assert(fMet);
 
   //*********************************************************************************************
-  //Define Cuts
+  // Define Cuts
   //*********************************************************************************************
-  const int nCuts = 3;
+  const int nCuts = 4;
   bool passCut[nCuts] = {
 	  false, 
 	  false, 
 	  false,
+	  false,
 	  };
 	  
   //***********************************************************************************************
-  //Discard events with no identified photons
+  // Discard events with no identified photons
   //***********************************************************************************************
-  if (fPhotons->GetEntries() > 0)  passCut[0] = true;
+  if (fPhotons->GetEntries() >= fMinNumPhotons)  passCut[0] = true;
 
   //***********************************************************************************************
-  //Discard events with soft photons
+  // Discard events with no hard photons
   //***********************************************************************************************
-  double minPhEt = 30;
   int    nHardPh = 0;
   for (UInt_t i=0; i<fPhotons->GetEntries(); ++i) {
 	  const Photon *ph = fPhotons->At(i);
-	  if ( ph->Et() < 30 ) continue; 
+	  if ( ph->Et() <= fMinPhotonEt ) continue; 
 	  nHardPh ++;
   }
   if ( nHardPh > 0 ) passCut[1] = true;
 
   //***********************************************************************************************
-  //Discard events with soft met
+  // Discard events with no hard photons inside eta range
+  //***********************************************************************************************
+  int    nHardEtaPh = 0;
+  for (UInt_t i=0; i<fPhotons->GetEntries(); ++i) {
+	  const Photon *ph = fPhotons->At(i);
+	  if ( ph->Et() <= fMinPhotonEt ) continue;
+	  if ( TMath::Abs(ph->Eta()) >= fMaxPhotonEta ) continue;
+	  nHardEtaPh ++;
+  }
+  if ( nHardEtaPh > 0 ) passCut[2] = true;
+
+  //***********************************************************************************************
+  // Discard events with soft met
   //***********************************************************************************************
   const Met *stdMet = fMet->At(0);
-  if ( stdMet->Pt() > 30 )  passCut[2] = true;
+  if ( stdMet->Pt() >= fMinMetEt )  passCut[3] = true;
 	  
   //*********************************************************************************************
-  //Make Selection Histograms. Number of events passing each level of cut
+  // Make Selection Histograms. Number of events passing each level of cut
   //*********************************************************************************************  
   //Cut Selection Histograms
-  fHWWSelection->Fill(-1,1);
+  int zero = 0;
+  fHWWSelection->Fill(zero,1);
 
   for (int k=0;k<nCuts;k++) {
     bool pass = true;
@@ -128,7 +173,7 @@ void MonoPhotonAnalysisMod::Process()
         passPreviousCut = (passPreviousCut&& passCut[p]);
     }
     if (pass)
-      fHWWSelection->Fill(k,1);
+      fHWWSelection->Fill(k+1,1);
   }
 
   
@@ -136,14 +181,13 @@ void MonoPhotonAnalysisMod::Process()
   for(int c=0; c<nCuts; c++) passAllCuts = passAllCuts & passCut[c];
   if(passAllCuts) {
 	  fNEventsSelected++;
-      //*****************************************************************************************
-	  //Make Preselection Histograms  
-	  //*****************************************************************************************
+	  
+	  // Make Preselection Histograms
 	  fPhotonEt->Fill(fPhotons->At(0)->Et()); 
 	  fMetEt->Fill(fMet->At(0)->Et()); 
   }
   else 
-	  this->SkipEvent(); //skip the event if does not passes the cuts
+	  this->SkipEvent(); // skip the event if does not passes the cuts
   
   return;
 }
