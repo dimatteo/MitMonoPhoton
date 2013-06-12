@@ -1,4 +1,4 @@
-// $Id: runHgg2012HCP.C,v 1.2 2012/10/24 14:47:27 mingyang Exp $
+// $Id: runMonoPhoton.C,v 1.1 2013/05/31 18:20:57 dimatteo Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -329,46 +329,50 @@ void runMonoPhoton(const char *fileset    = "0000",
   photcic->SetLeptonTagMuonsName("HggLeptonTagMuons");  
   photcic->Set2012HCP(kTRUE);
         
-	PhotonTreeWriter *phottreecic = new PhotonTreeWriter("PhotonTreeWriterCiC");
-	phottreecic->SetPhotonsFromBranch(kFALSE);
-	phottreecic->SetInputPhotonsName(photcic->GetOutputName());
-	phottreecic->SetEnableJets(kTRUE);
-	phottreecic->SetApplyJetId(kTRUE);
-	phottreecic->SetPFJetsFromBranch(kFALSE);
-	phottreecic->SetPFJetName(jetCorr->GetOutputName());
-	phottreecic->SetExcludeDoublePrompt(excludedoubleprompt);
-	phottreecic->SetIsData(isData);
-	if (is25) phottreecic->SetEnablePFPhotons(kFALSE);
-	phottreecic->SetApplyLeptonTag(kTRUE);
-	phottreecic->SetLeptonTagElectronsName("HggLeptonTagElectrons");
-	phottreecic->SetLeptonTagMuonsName("HggLeptonTagMuons");
-	phottreecic->SetApplyVBFTag(kTRUE);
-	phottreecic->SetApplyPFMetCorr(kTRUE);
-	phottreecic->SetBeamspotWidth(5.0);
+  PhotonTreeWriter *phottreecic = new PhotonTreeWriter("PhotonTreeWriterCiC");
+  phottreecic->SetPhotonsFromBranch(kFALSE);
+  phottreecic->SetInputPhotonsName(photcic->GetOutputName());
+  phottreecic->SetEnableJets(kTRUE);
+  phottreecic->SetApplyJetId(kTRUE);
+  phottreecic->SetPFJetsFromBranch(kFALSE);
+  phottreecic->SetPFJetName(jetCorr->GetOutputName());
+  phottreecic->SetExcludeDoublePrompt(excludedoubleprompt);
+  phottreecic->SetIsData(isData);
+  if (is25) phottreecic->SetEnablePFPhotons(kFALSE);
+  phottreecic->SetApplyLeptonTag(kTRUE);
+  phottreecic->SetLeptonTagElectronsName("HggLeptonTagElectrons");
+  phottreecic->SetLeptonTagMuonsName("HggLeptonTagMuons");
+  phottreecic->SetApplyVBFTag(kTRUE);
+  phottreecic->SetApplyPFMetCorr(kTRUE);
+  phottreecic->SetBeamspotWidth(5.0);
    
   //------------------------------------------------------------------------------------------------
   // select events with photon+MET
   //------------------------------------------------------------------------------------------------
   MonoPhotonAnalysisMod         *phplusmet = new MonoPhotonAnalysisMod("MonoPhotonSelector");
-  photcic->SetInputPhotonsName(photreg->GetOutputName());
+  phplusmet->SetMinNumPhotons(1);
+  phplusmet->SetMinPhotonEt(30);
+  phplusmet->SetMaxPhotonEta(2.4);
+  phplusmet->SetMinMetEt(30);
+  //phplusmet->SetInputPhotonsName(photreg->GetOutputName()); //phplusmet instead photcic?
   //photcic->SetInputMetName(photreg->GetOutputName());
 
-	MonoPhotonTreeWriter *phplusmettree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter");
-	phplusmettree->SetPhotonsFromBranch(kTRUE);
-//	phplusmettree->SetInputPhotonsName(photreg->GetOutputName());
-	phplusmettree->SetEnableJets(kTRUE);
-//	phplusmettree->SetApplyJetId(kTRUE);
-	phplusmettree->SetPFJetsFromBranch(kFALSE);
-	phplusmettree->SetPFJetName(jetCorr->GetOutputName());
-	phplusmettree->SetExcludeDoublePrompt(excludedoubleprompt);
-	phplusmettree->SetIsData(isData);
-	if (is25) phplusmettree->SetEnablePFPhotons(kFALSE);
-	phplusmettree->SetApplyLeptonTag(kTRUE);
-	phplusmettree->SetLeptonTagElectronsName("HggLeptonTagElectrons");
-	phplusmettree->SetLeptonTagMuonsName("HggLeptonTagMuons");
-	phplusmettree->SetApplyVBFTag(kTRUE);
-	phplusmettree->SetApplyPFMetCorr(kTRUE);
-	phplusmettree->SetBeamspotWidth(5.0);
+  MonoPhotonTreeWriter *phplusmettree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter");
+  phplusmettree->SetPhotonsFromBranch(kTRUE);
+  //phplusmettree->SetInputPhotonsName(photreg->GetOutputName());
+  phplusmettree->SetEnableJets(kTRUE);
+  //phplusmettree->SetApplyJetId(kTRUE);
+  phplusmettree->SetPFJetsFromBranch(kFALSE);
+  phplusmettree->SetPFJetName(jetCorr->GetOutputName());
+  phplusmettree->SetExcludeDoublePrompt(excludedoubleprompt);
+  phplusmettree->SetIsData(isData);
+  if (is25) phplusmettree->SetEnablePFPhotons(kFALSE);
+  phplusmettree->SetApplyLeptonTag(kTRUE);
+  phplusmettree->SetLeptonTagElectronsName("HggLeptonTagElectrons");
+  phplusmettree->SetLeptonTagMuonsName("HggLeptonTagMuons");
+  phplusmettree->SetApplyVBFTag(kTRUE);
+  phplusmettree->SetApplyPFMetCorr(kTRUE);
+  phplusmettree->SetBeamspotWidth(5.0);
 
   //------------------------------------------------------------------------------------------------
   // making analysis chain
@@ -381,8 +385,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   }
     
   if (!TString(dataset).Contains("meridiani")) {      
- //   mcselmod         ->Add(hltModP);
- //   hltModP         ->Add(goodPVFilterMod);
+  //mcselmod         ->Add(hltModP);
+  //hltModP         ->Add(goodPVFilterMod);
     mcselmod->Add(goodPVFilterMod);
   }
   else {
@@ -404,11 +408,11 @@ void runMonoPhoton(const char *fileset    = "0000",
   // Test gamma+met ana
   muonIdMod        ->Add(phplusmet);
   phplusmet        ->Add(phplusmettree);
-//  phplusmet        ->Add(testPVFilterMod);
+  //phplusmet        ->Add(testPVFilterMod);
 
   // Working version of Hgg ana
-//  muonIdMod          ->Add(photcic);
-//  photcic         ->Add(phottreecic);
+  //muonIdMod          ->Add(photcic);
+  //photcic         ->Add(phottreecic);
 
   //TFile::SetOpenTimeout(0);
   //TFile::SetCacheFileDir("./rootfilecache",kTRUE,kTRUE);
@@ -442,7 +446,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   else 
     d = c->FindDataset(bookstr,skimdataset.Data(),fileset);
   //ana->AddDataset(d);
-  ana->AddFile("/mnt/hadoop/cmsprod/filefi/029/s12-h125gg-gf-v7a/D0515547-68FA-E111-B849-002618FDA262.root");
+  ana->AddFile("/mnt/hadoop/cmsprod/filefi/029/s12-qcd-2em3040-v7a/3E54E8F4-D2ED-E111-98CE-0026189438B1.root");
 
   //------------------------------------------------------------------------------------------------
   // organize output
