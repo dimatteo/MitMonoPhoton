@@ -66,7 +66,7 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fPFPhotons              (0),
   fElectrons              (0),
   fConversions            (0),
-  fPFConversions                 (0),
+  fPFConversions          (0),
   fTracks                 (0),
   fPileUpDen              (0),
   fPV                     (0),
@@ -205,20 +205,26 @@ void MonoPhotonTreeWriter::Process()
   fMonoPhotonEvent->pfmetx = fPFMet->At(0)->Px();
   fMonoPhotonEvent->pfmety = fPFMet->At(0)->Py();
   
-  //jets
-  fMonoPhotonEvent->jet1pt   = -99.;
-  fMonoPhotonEvent->jet1eta  = -99.;
-  fMonoPhotonEvent->jet1phi  = -99.;
-  fMonoPhotonEvent->jet1mass = -99.;
-  
-  //IM AM HERE
-    
-  if (fEnableJets) {
-	const Jet *jet = fPFJets->At(0);
-	fMonoPhotonEvent->jet1pt   = jet->Pt();
-	fMonoPhotonEvent->jet1eta  = jet->Eta();
-	fMonoPhotonEvent->jet1phi  = jet->Phi();
-	fMonoPhotonEvent->jet1mass = jet->Mass();
+  //JETS  
+  fMonoPhotonEvent->nJets = fPFJets->GetEntries();
+  for ( int arrayIndex=0; arrayIndex<fMonoPhotonEvent->kMaxJet; arrayIndex++ ) {
+	  if ( fPFJets->GetEntries() > 0 && arrayIndex < (int) fPFJets->GetEntries() ) {
+		  const Jet *jet = fPFJets->At(arrayIndex);
+		  //kin
+		  fMonoPhotonEvent->a_jetE[arrayIndex] = jet->E();
+		  fMonoPhotonEvent->a_jetPt[arrayIndex] = jet->Pt();
+		  fMonoPhotonEvent->a_jetEta[arrayIndex] = jet->Eta();
+		  fMonoPhotonEvent->a_jetPhi[arrayIndex] = jet->Phi();
+		  fMonoPhotonEvent->a_jetMass[arrayIndex] = jet->Mass();
+	  }
+	  else {
+		  //kin
+		  fMonoPhotonEvent->a_jetE[arrayIndex] = -1;
+		  fMonoPhotonEvent->a_jetPt[arrayIndex] = -1;
+		  fMonoPhotonEvent->a_jetEta[arrayIndex] = -100;
+		  fMonoPhotonEvent->a_jetPhi[arrayIndex] = -100;
+		  fMonoPhotonEvent->a_jetMass[arrayIndex] = -1;
+	  }
   }
 
         
@@ -391,7 +397,6 @@ void MonoPhotonTreeWriter::SlaveBegin()
     if ( dataMemberIsArray ) hMonoPhotonTuple->Branch(tdm->GetName(),addr + tdm->GetOffset(),TString::Format("%s[10]/%s",tdm->GetName(),typestring.Data()));
     else hMonoPhotonTuple->Branch(tdm->GetName(),addr + tdm->GetOffset(),TString::Format("%s/%s",tdm->GetName(),typestring.Data()));
   }
-//  hMonoPhotonTuple->Branch("photonE",&photonE);
   
   AddOutput(hMonoPhotonTuple);
   

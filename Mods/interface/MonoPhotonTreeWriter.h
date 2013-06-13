@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------------------------
-// $Id: MonoPhotonTreeWriter.h,v 1.1 2013/05/31 18:20:56 dimatteo Exp $
+// $Id: MonoPhotonTreeWriter.h,v 1.2 2013/06/10 22:33:43 dimatteo Exp $
 //
 // MonoPhotonTreeWriter
 //
@@ -84,11 +84,14 @@ namespace mithep
       Float_t pfmetx;
       Float_t pfmety;
 
-      // ------------ BTAG STUFF -------------------
-      Float_t jet1pt;
-      Float_t jet1eta;
-      Float_t jet1phi;
-      Float_t jet1mass;
+      // ------------ JET STUFF -------------------
+      static const Int_t kMaxJet = 10;
+	  Int_t   nJets;
+      Float_t a_jetE[kMaxJet];
+      Float_t a_jetPt[kMaxJet];
+      Float_t a_jetEta[kMaxJet];
+      Float_t a_jetPhi[kMaxJet];
+      Float_t a_jetMass[kMaxJet];
 
   };
   
