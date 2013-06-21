@@ -221,6 +221,12 @@ void runMonoPhoton(const char *fileset    = "0000",
   // select events with photon+MET
   //------------------------------------------------------------------------------------------------
   MonoPhotonAnalysisMod         *phplusmet = new MonoPhotonAnalysisMod("MonoPhotonSelector");
+  // phplusmet->SetPhotonsName(phoIDMod->GetOutputName()); //identified photons
+  phplusmet->SetPhotonsFromBranch(kTRUE);
+  phplusmet->SetMinNumPhotons(1);
+  phplusmet->SetMinPhotonEt(40);
+  phplusmet->SetMaxPhotonEta(2.4);
+  phplusmet->SetMinMetEt(40);
 
   MonoPhotonTreeWriter *phplusmettree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter");
   phplusmettree->SetPhotonsFromBranch(kTRUE);
