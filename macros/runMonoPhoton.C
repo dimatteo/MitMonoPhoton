@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.3 2013/06/21 03:20:55 dimatteo Exp $
+// $Id: runMonoPhoton.C,v 1.4 2013/06/21 15:24:51 ceballos Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -218,7 +218,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   PhotonCleaningMod *photonCleaningMod = new PhotonCleaningMod;
   photonCleaningMod->SetCleanElectronsName(electronCleaning->GetOutputName());
   photonCleaningMod->SetCleanPhotonsName(photonIDMod->GetOutputName());
-  photonCleaningMod->SetGoodPhotonsName("GoodElectrons");
+  photonCleaningMod->SetGoodPhotonsName("CleanPhotons");
 
   PublisherMod<PFJet,Jet> *pubJet = new PublisherMod<PFJet,Jet>("JetPub");
   pubJet->SetInputName("AKt5PFJets");
