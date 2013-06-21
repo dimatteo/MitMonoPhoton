@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.5 2013/06/21 15:35:58 ceballos Exp $
+// $Id: runMonoPhoton.C,v 1.6 2013/06/21 15:37:04 ceballos Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -204,8 +204,16 @@ void runMonoPhoton(const char *fileset    = "0000",
   merger->SetElectronsName(electronCleaning->GetOutputName());
   merger->SetMergedName("MergedLeptons");
 
+  //-----------------------------------
+  // Photon Regression + ID 
+  //-----------------------------------
+  PhotonMvaMod *photreg = new PhotonMvaMod;
+  photreg->SetOutputName("GoodPhotonsRegr");
+  photreg->SetIsData(isData);
+
+
   PhotonIDMod *photonIDMod = new PhotonIDMod;
-  photonIDMod->SetPtMin(100.0);
+  photonIDMod->SetPtMin(20.0);
   photonIDMod->SetOutputName("GoodPhotons");
   photonIDMod->SetIDType("BaseLineCiCPFNoPresel");
   photonIDMod->SetIsoType("NoIso");
@@ -214,6 +222,43 @@ void runMonoPhoton(const char *fileset    = "0000",
   photonIDMod->SetApplyConversionId(kTRUE);
   photonIDMod->SetApplyFiduciality(kTRUE);       
   photonIDMod->SetIsData(isData);
+  photonIDMod->SetPhotonsFromBranch(kFALSE);
+  photonIDMod->SetInputName(photreg->GetOutputName());//get the photon with regression energy
+  
+  
+  photonIDMod->DoMCSmear(kTRUE);
+  photonIDMod->DoDataEneCorr(kTRUE);
+  //------------------------------------------Energy smear and scale--------------------------------------------------------------
+  photonIDMod->SetMCSmearFactors2012HCP(0.0111,0.0111,0.0107,0.0107,0.0155,0.0194,0.0295,0.0276,0.037,0.0371);
+  photonIDMod->AddEnCorrPerRun2012HCP(190645,190781,0.9964,0.9964,1.0020,1.0020,0.9893,1.0028,0.9871,0.9937,0.9839,0.9958);
+  photonIDMod->AddEnCorrPerRun2012HCP(190782,191042,1.0024,1.0024,1.0079,1.0079,0.9923,1.0058,0.9911,0.9977,0.9886,1.0005);
+  photonIDMod->AddEnCorrPerRun2012HCP(191043,193555,0.9935,0.9935,0.9991,0.9991,0.9861,0.9997,0.9894,0.9960,0.9864,0.9982);
+  photonIDMod->AddEnCorrPerRun2012HCP(193556,194150,0.9920,0.9920,0.9976,0.9976,0.9814,0.9951,0.9896,0.9962,0.9872,0.9990);
+  photonIDMod->AddEnCorrPerRun2012HCP(194151,194532,0.9925,0.9925,0.9981,0.9981,0.9826,0.9963,0.9914,0.9980,0.9874,0.9993);
+  photonIDMod->AddEnCorrPerRun2012HCP(194533,195113,0.9927,0.9927,0.9983,0.9983,0.9844,0.9981,0.9934,0.9999,0.9878,0.9996);
+  photonIDMod->AddEnCorrPerRun2012HCP(195114,195915,0.9929,0.9929,0.9984,0.9984,0.9838,0.9974,0.9942,1.0007,0.9878,0.9997);
+  photonIDMod->AddEnCorrPerRun2012HCP(195916,198115,0.9919,0.9919,0.9975,0.9975,0.9827,0.9964,0.9952,1.0017,0.9869,0.9987);
+  photonIDMod->AddEnCorrPerRun2012HCP(198116,199803,0.9955,0.9955,1.0011,1.0011,0.9859,0.9995,0.9893,0.9959,0.9923,1.0041);
+  photonIDMod->AddEnCorrPerRun2012HCP(199804,200048,0.9967,0.9967,1.0023,1.0023,0.9870,1.0006,0.9893,0.9959,0.9937,1.0055);
+  photonIDMod->AddEnCorrPerRun2012HCP(200049,200151,0.9980,0.9980,1.0036,1.0036,0.9877,1.0012,0.9910,0.9976,0.9980,1.0097);
+  photonIDMod->AddEnCorrPerRun2012HCP(200152,200490,0.9958,0.9958,1.0013,1.0013,0.9868,1.0004,0.9922,0.9988,0.9948,1.0065);
+  photonIDMod->AddEnCorrPerRun2012HCP(200491,200531,0.9979,0.9979,1.0035,1.0035,0.9876,1.0012,0.9915,0.9981,0.9979,1.0096);
+  photonIDMod->AddEnCorrPerRun2012HCP(200532,201656,0.9961,0.9961,1.0017,1.0017,0.9860,0.9996,0.9904,0.9970,0.9945,1.0063);
+  photonIDMod->AddEnCorrPerRun2012HCP(201657,202305,0.9969,0.9969,1.0025,1.0025,0.9866,1.0002,0.9914,0.9980,0.9999,1.0116);
+  photonIDMod->AddEnCorrPerRun2012HCP(202305,203002,0.9982,0.9982,1.0038,1.0038,0.9872,1.0008,0.9934,1.0000,1.0018,1.0135);
+  photonIDMod->AddEnCorrPerRun2012HCP(203003,203984,1.0006,1.0006,1.0061,1.0061,0.9880,1.0017,0.9919,0.9988,0.9992,1.0104);     
+  photonIDMod->AddEnCorrPerRun2012HCP(203985,205085,0.9993,0.9993,1.0048,1.0048,0.9903,1.0040,0.9928,0.9997,0.9987,1.0099);     
+  photonIDMod->AddEnCorrPerRun2012HCP(205086,205310,1.0004,1.0004,1.0059,1.0059,0.9901,1.0037,0.9987,1.0055,1.0091,1.0202);     
+  photonIDMod->AddEnCorrPerRun2012HCP(205311,206207,1.0000,1.0000,1.0055,1.0055,0.9891,1.0028,0.9948,1.0017,1.0032,1.0144);     
+  photonIDMod->AddEnCorrPerRun2012HCP(206208,206483,1.0003,1.0003,1.0058,1.0058,0.9895,1.0032,0.9921,0.9989,1.0056,1.0167);     
+  photonIDMod->AddEnCorrPerRun2012HCP(206484,206597,1.0005,1.0005,1.0060,1.0060,0.9895,1.0032,0.9968,1.0036,1.0046,1.0158);     
+  photonIDMod->AddEnCorrPerRun2012HCP(206598,206896,1.0006,1.0006,1.0061,1.0061,0.9881,1.0017,0.9913,0.9982,1.0050,1.0162);     
+  photonIDMod->AddEnCorrPerRun2012HCP(206897,207220,1.0006,1.0006,1.0061,1.0061,0.9884,1.0021,0.9909,0.9978,1.0053,1.0165);     
+  photonIDMod->AddEnCorrPerRun2012HCP(207221,208686,1.0006,1.0006,1.0061,1.0061,0.9894,1.0030,0.9951,1.0020,1.0060,1.0172);     
+  //---------------------------------shower shape scale--------------------------------------------------------------------------------
+  photonIDMod->SetDoShowerShapeScaling(kTRUE);
+  photonIDMod->SetShowerShapeType("2012ShowerShape");
+  photonIDMod->Set2012HCP(kTRUE);
 
   PhotonCleaningMod *photonCleaningMod = new PhotonCleaningMod;
   photonCleaningMod->SetCleanElectronsName(electronCleaning->GetOutputName());
@@ -289,9 +334,10 @@ void runMonoPhoton(const char *fileset    = "0000",
  
   mcselmod->Add(goodPVFilterMod);
   goodPVFilterMod->Add(hltModP);
-  
+  // photon regression
+  hltModP->Add(photreg);
   // simple object id modules
-  hltModP          ->Add(SepPUMod); 
+  photreg          ->Add(SepPUMod); 
   SepPUMod         ->Add(muonIdMod);
   muonIdMod        ->Add(eleIdMod);
   eleIdMod	   ->Add(electronCleaning);
