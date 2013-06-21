@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.1 2013/06/14 20:02:34 dimatteo Exp $
+// $Id: runMonoPhoton.C,v 1.3 2013/06/21 03:20:55 dimatteo Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -18,7 +18,6 @@
 #include "MitPhysics/Mods/interface/ElectronIDMod.h"
 #include "MitPhysics/Mods/interface/ElectronCleaningMod.h"
 #include "MitPhysics/Mods/interface/PhotonIDMod.h"
-#include "MitPhysics/Mods/interface/PhotonPairSelector.h"
 #include "MitPhysics/Mods/interface/PhotonTreeWriter.h"
 #include "MitPhysics/Mods/interface/PhotonCleaningMod.h"
 #include "MitPhysics/Mods/interface/MergeLeptonsMod.h"
@@ -26,6 +25,8 @@
 #include "MitPhysics/Mods/interface/PhotonMvaMod.h"
 #include "MitPhysics/Mods/interface/MVASystematicsMod.h"
 #include "MitPhysics/Mods/interface/SeparatePileUpMod.h"
+#include "MitPhysics/Mods/interface/JetIDMod.h"
+#include "MitPhysics/Mods/interface/JetCleaningMod.h"
 
 #include "MitMonoPhoton/SelMods/interface/MonoPhotonAnalysisMod.h"
 #include "MitMonoPhoton/Mods/interface/MonoPhotonTreeWriter.h"
@@ -34,12 +35,12 @@
 
 //--------------------------------------------------------------------------------------------------
 void runMonoPhoton(const char *fileset    = "0000",
-				   const char *skim       = "noskim",
-				   const char *dataset    = "r12a-pho-j13-v1", 
-				   const char *book       = "t2mit/filefi/029",
-				   const char *catalogDir = "/home/cmsprod/catalog",
-				   const char *outputName = "hgg",
-				   int         nEvents    = 1000)
+		   const char *skim       = "noskim",
+		   const char *dataset    = "s12-wglg-v7a", 
+		   const char *book       = "t2mit/filefi/029",
+		   const char *catalogDir = "/home/cmsprod/catalog",
+		   const char *outputName = "gmet",
+		   int         nEvents    = 1000)
 {
   //------------------------------------------------------------------------------------------------
   // some parameters get passed through the environment
@@ -72,7 +73,7 @@ void runMonoPhoton(const char *fileset    = "0000",
     //return;
   } 
 
-  printf("\n Initialization worked. \n\n");
+  printf("\n Initialization worked \n");
 
   //------------------------------------------------------------------------------------------------
   // some global setups
@@ -84,15 +85,14 @@ void runMonoPhoton(const char *fileset    = "0000",
   //------------------------------------------------------------------------------------------------
   // set up information
   //------------------------------------------------------------------------------------------------
-  RunLumiSelectionMod *runLumiSel = new RunLumiSelectionMod;
-  runLumiSel->SetAcceptMC(kTRUE);                          // Monte Carlo events are always accepted
-
   MCProcessSelectionMod *mcselmod = new MCProcessSelectionMod;
   
   MVASystematicsMod *sysMod = new MVASystematicsMod;
   sysMod->SetMCR9Scale(1.0035, 1.0035);  
   sysMod->SetIsData(isData);
   
+  RunLumiSelectionMod *runLumiSel = new RunLumiSelectionMod;      
+  runLumiSel->SetAcceptMC(!isData);
   // only select on run- and lumisection numbers when valid json file present
   if ((jsonFile.CompareTo("/home/cmsprod/cms/json/~") != 0) &&
       (jsonFile.CompareTo("/home/cmsprod/cms/json/-") != 0)   ) {
@@ -103,7 +103,7 @@ void runMonoPhoton(const char *fileset    = "0000",
     runLumiSel->SetAbortIfNotAccepted(kFALSE);   // accept all events if there is no valid JSON file
   }
 
-  printf("\n Run lumi worked. \n\n");
+  printf("\n Run lumi worked\n");
 
   //------------------------------------------------------------------------------------------------
   // HLT information : [TBF]
@@ -156,7 +156,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   // Lepton Selection 
   //-----------------------------------
   ElectronIDMod* eleIdMod = new ElectronIDMod;
-  eleIdMod -> SetPtMin(20);  
+  eleIdMod -> SetPtMin(10);  
   eleIdMod -> SetEtaMax(2.5);
   eleIdMod -> SetApplyEcalFiducial(true);
   eleIdMod -> SetIDType("Hgg_LeptonTag_2012IdHCP");  
@@ -180,12 +180,12 @@ void runMonoPhoton(const char *fileset    = "0000",
 
   MuonIDMod* muonIdMod = new MuonIDMod;
   // base kinematics
-  muonIdMod -> SetPtMin(20.);
+  muonIdMod -> SetPtMin(10.);
   muonIdMod -> SetEtaCut(2.4);
   // base ID
   muonIdMod -> SetIDType("Tight");
   muonIdMod -> SetWhichVertex(-1); // this is a 'hack'.. but hopefully good enough...
-  muonIdMod -> SetD0Cut(0.2);
+  muonIdMod -> SetD0Cut(0.02);
   muonIdMod -> SetDZCut(0.5);
   muonIdMod -> SetIsoType("PFIsoBetaPUCorrected"); //h
   muonIdMod -> SetPFIsoCut(0.2); //h
@@ -194,14 +194,36 @@ void runMonoPhoton(const char *fileset    = "0000",
   muonIdMod -> SetPFPileUpName("pfpileupcands");
   muonIdMod -> SetPVName(Names::gkPVBeamSpotBrn); 
   
+  ElectronCleaningMod *electronCleaning = new ElectronCleaningMod;
+  electronCleaning->SetCleanMuonsName(muonIdMod->GetOutputName());
+  electronCleaning->SetGoodElectronsName(eleIdMod->GetOutputName());
+  electronCleaning->SetCleanElectronsName("CleanElectrons");
+
+  MergeLeptonsMod *merger = new MergeLeptonsMod;
+  merger->SetMuonsName(muonIdMod->GetOutputName());
+  merger->SetElectronsName(electronCleaning->GetOutputName());
+  merger->SetMergedName("MergedLeptons");
+
+  PhotonIDMod *photonIDMod = new PhotonIDMod;
+  photonIDMod->SetPtMin(100.0);
+  photonIDMod->SetOutputName("GoodPhotons");
+  photonIDMod->SetIDType("BaseLineCiCPFNoPresel");
+  photonIDMod->SetIsoType("NoIso");
+  photonIDMod->SetApplyElectronVeto(kTRUE);
+  photonIDMod->SetApplyPixelSeed(kTRUE);
+  photonIDMod->SetApplyConversionId(kTRUE);
+  photonIDMod->SetApplyFiduciality(kTRUE);       
+  photonIDMod->SetIsData(isData);
+
+  PhotonCleaningMod *photonCleaningMod = new PhotonCleaningMod;
+  photonCleaningMod->SetCleanElectronsName(electronCleaning->GetOutputName());
+  photonCleaningMod->SetCleanPhotonsName(photonIDMod->GetOutputName());
+  photonCleaningMod->SetGoodPhotonsName("GoodElectrons");
+
   PublisherMod<PFJet,Jet> *pubJet = new PublisherMod<PFJet,Jet>("JetPub");
   pubJet->SetInputName("AKt5PFJets");
   pubJet->SetOutputName("PubAKt5PFJets");
-  
-  PublisherMod<PFJet,Jet> *pubJetOpen = new PublisherMod<PFJet,Jet>("JetPubOpen");
-  pubJetOpen->SetInputName("AKt5PFJets");
-  pubJetOpen->SetOutputName("PubAKt5PFJetsOpen");  
-  
+
   JetCorrectionMod *jetCorr = new JetCorrectionMod;
   if(isData){ 
     jetCorr->AddCorrectionFromFile(std::string((gSystem->Getenv("CMSSW_BASE") + TString("/src/MitPhysics/data/Summer12_V7_DATA_L1FastJet_AK5PF.txt")).Data())); 
@@ -216,6 +238,23 @@ void runMonoPhoton(const char *fileset    = "0000",
   }
   jetCorr->SetInputName(pubJet->GetOutputName());
   jetCorr->SetCorrectedName("CorrectedJets");    
+
+  JetIDMod *theJetID = new JetIDMod;
+  theJetID->SetInputName(jetCorr->GetOutputName());
+  theJetID->SetPtCut(30.0);
+  theJetID->SetEtaMaxCut(4.7);
+  theJetID->SetJetEEMFractionMinCut(0.00);
+  theJetID->SetOutputName("GoodJets");
+  theJetID->SetApplyBetaCut(kFALSE);
+  theJetID->SetApplyMVACut(kTRUE);
+
+  JetCleaningMod *theJetCleaning = new JetCleaningMod;
+  theJetCleaning->SetCleanElectronsName(electronCleaning->GetOutputName());
+  theJetCleaning->SetCleanMuonsName(muonIdMod->GetOutputName());
+  theJetCleaning->SetCleanPhotonsName(photonCleaningMod->GetOutputName());
+  theJetCleaning->SetApplyPhotonRemoval(kTRUE);
+  theJetCleaning->SetGoodJetsName(theJetID->GetOutputName());
+  theJetCleaning->SetCleanJetsName("CleanJets");
         
   //------------------------------------------------------------------------------------------------
   // select events with photon+MET
@@ -224,9 +263,9 @@ void runMonoPhoton(const char *fileset    = "0000",
   // phplusmet->SetPhotonsName(phoIDMod->GetOutputName()); //identified photons
   phplusmet->SetPhotonsFromBranch(kTRUE);
   phplusmet->SetMinNumPhotons(1);
-  phplusmet->SetMinPhotonEt(40);
+  phplusmet->SetMinPhotonEt(100);
   phplusmet->SetMaxPhotonEta(2.4);
-  phplusmet->SetMinMetEt(40);
+  phplusmet->SetMinMetEt(100);
 
   MonoPhotonTreeWriter *phplusmettree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter");
   phplusmettree->SetPhotonsFromBranch(kTRUE);
@@ -249,18 +288,25 @@ void runMonoPhoton(const char *fileset    = "0000",
   runLumiSel      ->Add(mcselmod);
  
   mcselmod->Add(goodPVFilterMod);
-  goodPVFilterMod->Add(pubJet);
-  pubJet->Add(jetCorr);
+  goodPVFilterMod->Add(hltModP);
   
   // simple object id modules
-  jetCorr          ->Add(SepPUMod); 
-  SepPUMod         ->Add(eleIdMod);
-  eleIdMod         ->Add(muonIdMod);
+  hltModP          ->Add(SepPUMod); 
+  SepPUMod         ->Add(muonIdMod);
+  muonIdMod        ->Add(eleIdMod);
+  eleIdMod	   ->Add(electronCleaning);
+  electronCleaning ->Add(merger);
+  merger           ->Add(photonIDMod);
+  photonIDMod	   ->Add(photonCleaningMod);
+  photonCleaningMod->Add(pubJet);
+  pubJet           ->Add(jetCorr);
+  jetCorr          ->Add(theJetID);
+  theJetID	   ->Add(theJetCleaning);
    
   // Gamma+met selection
-  muonIdMod        ->Add(phplusmet);
+  theJetCleaning   ->Add(phplusmet);
   phplusmet        ->Add(phplusmettree);
-  
+
   //------------------------------------------------------------------------------------------------
   // setup analysis
   //------------------------------------------------------------------------------------------------
@@ -272,10 +318,6 @@ void runMonoPhoton(const char *fileset    = "0000",
   if (nEvents >= 0)
     ana->SetProcessNEvents(nEvents);
 
-  if (TString(dataset).Contains("meridiani")) {    
-    ana->SetUseHLT(kFALSE);
-  }
-  
   //------------------------------------------------------------------------------------------------
   // organize input
   //------------------------------------------------------------------------------------------------
@@ -283,13 +325,11 @@ void runMonoPhoton(const char *fileset    = "0000",
   TString skimdataset = TString(dataset)+TString("/") +TString(skim);
   Dataset *d = NULL;
   TString bookstr = book;
-  //if (TString(dataset).Contains("s11-h")) bookstr.ReplaceAll("local","t2mit");
   if (TString(skim).CompareTo("noskim") == 0)
-    d = c->FindDataset(bookstr,dataset,fileset,true);
+    d = c->FindDataset(bookstr,dataset,fileset);
   else 
-    d = c->FindDataset(bookstr,skimdataset.Data(),fileset,true);
+    d = c->FindDataset(bookstr,skimdataset.Data(),fileset);
   ana->AddDataset(d);
-  //ana->AddFile("/mnt/hadoop/cmsprod/filefi/029/s12-h125gg-gf-v7a/D0515547-68FA-E111-B849-002618FDA262.root");
 
   //------------------------------------------------------------------------------------------------
   // organize output
@@ -302,7 +342,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   ana->SetOutputName(rootFile.Data());
   //ana->SetCacheSize(64*1024*1024);
   ana->SetCacheSize(0);
-  
+
   //------------------------------------------------------------------------------------------------
   // Say what we are doing
   //------------------------------------------------------------------------------------------------
