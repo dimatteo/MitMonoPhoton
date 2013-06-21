@@ -42,15 +42,18 @@ namespace mithep
       ~MonoPhotonAnalysisMod() {}
 
       // setting all the input Names
-      void                SetInputPhotonsName(const char *n){ fPhotonBranchName= n;        }
+      void                SetInputPhotonsName(const char *n){ fPhotonsBranchName= n;        }
       void                SetInputMetName(const char *n){ fMetBranchName= n;        }
+      void                SetPhotonsFromBranch(Bool_t b)    { fPhotonsFromBranch = b; }
+      void                SetMetFromBranch(Bool_t b)    { fMetFromBranch = b; }
 
     protected:
-      TString                  fPhotonBranchName;	 //name of input photon branch
+      TString                  fPhotonsBranchName;	   //name of input photon branch
       TString                  fMetBranchName;           //name of input met branch
-      Int_t                    fNEventsSelected;         //selected events
-
-      TH1D                    *fHWWSelection;            //histogram for cut flow monitoring
+      Bool_t                   fPhotonsFromBranch;       //photons are loaded from a branch
+      Bool_t                   fMetFromBranch;           //met is loaded from a branch
+      
+      TH1D                    *fMonoPhotonSelection;     //histogram for cut flow monitoring
 
       TH1D                    *fPhotonEt;                //histogram of photon transverse energy spectrum
       TH1D                    *fMetEt;                   //histogram of met spectrum
@@ -73,6 +76,8 @@ namespace mithep
       Double_t     fMinPhotonEt;
       Double_t     fMaxPhotonEta;
       Double_t     fMinMetEt;
+
+      Int_t                    fNEventsSelected;         //selected events
 
       ClassDef(MonoPhotonAnalysisMod,1) // TAM example analysis module
   };

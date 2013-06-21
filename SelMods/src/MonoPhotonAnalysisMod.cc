@@ -25,8 +25,11 @@ ClassImp(mithep::MonoPhotonAnalysisMod)
 MonoPhotonAnalysisMod::MonoPhotonAnalysisMod(const char *name, const char *title) : 
   BaseMod(name,title),
   // Define all the Branches to load
-  fPhotonBranchName              (Names::gkPhotonBrn),
+  // define all the Branches to load
   fMetBranchName                 ("PFMet"),
+  fPhotonsBranchName             (Names::gkPhotonBrn),
+  fMetFromBranch                 (kTRUE),
+  fPhotonsFromBranch             (kTRUE),
   // ----------------------------------------
   // Collections....
   fPhotons                       (0),
@@ -56,15 +59,14 @@ void MonoPhotonAnalysisMod::SlaveBegin()
   // branches. For this module, we request a branch of the MitTree.
 
   // Load Branches
-  ReqEventObject(fPhotonBranchName,   fPhotons,      true);
-  ReqEventObject(fMetBranchName,   fMet,      true);
+  ReqEventObject(fMetBranchName,    fMet,      fMetFromBranch);
+  ReqEventObject(fPhotonsBranchName, fPhotons,  fPhotonsFromBranch); 
 
   // Create your histograms here
-
   //*************************************************************************************************
   // Selection Histograms
   //*************************************************************************************************
-  AddTH1(fHWWSelection,"hHWWSelection", ";Cuts;Number of Events",             5, 0, 5);
+  AddTH1(fMonoPhotonSelection,"hMonoPhotonSelection", ";Cuts;Number of Events",             5, 0, 5);
   
   // Create const char* labels with cut values
   std::ostringstream os1;
@@ -89,11 +91,11 @@ void MonoPhotonAnalysisMod::SlaveBegin()
   const char* labelCut4 = s4.c_str();
   
   // Set selection histogram bin labels
-  fHWWSelection->GetXaxis()->TAxis::SetBinLabel(1, "All Events");
-  fHWWSelection->GetXaxis()->TAxis::SetBinLabel(2, labelCut1);
-  fHWWSelection->GetXaxis()->TAxis::SetBinLabel(3, labelCut2);
-  fHWWSelection->GetXaxis()->TAxis::SetBinLabel(4, labelCut3);
-  fHWWSelection->GetXaxis()->TAxis::SetBinLabel(5, labelCut4);
+  fMonoPhotonSelection->GetXaxis()->TAxis::SetBinLabel(1, "All Events");
+  fMonoPhotonSelection->GetXaxis()->TAxis::SetBinLabel(2, labelCut1);
+  fMonoPhotonSelection->GetXaxis()->TAxis::SetBinLabel(3, labelCut2);
+  fMonoPhotonSelection->GetXaxis()->TAxis::SetBinLabel(4, labelCut3);
+  fMonoPhotonSelection->GetXaxis()->TAxis::SetBinLabel(5, labelCut4);
 
   //***********************************************************************************************
   // Histograms after preselection
@@ -107,7 +109,7 @@ void MonoPhotonAnalysisMod::SlaveBegin()
 void MonoPhotonAnalysisMod::Process()
 {
   // Process entries of the tree.
-  LoadEventObject(fPhotonBranchName,   fPhotons);
+  LoadEventObject(fPhotonsBranchName,   fPhotons);
   assert(fPhotons);
   LoadEventObject(fMetBranchName,   fMet);
   assert(fMet);
@@ -143,11 +145,13 @@ void MonoPhotonAnalysisMod::Process()
   // Discard events with no hard photons inside eta range
   //***********************************************************************************************
   int    nHardEtaPh = 0;
+  vector<int> theGoodPhotons;
   for (UInt_t i=0; i<fPhotons->GetEntries(); ++i) {
 	  const Photon *ph = fPhotons->At(i);
 	  if ( ph->Et() <= fMinPhotonEt ) continue;
 	  if ( TMath::Abs(ph->Eta()) >= fMaxPhotonEta ) continue;
 	  nHardEtaPh ++;
+    theGoodPhotons.push_back((int) i);
   }
   if ( nHardEtaPh > 0 ) passCut[2] = true;
 
@@ -162,7 +166,7 @@ void MonoPhotonAnalysisMod::Process()
   //*********************************************************************************************  
   //Cut Selection Histograms
   int zero = 0;
-  fHWWSelection->Fill(zero,1);
+  fMonoPhotonSelection->Fill(zero,1);
 
   for (int k=0;k<nCuts;k++) {
     bool pass = true;
@@ -173,7 +177,7 @@ void MonoPhotonAnalysisMod::Process()
         passPreviousCut = (passPreviousCut&& passCut[p]);
     }
     if (pass)
-      fHWWSelection->Fill(k+1,1);
+      fMonoPhotonSelection->Fill(k+1,1);
   }
 
   
@@ -183,7 +187,9 @@ void MonoPhotonAnalysisMod::Process()
 	  fNEventsSelected++;
 	  
 	  // Make Preselection Histograms
-	  fPhotonEt->Fill(fPhotons->At(0)->Et()); 
+    for ( int iGoodPh=0; iGoodPh<(int) theGoodPhotons.size(); iGoodPh++ )
+      fPhotonEt->Fill(fPhotons->At(theGoodPhotons[iGoodPh])->Et()); 
+
 	  fMetEt->Fill(fMet->At(0)->Et()); 
   }
   else 
