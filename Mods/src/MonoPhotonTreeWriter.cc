@@ -238,13 +238,19 @@ void MonoPhotonTreeWriter::Process()
 		  fMonoPhotonEvent->a_photonEt[arrayIndex] = photon->Et();
 		  fMonoPhotonEvent->a_photonEta[arrayIndex] = photon->Eta();
 		  fMonoPhotonEvent->a_photonPhi[arrayIndex] = photon->Phi();
-		  //iso
+      //iso
 		  fMonoPhotonEvent->a_photonHCALisoDR03[arrayIndex] = photon->HcalTowerSumEtDr03();
 		  fMonoPhotonEvent->a_photonECALisoDR03[arrayIndex] = photon->EcalRecHitIsoDr03();
 		  fMonoPhotonEvent->a_photonHollowConeTKisoDR03[arrayIndex] = photon->HollowConeTrkIsoDr03();
 		  fMonoPhotonEvent->a_photonHCALisoDR04[arrayIndex] = photon->HcalTowerSumEtDr04();
 		  fMonoPhotonEvent->a_photonECALisoDR04[arrayIndex] = photon->EcalRecHitIsoDr04();
 		  fMonoPhotonEvent->a_photonHollowConeTKisoDR04[arrayIndex] = photon->HollowConeTrkIsoDr04();
+      //shape
+		  fMonoPhotonEvent->a_photonCoviEtaiEta[arrayIndex] = photon->CoviEtaiEta();
+		  fMonoPhotonEvent->a_photonR9[arrayIndex] = photon->SCluster()->R9();
+      //misc
+		  fMonoPhotonEvent->a_photonSeedTime[arrayIndex] = photon->SCluster()->SeedTime();
+		  fMonoPhotonEvent->a_photonHadOverEm[arrayIndex] = photon->HadOverEm();
 	  }
 	  else {
 		  //kin
@@ -259,6 +265,12 @@ void MonoPhotonTreeWriter::Process()
 		  fMonoPhotonEvent->a_photonHCALisoDR04[arrayIndex] = -1;
 		  fMonoPhotonEvent->a_photonECALisoDR04[arrayIndex] = -1;
 		  fMonoPhotonEvent->a_photonHollowConeTKisoDR04[arrayIndex] = -1;
+      //shape
+		  fMonoPhotonEvent->a_photonCoviEtaiEta[arrayIndex] = -100;
+		  fMonoPhotonEvent->a_photonR9[arrayIndex] = -1;
+      //misc
+		  fMonoPhotonEvent->a_photonSeedTime[arrayIndex] = -10000;
+		  fMonoPhotonEvent->a_photonHadOverEm[arrayIndex] = -1;
 	  }
   }
   
