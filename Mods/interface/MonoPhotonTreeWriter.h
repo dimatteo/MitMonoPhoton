@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------------------------
-// $Id: MonoPhotonTreeWriter.h,v 1.3 2013/06/13 15:05:24 dimatteo Exp $
+// $Id: MonoPhotonTreeWriter.h,v 1.4 2013/06/21 03:20:30 dimatteo Exp $
 //
 // MonoPhotonTreeWriter
 //
@@ -84,7 +84,6 @@ namespace mithep
       UInt_t  run;
       UInt_t  lumi;
       UChar_t evtcat;
-      UInt_t  nobj;
 
       // ------------ MET STUFF -------------------
       Float_t pfmet;
@@ -101,6 +100,22 @@ namespace mithep
       Float_t a_jetPhi[kMaxJet];
       Float_t a_jetMass[kMaxJet];
 
+      // ------------ ELECTRON STUFF -------------------
+      static const Int_t kMaxEle = 10;
+	  Int_t   nElectrons;
+      Float_t a_eleE[kMaxEle];
+      Float_t a_elePt[kMaxEle];
+      Float_t a_eleEta[kMaxEle];
+      Float_t a_elePhi[kMaxEle];
+
+      // ------------ MUON STUFF -------------------
+      static const Int_t kMaxMu = 10;
+	  Int_t   nMuons;
+      Float_t a_muE[kMaxMu];
+      Float_t a_muPt[kMaxMu];
+      Float_t a_muEta[kMaxMu];
+      Float_t a_muPhi[kMaxMu];
+
   };
   
   
@@ -113,209 +128,77 @@ namespace mithep
     ~MonoPhotonTreeWriter();
 
     // setting all the input Names
-    void                SetInputPhotonsName(const char *n){ fPhotonBranchName= n;        }
+    void                SetMetName(const char *n)         { fMetName= n;                 }
+    void                SetPhotonsName(const char *n)     { fPhotonsName= n;              }
     void                SetPhotonsFromBranch(bool b)      { fPhotonsFromBranch = b;      }
-    void                SetTrackName(const char *n)       { fTrackBranchName = n;        }
-    void                SetElectronName(const char *n)    { fElectronName = n;           }
-    void                SetConversionName(const char *n)  { fConversionName = n;         }
-    void                SetPUDensityName(const char *n)   { fPileUpDenName = n;          }
+    void                SetElectronsName(const char *n)   { fElectronsName = n;          }
+    void                SetElectronsFromBranch(bool b)    { fElectronsFromBranch = b;    }
+    void                SetMuonsName(const char *n)       { fMuonsName = n;              }
+    void                SetMuonsFromBranch(bool b)        { fMuonsFromBranch = b;        }
+    void                SetJetsName(const char *n)        { fJetsName = n;               }
+    void                SetJetsFromBranch(bool b)         { fJetsFromBranch = b;         }
+
+    void                SetSuperClustersName(const char *n){ fSuperClustersName = n;     }
+    void                SetTracksName(const char *n)      { fTracksName = n;             }
     void                SetPVName(const char *n)          { fPVName = n;                 }
     void                SetPVFromBranch(bool b)           { fPVFromBranch = b;           }
-    void                SetMCParticle(const char *n)      { fMCParticleName = n;         }
     void                SetPUInfoName(const char *n)      { fPileUpName = n;             }
     void                SetBeamspotName(const char *n)    { fBeamspotName = n;           }
-    void                SetPFCandName(const char *n)      { fPFCandName = n;             }
-    void                SetSuperClusterName(const char *n) { fSuperClusterName = n;      }
-    void                SetPFJetName(const char *n)       { fPFJetName = n;              }
-    void                SetGenJetName(const char *n)      { fGenJetName = n;             }
-    void                SetuncorrPFJetName(const char *n) { funcorrPFJetName = n;        }
-    void                SetPFNoPileUpName(const char *n)  { fPFNoPileUpName  = n;       } 
-    void                SetPFPileUpName(const char *n)    { fPFPileUpName  = n;         }
-
-
-    void                SetPFJetsFromBranch(Bool_t b)     { fPFJetsFromBranch = b;       }
-    void                SetEnableJets(Bool_t b)           { fEnableJets = b;             }
-    void                SetApplyJetId(Bool_t b)           { fApplyJetId = b;             }
-    void                SetApplyLeptonTag(Bool_t b)       { fApplyLeptonTag = b;         }
-    void                SetApplyVBFTag(Bool_t b)          { fApplyVBFTag = b;            }
-    void                SetApplyBTag(Bool_t b)            { fApplyBTag = b;              }
-    void                SetApplyPFMetCorr(Bool_t b)       { fApplyPFMetCorrections = b;  }
-    void                SetPhFixDataFile(const char *n)   { fPhFixDataFile = n;          }
-
-
-
-
-    // set basic Cut variables (FOR PRE-SELECTION)
 
     // is Data Or Not?
-    void                SetIsData (Bool_t b)                 { fIsData = b; };
+    void                SetIsData (Bool_t b)              { fIsData = b; };
     
-
-    void                SetApplyElectronVeto(Bool_t b)   { fApplyElectronVeto = b;     }          
 
     void                SetTupleName(const char* c)          { fTupleName = c; }
-    void                SetGoodElectronsFromBranch(Bool_t b) { fGoodElectronsFromBranch = b; }
-    void                SetGoodElectronName(TString name)    { fGoodElectronName = name; }
-    void                SetWriteDiphotonTree(Bool_t b)       { fWriteDiphotonTree = b; }
-    void                SetWriteSingleTree(Bool_t b)         { fWriteSingleTree = b; }
-    void                SetLoopOnGoodElectrons(Bool_t b)     { fLoopOnGoodElectrons = b; }
-    void                SetEnablePFPhotons(Bool_t b)         { fEnablePFPhotons = b; }
-    void                SetExcludeSinglePrompt(Bool_t b)     { fExcludeSinglePrompt = b; }
-    void                SetExcludeDoublePrompt(Bool_t b)     { fExcludeDoublePrompt = b; }
-
-    void                SetLeptonTagElectronsName(TString name) { fLeptonTagElectronsName = name; }
-    void                SetLeptonTagMuonsName    (TString name) { fLeptonTagMuonsName     = name; }
-    void                SetFillClusterArrays(Bool_t b)          { fFillClusterArrays = b; }
-
-    void                SetDo2012LepTag(Bool_t b) {                         fDo2012LepTag = b; }
-    
-    void                SetBeamspotWidth(Double_t x)            { fBeamspotWidth = x; }
-
-      void                SetElectronMVAWeightsSubdet0Pt10To20(TString s)  
-                          { fElectronMVAWeights_Subdet0Pt10To20  = s; }
-      void                SetElectronMVAWeightsSubdet1Pt10To20(TString s)  
-                          { fElectronMVAWeights_Subdet1Pt10To20  = s; }
-      void                SetElectronMVAWeightsSubdet2Pt10To20(TString s)  
-                          { fElectronMVAWeights_Subdet2Pt10To20  = s; }
-      void                SetElectronMVAWeightsSubdet0Pt20ToInf(TString s) 
-                          { fElectronMVAWeights_Subdet0Pt20ToInf = s; }
-      void                SetElectronMVAWeightsSubdet1Pt20ToInf(TString s) 
-                          { fElectronMVAWeights_Subdet1Pt20ToInf = s; }
-      void                SetElectronMVAWeightsSubdet2Pt20ToInf(TString s) 
-                          { fElectronMVAWeights_Subdet2Pt20ToInf = s; }
-
-      void                SetDoSynching(bool b) {fDoSynching = b;}
-
 
     
   protected:
     void                Process();
     void                SlaveBegin();
     // Private auxiliary methods...
-    void                FindHiggsPtAndZ(Float_t& pt, Float_t& z, Float_t& mass);
-    Float_t             GetEventCat    (PhotonTools::CiCBaseLineCats cat1,
-					PhotonTools::CiCBaseLineCats cat2);
-
     // Names for the input Collections
-    TString             fPhotonBranchName;
-    TString             fPFPhotonName;
-    TString             fElectronName;
-    TString             fGoodElectronName;
-    TString             fConversionName;
-    TString             fPFConversionName;
-    TString             fTrackBranchName;
-    TString             fPileUpDenName;    
+    TString             fMetName;
+    TString             fPhotonsName;
+    TString             fElectronsName;
+    TString             fMuonsName;
+    TString             fJetsName;
+
+    TString             fSuperClustersName;
+    TString             fTracksName;
     TString             fPVName;
-    TString             fBeamspotName;
-    TString             fPFCandName;
-    TString             fPFNoPileUpName;  //name of pfnpu collection
-    TString             fPFPileUpName;    //name of pfpu collection
-
-    TString             fMCParticleName;
-    TString             fMCEventInfoName;
-    
     TString             fPileUpName;
-    TString             fSuperClusterName;
-    TString             fPFMetName;
-    TString             fPFJetName;
-
-
-    TString             funcorrPFJetName;
-    TString             fGenJetName;   //added to do pfmet correction 05/01/2012
-
-
-    TString             fLeptonTagElectronsName;
-    TString             fLeptonTagMuonsName;
-
+    TString             fPileUpDenName;    
+    TString             fBeamspotName;
     
     // is it Data or MC?
     Bool_t              fIsData;
     
     // in case there's some PV pre-selection
     Bool_t              fPhotonsFromBranch;
+    Bool_t              fElectronsFromBranch;
+    Bool_t              fMuonsFromBranch;
+    Bool_t              fJetsFromBranch;
     Bool_t              fPVFromBranch;
-    Bool_t              fGoodElectronsFromBranch;
-    Bool_t              fPFJetsFromBranch;
 
-    Bool_t              fDoSynching;
-
+    const PFMetCol                *fMet;
     const PhotonCol               *fPhotons;
-    const PhotonCol               *fPFPhotons;
     const ElectronCol             *fElectrons;
-    const ElectronCol             *fGoodElectrons;    
-    const DecayParticleCol        *fConversions;
-    const DecayParticleCol        *fPFConversions;
-    const TrackCol                *fTracks;
-    const PileupEnergyDensityCol  *fPileUpDen;
-    const VertexCol               *fPV;
-    const BeamSpotCol             *fBeamspot;
-    const PFCandidateCol          *fPFCands;
-    const MCParticleCol           *fMCParticles;
-    const MCEventInfo             *fMCEventInfo;
-    const PileupInfoCol           *fPileUp;    
+    const MuonCol                 *fMuons;
+    const JetCol                  *fJets;
+
     const SuperClusterCol         *fSuperClusters;   
-    const PFMetCol                *fPFMet;
-    const JetCol                  *fPFJets;
-    const GenJetCol               *fGenJets;
-    const PFJetCol                *funcorrPFJets;
+    const TrackCol                *fTracks;
+    const VertexCol               *fPV;
+    const PileupInfoCol           *fPileUp;    
+    const PileupEnergyDensityCol  *fPileUpDen;
+    const BeamSpotCol             *fBeamspot;
     
-    const ElectronCol             *fLeptonTagElectrons;
-    const MuonCol                 *fLeptonTagMuons;
-    const PFCandidateCol          *fPFNoPileUpCands;  //!pfnpu collection
-    const PFCandidateCol          *fPFPileUpCands;    //!pfpu collection
-
     // --------------------------------
-    Bool_t                         fLoopOnGoodElectrons; //loop over good elecs instead of photons
-    Bool_t                         fApplyElectronVeto;   //invert elec veto (for cic sel. only atm)
-    Bool_t                         fWriteDiphotonTree;
-    Bool_t                         fWriteSingleTree;
-
-    Bool_t                         fEnablePFPhotons;
-    
-    Bool_t                         fExcludeSinglePrompt;
-    Bool_t                         fExcludeDoublePrompt;
-    
-    Bool_t                         fEnableJets;
-    Bool_t                         fApplyJetId;
-
-    Bool_t                         fApplyLeptonTag;
-    Bool_t                         fApplyVBFTag;
-    Bool_t                         fApplyBTag;
-    Bool_t                         fApplyPFMetCorrections;
-
-    Bool_t                         fFillClusterArrays;
-    Bool_t                         fFillVertexTree;
-    
-    Bool_t                         fDo2012LepTag;
-
-    TString                        fPhFixDataFile;
-    PhotonFix                      fPhfixph;
-    PhotonFix                      fPhfixele;
-    
-    Double_t                       fBeamspotWidth;
-
-    // --------------------------------
-    // validation Tuple
+    // ntuple Tuple
     TString                        fTupleName;
     MonoPhotonEvent*               fMonoPhotonEvent;
     TTree*                         hMonoPhotonTuple;
-
-    MVAMet                         fMVAMet;
-    JetIDMVA                       fJetId;
-    MVAVBF                         fMVAVBF;   
     
-    VertexTools           fVtxTools;
-
-    ElectronIDMVA                 *fElectronIDMVA;
-    TString                   fElectronMVAWeights_Subdet0Pt10To20;
-    TString                   fElectronMVAWeights_Subdet1Pt10To20;
-    TString                   fElectronMVAWeights_Subdet2Pt10To20;
-    TString                   fElectronMVAWeights_Subdet0Pt20ToInf;
-    TString                   fElectronMVAWeights_Subdet1Pt20ToInf;
-    TString                   fElectronMVAWeights_Subdet2Pt20ToInf;
-
-    RhoUtilities::RhoType    fTheRhoType;
-
     ClassDef(MonoPhotonTreeWriter, 1) // Photon identification module
       };
 }

@@ -25,93 +25,38 @@ ClassImp(mithep::MonoPhotonTreeWriter)
 MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) : 
   // Base Module...
   BaseMod                 (name,title),
-  // define all the Branches to load
-  fPhotonBranchName       (Names::gkPhotonBrn),
-  fPFPhotonName           ("PFPhotons"),
-  fElectronName           (Names::gkElectronBrn),
-  fGoodElectronName       (Names::gkElectronBrn),  
-  fConversionName         (Names::gkMvfConversionBrn),  
-  fPFConversionName              ("PFPhotonConversions"),  
-  fTrackBranchName        (Names::gkTrackBrn),
-  fPileUpDenName          (Names::gkPileupEnergyDensityBrn),
+
+  fMetName                ("PFMet"),
+  fPhotonsName            (Names::gkPhotonBrn),
+  fElectronsName          (Names::gkElectronBrn),
+  fMuonsName              (Names::gkMuonBrn),
+  fJetsName               (Names::gkPFJetBrn),
+
+  fSuperClustersName      ("PFSuperClusters"),
+  fTracksName             (Names::gkTrackBrn),
   fPVName                 (Names::gkPVBeamSpotBrn),
-  fBeamspotName           (Names::gkBeamSpotBrn),
-  fPFCandName             (Names::gkPFCandidatesBrn),
-  fPFNoPileUpName         ("PFNoPileUp"),
-  fPFPileUpName           ("PFPileUp"),
-  fMCParticleName         (Names::gkMCPartBrn),
-  fMCEventInfoName        (Names::gkMCEvtInfoBrn),
+  fPileUpDenName          (Names::gkPileupEnergyDensityBrn),
   fPileUpName             (Names::gkPileupInfoBrn),  
-  fSuperClusterName       ("PFSuperClusters"),
-  fPFMetName              ("PFMet"),
-  fPFJetName              (Names::gkPFJetBrn),
-  funcorrPFJetName        ("AKt5PFJets"),
-  fGenJetName             ("AKT5GenJets"),
-  fLeptonTagElectronsName ("HggLeptonTagElectrons"),
-  fLeptonTagMuonsName     ("HggLeptonTagMuons"),
+  fBeamspotName           (Names::gkBeamSpotBrn),
 
   fIsData                 (false),
   fPhotonsFromBranch      (kTRUE),  
+  fElectronsFromBranch    (kTRUE),  
+  fMuonsFromBranch        (kTRUE),  
   fPVFromBranch           (kTRUE),
-  fGoodElectronsFromBranch(kTRUE),
-  fPFJetsFromBranch       (kTRUE),
-  // ----------------------------------------
-  // flag for synchronization, adds vertex variables
-  // should be on for synching trees
-  fDoSynching             (kFALSE),
+  fJetsFromBranch         (kTRUE),
 
   // ----------------------------------------
   // collections....
   fPhotons                (0),
-  fPFPhotons              (0),
   fElectrons              (0),
-  fConversions            (0),
-  fPFConversions          (0),
   fTracks                 (0),
   fPileUpDen              (0),
   fPV                     (0),
   fBeamspot               (0),
-  fPFCands                (0),
-  fMCParticles            (0),
-  fMCEventInfo            (0),
   fPileUp                 (0),
   fSuperClusters          (0),
-  fPFJets                 (0),
-  fGenJets                (0),
-  funcorrPFJets           (0),
-
-  fLeptonTagElectrons     (0),
-  fLeptonTagMuons         (0),
-  fPFNoPileUpCands        (0),
-  fPFPileUpCands          (0),
-
-  fLoopOnGoodElectrons    (kFALSE),
-  fApplyElectronVeto      (kTRUE),  
-  fWriteSingleTree        (kTRUE),
-  fEnablePFPhotons        (kTRUE),
-  fExcludeSinglePrompt    (kFALSE),
-  fExcludeDoublePrompt    (kFALSE),
-  fEnableJets             (kFALSE),
-  fApplyJetId             (kFALSE),
-  fApplyLeptonTag         (kFALSE),
-  fApplyVBFTag            (kFALSE),
-  fApplyBTag              (kFALSE),
-  fApplyPFMetCorrections  (kFALSE),
-  fFillClusterArrays      (kFALSE),
-  fFillVertexTree         (kFALSE),
-  fDo2012LepTag           (kFALSE),
-  fPhFixDataFile          (gSystem->Getenv("CMSSW_BASE") +
-		           TString("/src/MitPhysics/data/PhotonFixSTART42V13.dat")),
-  fBeamspotWidth          (5.8),
-
-  fElectronIDMVA(0),
-  fElectronMVAWeights_Subdet0Pt10To20(""),
-  fElectronMVAWeights_Subdet1Pt10To20(""),
-  fElectronMVAWeights_Subdet2Pt10To20(""),
-  fElectronMVAWeights_Subdet0Pt20ToInf(""),
-  fElectronMVAWeights_Subdet1Pt20ToInf(""),
-  fElectronMVAWeights_Subdet2Pt20ToInf(""),
-  fTheRhoType(RhoUtilities::DEFAULT),
+  fJets                   (0),
 
   fTupleName              ("hMonoPhotonTree")
 
@@ -133,34 +78,21 @@ void MonoPhotonTreeWriter::Process()
   // }
   // ------------------------------------------------------------  
   // Process entries of the tree. 
-  LoadEventObject(fPhotonBranchName,   fPhotons);
-  LoadEventObject(fGoodElectronName,   fGoodElectrons);
+  LoadEventObject(fMetName,           fMet,            true);
+  LoadEventObject(fPhotonsName,       fPhotons,        fPhotonsFromBranch); 
+  LoadEventObject(fElectronsName,     fElectrons,      fElectronsFromBranch);
+  LoadEventObject(fMuonsName,         fMuons,          fMuonsFromBranch);
+  LoadEventObject(fJetsName,          fJets,           fJetsFromBranch);
 
-  // lepton tag collections
-  if( fApplyLeptonTag ) {
-    LoadEventObject(fLeptonTagElectronsName, fLeptonTagElectrons);
-    LoadEventObject(fLeptonTagMuonsName,     fLeptonTagMuons);
-  }
+  LoadEventObject(fPVName,            fPV);    
+  LoadEventObject(fBeamspotName,      fBeamspot);
   
-  if (fEnablePFPhotons) LoadEventObject(fPFPhotonName,   fPFPhotons);
-  LoadEventObject(fElectronName,       fElectrons);
-  LoadEventObject(fConversionName,     fConversions);
-  if ( fDoSynching ) LoadEventObject(fPFConversionName,     fPFConversions);
-  LoadEventObject(fTrackBranchName,    fTracks);
-  LoadEventObject(fPileUpDenName,      fPileUpDen);
-  LoadEventObject(fPVName,             fPV);    
-  LoadEventObject(fBeamspotName,       fBeamspot);
-  LoadEventObject(fPFCandName,         fPFCands);
-  LoadEventObject(fSuperClusterName,   fSuperClusters);
-  LoadEventObject(fPFMetName,          fPFMet);  
-//   LoadEventObject(fPFNoPileUpName,     fPFNoPileUpCands);
-//   LoadEventObject(fPFPileUpName,     fPFPileUpCands);
+  LoadEventObject(fSuperClustersName, fSuperClusters);
+  LoadEventObject(fTracksName,        fTracks,        true);
 
-  if (fEnableJets){
-    LoadEventObject(fPFJetName,        fPFJets);  
-    //LoadEventObject(funcorrPFJetName,  funcorrPFJets);
-    LoadBranch(funcorrPFJetName);
-    //   if(!fIsData) LoadEventObject(fGenJetName,        fGenJets);
+  LoadEventObject(fPileUpDenName,     fPileUpDen,    true);
+  if (!fIsData) {
+    ReqBranch(fPileUpName,            fPileUp);
   }
 
   // ------------------------------------------------------------  
@@ -170,12 +102,8 @@ void MonoPhotonTreeWriter::Process()
   Int_t _numPUplus  = -1.;        // some sensible default values....
       
   if( !fIsData ) {
-    LoadBranch(fMCParticleName);
-    LoadBranch(fMCEventInfoName);
-    LoadBranch(fPileUpName);
-    if (fEnableJets) LoadEventObject(fGenJetName,        fGenJets);
-  }  else fGenJets = NULL;
-  
+  LoadBranch(fPileUpName);
+  } 
   if( !fIsData ) {
     for (UInt_t i=0; i<fPileUp->GetEntries(); ++i) {
       const PileupInfo *puinfo = fPileUp->At(i);
@@ -199,17 +127,16 @@ void MonoPhotonTreeWriter::Process()
   fMonoPhotonEvent->evt = GetEventHeader()->EvtNum();
   fMonoPhotonEvent->run = GetEventHeader()->RunNum();
   fMonoPhotonEvent->lumi = GetEventHeader()->LumiSec();
-  fMonoPhotonEvent->nobj = fPhotons->GetEntries();
-  fMonoPhotonEvent->pfmet = fPFMet->At(0)->Pt();
-  fMonoPhotonEvent->pfmetphi = fPFMet->At(0)->Phi();
-  fMonoPhotonEvent->pfmetx = fPFMet->At(0)->Px();
-  fMonoPhotonEvent->pfmety = fPFMet->At(0)->Py();
+  fMonoPhotonEvent->pfmet = fMet->At(0)->Pt();
+  fMonoPhotonEvent->pfmetphi = fMet->At(0)->Phi();
+  fMonoPhotonEvent->pfmetx = fMet->At(0)->Px();
+  fMonoPhotonEvent->pfmety = fMet->At(0)->Py();
   
   //JETS  
-  fMonoPhotonEvent->nJets = fPFJets->GetEntries();
+  fMonoPhotonEvent->nJets = fJets->GetEntries();
   for ( int arrayIndex=0; arrayIndex<fMonoPhotonEvent->kMaxJet; arrayIndex++ ) {
-	  if ( fPFJets->GetEntries() > 0 && arrayIndex < (int) fPFJets->GetEntries() ) {
-		  const Jet *jet = fPFJets->At(arrayIndex);
+	  if ( fJets->GetEntries() > 0 && arrayIndex < (int) fJets->GetEntries() ) {
+		  const Jet *jet = fJets->At(arrayIndex);
 		  //kin
 		  fMonoPhotonEvent->a_jetE[arrayIndex] = jet->E();
 		  fMonoPhotonEvent->a_jetPt[arrayIndex] = jet->Pt();
@@ -273,6 +200,46 @@ void MonoPhotonTreeWriter::Process()
 		  fMonoPhotonEvent->a_photonHadOverEm[arrayIndex] = -1;
 	  }
   }
+
+  //ELECTRONS  
+  fMonoPhotonEvent->nElectrons = fElectrons->GetEntries();
+  for ( int arrayIndex=0; arrayIndex<fMonoPhotonEvent->kMaxEle; arrayIndex++ ) {
+	  if ( fElectrons->GetEntries() > 0 && arrayIndex < (int) fElectrons->GetEntries() ) {
+		  const Electron *ele = fElectrons->At(arrayIndex);
+		  //kin
+		  fMonoPhotonEvent->a_eleE[arrayIndex] = ele->E();
+		  fMonoPhotonEvent->a_elePt[arrayIndex] = ele->Pt();
+		  fMonoPhotonEvent->a_eleEta[arrayIndex] = ele->Eta();
+		  fMonoPhotonEvent->a_elePhi[arrayIndex] = ele->Phi();
+	  }
+	  else {
+		  //kin
+		  fMonoPhotonEvent->a_eleE[arrayIndex] = -1;
+		  fMonoPhotonEvent->a_elePt[arrayIndex] = -1;
+		  fMonoPhotonEvent->a_eleEta[arrayIndex] = -100;
+		  fMonoPhotonEvent->a_elePhi[arrayIndex] = -100;
+	  }
+  }
+
+  //ELECTRONS  
+  fMonoPhotonEvent->nMuons = fMuons->GetEntries();
+  for ( int arrayIndex=0; arrayIndex<fMonoPhotonEvent->kMaxMu; arrayIndex++ ) {
+	  if ( fMuons->GetEntries() > 0 && arrayIndex < (int) fMuons->GetEntries() ) {
+		  const Muon *mu = fMuons->At(arrayIndex);
+		  //kin
+		  fMonoPhotonEvent->a_muE[arrayIndex] = mu->E();
+		  fMonoPhotonEvent->a_muPt[arrayIndex] = mu->Pt();
+		  fMonoPhotonEvent->a_muEta[arrayIndex] = mu->Eta();
+		  fMonoPhotonEvent->a_muPhi[arrayIndex] = mu->Phi();
+	  }
+	  else {
+		  //kin
+		  fMonoPhotonEvent->a_muE[arrayIndex] = -1;
+		  fMonoPhotonEvent->a_muPt[arrayIndex] = -1;
+		  fMonoPhotonEvent->a_muEta[arrayIndex] = -100;
+		  fMonoPhotonEvent->a_muPhi[arrayIndex] = -100;
+	  }
+  }
   
   hMonoPhotonTuple -> Fill();
   
@@ -284,99 +251,28 @@ void MonoPhotonTreeWriter::SlaveBegin()
 {
   // Run startup code on the computer (slave) doing the actual analysis. Here,
   // we just request the photon collection branch.
+  ReqEventObject(fMetName,           fMet,            true);
+  ReqEventObject(fPhotonsName,       fPhotons,        fPhotonsFromBranch); 
+  ReqEventObject(fElectronsName,     fElectrons,      fElectronsFromBranch);
+  ReqEventObject(fMuonsName,         fMuons,          fMuonsFromBranch);
+  ReqEventObject(fJetsName,          fJets,           fJetsFromBranch);
 
-  if( fApplyLeptonTag ) {
-    ReqEventObject(fLeptonTagElectronsName,    fLeptonTagElectrons,    false);  
-    ReqEventObject(fLeptonTagMuonsName,        fLeptonTagMuons,        false);  
-  }
+  ReqEventObject(fSuperClustersName,  fSuperClusters, true);
+  ReqEventObject(fTracksName,         fTracks,        true);
 
-//   ReqEventObject(fPFNoPileUpName,     fPFNoPileUpCands,    false);
-//   ReqEventObject(fPFPileUpName,     fPFPileUpCands,    false);
+  ReqEventObject(fPVName,             fPV,            fPVFromBranch);    
+  ReqEventObject(fBeamspotName,       fBeamspot,      true);
+  
 
-  ReqEventObject(fPhotonBranchName,fPhotons,      fPhotonsFromBranch);
-  if (fEnablePFPhotons) ReqEventObject(fPFPhotonName,fPFPhotons,      true);
-  ReqEventObject(fTrackBranchName, fTracks,       true);
-  ReqEventObject(fElectronName,    fElectrons,    true);  
-  ReqEventObject(fGoodElectronName,fGoodElectrons,fGoodElectronsFromBranch);  
+
   ReqEventObject(fPileUpDenName,   fPileUpDen,    true);
-  ReqEventObject(fPVName,          fPV,           fPVFromBranch);
-  ReqEventObject(fConversionName,  fConversions,  true);
-  if ( fDoSynching ) ReqEventObject(fPFConversionName,     fPFConversions,  true);
-  ReqEventObject(fBeamspotName,    fBeamspot,     true);
-  ReqEventObject(fPFCandName,      fPFCands,      true);
-  ReqEventObject(fSuperClusterName,fSuperClusters,true);
-  ReqEventObject(fPFMetName,       fPFMet,        true);
-  if (fEnableJets){
-    ReqEventObject(fPFJetName,       fPFJets,       fPFJetsFromBranch);
-    ReqBranch(funcorrPFJetName, funcorrPFJets);
-    //   if (!fIsData) ReqEventObject(fGenJetName, fGenJets, true);
-  }
   if (!fIsData) {
     ReqBranch(fPileUpName,         fPileUp);
-    ReqBranch(fMCParticleName,     fMCParticles);
-    ReqBranch(fMCEventInfoName,    fMCEventInfo);
-    if (fEnableJets) ReqEventObject(fGenJetName, fGenJets, true);
   }
-  if (fIsData) {
-    fPhFixDataFile = gSystem->Getenv("CMSSW_BASE") +
-      TString("/src/MitPhysics/data/PhotonFixGRPV22.dat");
-  }
-  else {
-    fPhFixDataFile = gSystem->Getenv("CMSSW_BASE") +
-      TString("/src/MitPhysics/data/PhotonFixSTART42V13.dat");
-  }
-
-  fPhfixph.initialise("4_2",std::string(fPhFixDataFile));
-  fPhfixele.initialise("4_2e",std::string(fPhFixDataFile));
-  
-//   fMVAMet.Initialize(TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/mva_JetID_lowpt.weights.xml"))),
-//                       TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/mva_JetID_highpt.weights.xml"))),
-//                       TString(getenv("CMSSW_BASE")+string("/src/MitPhysics/Utils/python/JetIdParams_cfi.py")),
-//                       TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/gbrmet_42.root"))),
-//                       TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/gbrmetphi_42.root"))),
-//                       TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/gbrmetu1_42.root"))),
-//                       TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/gbrmetu2_42.root")))
-//                       );  
-  
-  fMVAMet.Initialize(TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/mva_JetID_lowpt.weights.xml"))),
-                      TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/mva_JetID_highpt.weights.xml"))),
-                      TString(getenv("CMSSW_BASE")+string("/src/MitPhysics/Utils/python/JetIdParams_cfi.py")),
-                      TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/gbrmet_52.root"))),
-                      TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/gbrmetphi_52.root"))),
-                      TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/gbrmetu1cov_52.root"))),
-                      TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/gbrmetu2cov_52.root")))
-                      );                      
-                 
-  fJetId.Initialize(JetIDMVA::kMedium,
-                          TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/mva_JetID_lowpt.weights.xml"))),
-                          TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/mva_JetID_highpt.weights.xml"))),
-                          JetIDMVA::kCut,
-                          TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/Utils/python/JetIdParams_cfi.py")))
-
-                          );
-
-  fMVAVBF.InitializeMVA();
-                      
-
-  if( fDoSynching ) {
-    fVtxTools.InitP(2);
-    fElectronIDMVA = new ElectronIDMVA();
-    fElectronIDMVA->Initialize("BDTG method",
-                               fElectronMVAWeights_Subdet0Pt10To20,
-                               fElectronMVAWeights_Subdet1Pt10To20,
-                               fElectronMVAWeights_Subdet2Pt10To20,
-                               fElectronMVAWeights_Subdet0Pt20ToInf,
-                               fElectronMVAWeights_Subdet1Pt20ToInf,
-                               fElectronMVAWeights_Subdet2Pt20ToInf,
-                               ElectronIDMVA::kIDEGamma2012NonTrigV1,
-			       fTheRhoType);
-  }
-
 
   fMonoPhotonEvent = new MonoPhotonEvent;
   
   TFile *ftmp = TFile::Open(TString::Format("%s_tmp.root",GetName()),"RECREATE");
-  
   hMonoPhotonTuple = new TTree(fTupleName.Data(),fTupleName.Data());
     
   //make flattish tree from classes so we don't have to rely on dictionaries for reading later

@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.6 2013/06/21 15:37:04 ceballos Exp $
+// $Id: runMonoPhoton.C,v 1.7 2013/06/21 22:10:17 dimatteo Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -305,26 +305,23 @@ void runMonoPhoton(const char *fileset    = "0000",
   // select events with photon+MET
   //------------------------------------------------------------------------------------------------
   MonoPhotonAnalysisMod         *phplusmet = new MonoPhotonAnalysisMod("MonoPhotonSelector");
-  // phplusmet->SetPhotonsName(phoIDMod->GetOutputName()); //identified photons
-  phplusmet->SetPhotonsFromBranch(kTRUE);
+  phplusmet->SetInputPhotonsName(photonCleaningMod->GetOutputName()); //identified photons
+  phplusmet->SetPhotonsFromBranch(kFALSE);
   phplusmet->SetMinNumPhotons(1);
   phplusmet->SetMinPhotonEt(100);
   phplusmet->SetMaxPhotonEta(2.4);
   phplusmet->SetMinMetEt(100);
 
   MonoPhotonTreeWriter *phplusmettree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter");
-  phplusmettree->SetPhotonsFromBranch(kTRUE);
-  phplusmettree->SetEnableJets(kTRUE);
-  //phplusmettree->SetApplyJetId(kTRUE);
-  phplusmettree->SetPFJetsFromBranch(kFALSE);
-  phplusmettree->SetPFJetName(jetCorr->GetOutputName());
+  phplusmettree->SetPhotonsFromBranch(kFALSE);
+  phplusmettree->SetPhotonsName(photonCleaningMod->GetOutputName());
+  phplusmettree->SetElectronsFromBranch(kFALSE);
+  phplusmettree->SetElectronsName(electronCleaning->GetOutputName());
+  phplusmettree->SetMuonsFromBranch(kFALSE);
+  phplusmettree->SetMuonsName(muonIdMod->GetOutputName());
+  phplusmettree->SetJetsFromBranch(kFALSE);
+  phplusmettree->SetJetsName(theJetCleaning->GetOutputName());
   phplusmettree->SetIsData(isData);
-  phplusmettree->SetApplyLeptonTag(kTRUE);
-  phplusmettree->SetLeptonTagElectronsName("HggLeptonTagElectrons");
-  phplusmettree->SetLeptonTagMuonsName("HggLeptonTagMuons");
-  phplusmettree->SetApplyVBFTag(kTRUE);
-  phplusmettree->SetApplyPFMetCorr(kTRUE);
-  phplusmettree->SetBeamspotWidth(5.0);
 
   //------------------------------------------------------------------------------------------------
   // making analysis chain
