@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.9 2013/06/22 08:12:13 ceballos Exp $
+// $Id: runMonoPhoton.C,v 1.10 2013/06/22 08:21:18 ceballos Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -208,7 +208,10 @@ void runMonoPhoton(const char *fileset    = "0000",
   // Photon Regression + ID 
   //-----------------------------------
   PhotonMvaMod *photreg = new PhotonMvaMod;
+  photreg->SetRegressionVersion(3);
+  photreg->SetRegressionWeights(std::string((gSystem->Getenv("CMSSW_BASE") + TString("/src/MitPhysics/data/gbrv3ph_52x.root")).Data()));
   photreg->SetOutputName("GoodPhotonsRegr");
+  photreg->SetApplyShowerRescaling(kTRUE);
   photreg->SetIsData(isData);
 
   PhotonIDMod *photonIDMod = new PhotonIDMod;
