@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.7 2013/06/21 22:10:17 dimatteo Exp $
+// $Id: runMonoPhoton.C,v 1.8 2013/06/22 01:16:13 dimatteo Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -211,7 +211,6 @@ void runMonoPhoton(const char *fileset    = "0000",
   photreg->SetOutputName("GoodPhotonsRegr");
   photreg->SetIsData(isData);
 
-
   PhotonIDMod *photonIDMod = new PhotonIDMod;
   photonIDMod->SetPtMin(20.0);
   photonIDMod->SetOutputName("GoodPhotons");
@@ -223,9 +222,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   photonIDMod->SetApplyFiduciality(kTRUE);       
   photonIDMod->SetIsData(isData);
   photonIDMod->SetPhotonsFromBranch(kFALSE);
-  photonIDMod->SetInputName(photreg->GetOutputName());//get the photon with regression energy
-  
-  
+  photonIDMod->SetInputName(photreg->GetOutputName());
+  //get the photon with regression energy  
   photonIDMod->DoMCSmear(kTRUE);
   photonIDMod->DoDataEneCorr(kTRUE);
   //------------------------------------------Energy smear and scale--------------------------------------------------------------
