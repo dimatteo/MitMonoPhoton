@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.8 2013/06/22 01:16:13 dimatteo Exp $
+// $Id: runMonoPhoton.C,v 1.9 2013/06/22 08:12:13 ceballos Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -120,11 +120,11 @@ void runMonoPhoton(const char *fileset    = "0000",
   //------------------------------------------------------------------------------------------------
   // Run2012
   //------------------------------------------------------------------------------------------------
-  hltModP->AddTrigger("HLT_Photon135_v*",190456,999999); 
-  hltModP->AddTrigger("HLT_Photon150_v*",190456,999999); 
-  hltModP->AddTrigger("HLT_Photon160_v*",190456,999999); 
+  hltModP->AddTrigger("HLT_Photon135_v*",0,999999); 
+  hltModP->AddTrigger("HLT_Photon150_v*",0,999999); 
+  hltModP->AddTrigger("HLT_Photon160_v*",0,999999); 
   // Eventual OR with Pho+X
-  //hltModP->AddTrigger("HLT_Photon70_CaloIdXL_PFMET100*",190456,999999); 
+  //hltModP->AddTrigger("HLT_Photon70_CaloIdXL_PFMET100*",0,999999); 
     
   hltModP->SetTrigObjsName("MyHltPhotObjs");
   hltModP->SetAbortIfNotAccepted(isData);
