@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.10 2013/06/22 08:21:18 ceballos Exp $
+// $Id: runMonoPhoton.C,v 1.11 2013/06/22 16:57:33 ceballos Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -322,6 +322,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   phplusmettree->SetMuonsName(muonIdMod->GetOutputName());
   phplusmettree->SetJetsFromBranch(kFALSE);
   phplusmettree->SetJetsName(theJetCleaning->GetOutputName());
+  phplusmettree->SetPVFromBranch(kFALSE);
+  phplusmettree->SetPVName(goodPVFilterMod->GetOutputName());
   phplusmettree->SetIsData(isData);
 
   //------------------------------------------------------------------------------------------------

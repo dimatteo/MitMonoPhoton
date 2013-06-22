@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------------------------
-// $Id: MonoPhotonTreeWriter.h,v 1.4 2013/06/21 03:20:30 dimatteo Exp $
+// $Id: MonoPhotonTreeWriter.h,v 1.5 2013/06/22 01:16:12 dimatteo Exp $
 //
 // MonoPhotonTreeWriter
 //
@@ -47,8 +47,8 @@ namespace mithep
   {
     public:  
       // ------------ PHOTON STUFF -------------------
-      static const Int_t kMaxPh = 10;
-	  Int_t   nPhotons;
+      static const Int_t kMaxPh = 5;
+      Int_t   nPhotons;
       //kin
       Float_t a_photonE[kMaxPh];
       Float_t a_photonEt[kMaxPh];
@@ -77,9 +77,9 @@ namespace mithep
       Float_t vtxY;      
       Float_t vtxZ;
       Int_t   nVtx;
-      Int_t   numPU;
-      Int_t   numPUminus;
-      Int_t   numPUplus;
+      Float_t numPU;
+      Float_t numPUminus;
+      Float_t numPUplus;
       UInt_t  evt;
       UInt_t  run;
       UInt_t  lumi;
@@ -88,12 +88,12 @@ namespace mithep
       // ------------ MET STUFF -------------------
       Float_t pfmet;
       Float_t pfmetphi;
-      Float_t pfmetx;
-      Float_t pfmety;
+      Float_t pfmetSig;
+      Float_t pfSumEt;
 
       // ------------ JET STUFF -------------------
-      static const Int_t kMaxJet = 10;
-	  Int_t   nJets;
+      static const Int_t kMaxJet = 5;
+      Int_t   nJets;
       Float_t a_jetE[kMaxJet];
       Float_t a_jetPt[kMaxJet];
       Float_t a_jetEta[kMaxJet];
@@ -101,20 +101,27 @@ namespace mithep
       Float_t a_jetMass[kMaxJet];
 
       // ------------ ELECTRON STUFF -------------------
-      static const Int_t kMaxEle = 10;
-	  Int_t   nElectrons;
+      static const Int_t kMaxEle = 2;
+      Int_t   nElectrons;
       Float_t a_eleE[kMaxEle];
       Float_t a_elePt[kMaxEle];
       Float_t a_eleEta[kMaxEle];
       Float_t a_elePhi[kMaxEle];
 
       // ------------ MUON STUFF -------------------
-      static const Int_t kMaxMu = 10;
-	  Int_t   nMuons;
+      static const Int_t kMaxMu = 2;
+      Int_t   nMuons;
       Float_t a_muE[kMaxMu];
       Float_t a_muPt[kMaxMu];
       Float_t a_muEta[kMaxMu];
       Float_t a_muPhi[kMaxMu];
+
+      // ------------ Tracks STUFF -------------------
+      static const Int_t kMaxTrack = 5;
+      Int_t   nTracks;
+      Float_t a_trkPt[kMaxTrack];
+      Float_t a_trkEta[kMaxTrack];
+      Float_t a_trkPhi[kMaxTrack];
 
   };
   
@@ -123,7 +130,7 @@ namespace mithep
   {
   public:
     MonoPhotonTreeWriter(const char *name ="MonoPhotonTreeWriter", 
-		       const char *title="Selecting PhotonPairs");
+		         const char *title="Selecting PhotonPairs");
     
     ~MonoPhotonTreeWriter();
 
@@ -147,16 +154,15 @@ namespace mithep
 
     // is Data Or Not?
     void                SetIsData (Bool_t b)              { fIsData = b; };
-    
 
     void                SetTupleName(const char* c)          { fTupleName = c; }
 
-    
   protected:
     void                Process();
     void                SlaveBegin();
+    void                SlaveTerminate();
     // Private auxiliary methods...
-    // Names for the input Collections
+    // Names of the input Collections
     TString             fMetName;
     TString             fPhotonsName;
     TString             fElectronsName;
@@ -166,14 +172,14 @@ namespace mithep
     TString             fSuperClustersName;
     TString             fTracksName;
     TString             fPVName;
-    TString             fPileUpName;
     TString             fPileUpDenName;    
+    TString             fPileUpName;
     TString             fBeamspotName;
     
     // is it Data or MC?
     Bool_t              fIsData;
     
-    // in case there's some PV pre-selection
+    // there are not some PV pre-selection?
     Bool_t              fPhotonsFromBranch;
     Bool_t              fElectronsFromBranch;
     Bool_t              fMuonsFromBranch;
@@ -186,12 +192,12 @@ namespace mithep
     const MuonCol                 *fMuons;
     const JetCol                  *fJets;
 
-    const SuperClusterCol         *fSuperClusters;   
     const TrackCol                *fTracks;
     const VertexCol               *fPV;
+    const BeamSpotCol             *fBeamspot;
     const PileupInfoCol           *fPileUp;    
     const PileupEnergyDensityCol  *fPileUpDen;
-    const BeamSpotCol             *fBeamspot;
+    const SuperClusterCol         *fSuperClusters;   
     
     // --------------------------------
     // ntuple Tuple
@@ -199,6 +205,8 @@ namespace mithep
     MonoPhotonEvent*               fMonoPhotonEvent;
     TTree*                         hMonoPhotonTuple;
     
+    Int_t                          fNEventsSelected;
+
     ClassDef(MonoPhotonTreeWriter, 1) // Photon identification module
       };
 }
