@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------------------------
-// $Id: MonoPhotonTreeWriter.h,v 1.6 2013/06/22 20:58:23 ceballos Exp $
+// $Id: MonoPhotonTreeWriter.h,v 1.7 2013/06/23 14:31:17 ceballos Exp $
 //
 // MonoPhotonTreeWriter
 //
@@ -72,10 +72,10 @@ namespace mithep
     void                SetPUInfoName(const char *n)      { fPileUpName = n;             }
     void                SetBeamspotName(const char *n)    { fBeamspotName = n;           }
 
-    // is Data Or Not?
-    void                SetIsData (Bool_t b)              { fIsData = b; };
+    void                SetIsData (Bool_t b)              { fIsData = b;                 }
 
-    void                SetTupleName(const char* c)          { fTupleName = c; }
+    void                SetProcessID(Int_t n)             { fDecay = n;                  }
+    void                SetTupleName(const char* c)       { fTupleName = c;              }
 
   protected:
     void                Process();
@@ -123,7 +123,8 @@ namespace mithep
     const SuperClusterCol         *fSuperClusters;   
     
     // --------------------------------
-    TFile	                   *fOutputFile;
+    Int_t                          fDecay;
+    TFile	                  *fOutputFile;
     TString	                   fTupleName;
     MitGPTree                      fMitGPTree;
 

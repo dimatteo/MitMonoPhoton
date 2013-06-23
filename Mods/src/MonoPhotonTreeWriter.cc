@@ -60,6 +60,7 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fPileUpDen              (0),
   fSuperClusters          (0),
 
+  fDecay(0),
   fOutputFile(0),
   fTupleName("hMonoPhotonTree"),
 
@@ -121,7 +122,9 @@ void MonoPhotonTreeWriter::Process()
   fMitGPTree.event_ = GetEventHeader()->EvtNum();
   fMitGPTree.nvtx_  = fPV->GetEntries();
   fMitGPTree.scale1fb_ = 1000.0;
-  fMitGPTree.dstype_ = MitGPTree::other;
+  
+  if(fDecay == 0) fMitGPTree.dstype_ = MitGPTree::data;
+  else            fMitGPTree.dstype_ = MitGPTree::other;
 
   fMitGPTree.met_    = fMet->At(0)->Pt();
   fMitGPTree.metPhi_ = fMet->At(0)->Phi();

@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.12 2013/06/22 20:58:23 ceballos Exp $
+// $Id: runMonoPhoton.C,v 1.13 2013/06/23 14:31:17 ceballos Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -345,8 +345,9 @@ void runMonoPhoton(const char *fileset    = "0000",
   phplusmettree->SetPVFromBranch(kFALSE);
   phplusmettree->SetPVName(goodPVFilterMod->GetOutputName());
   phplusmettree->SetLeptonsName(merger->GetOutputName());
-  phplusmettree->SetTupleName(tupleName);
   phplusmettree->SetIsData(isData);
+  phplusmettree->SetProcessID(0);
+  phplusmettree->SetTupleName(tupleName);
 
   //------------------------------------------------------------------------------------------------
   // making analysis chain
