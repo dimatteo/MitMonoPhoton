@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.11 2013/06/22 16:57:33 ceballos Exp $
+// $Id: runMonoPhoton.C,v 1.12 2013/06/22 20:58:23 ceballos Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -128,6 +128,21 @@ void runMonoPhoton(const char *fileset    = "0000",
     
   hltModP->SetTrigObjsName("MyHltPhotObjs");
   hltModP->SetAbortIfNotAccepted(isData);
+  if(isData == kFALSE){ // ugly, but it works
+    hltModP->AddTrigger("HLT_Mu15_v9");
+    hltModP->AddTrigger("!HLT_Mu15_v9");
+    hltModP->AddTrigger("HLT_Mu15_v2");
+    hltModP->AddTrigger("!HLT_Mu15_v2");
+    hltModP->AddTrigger("HLT_Mu9");
+    hltModP->AddTrigger("!HLT_Mu9");
+    hltModP->AddTrigger("HLT_Mu12_v13");
+    hltModP->AddTrigger("!HLT_Mu12_v13");
+    hltModP->AddTrigger("HLT_Mu12_v14");
+    hltModP->AddTrigger("!HLT_Mu12_v14");
+    hltModP->AddTrigger("HLT_Mu12_v16");
+    hltModP->AddTrigger("!HLT_Mu12_v16");
+  }
+
   //------------------------------------------------------------------------------------------------
   // split pfcandidates to PFPU and PFnoPU
   //------------------------------------------------------------------------------------------------
@@ -313,6 +328,11 @@ void runMonoPhoton(const char *fileset    = "0000",
   phplusmet->SetMaxPhotonEta(2.4);
   phplusmet->SetMinMetEt(100);
 
+  TString tupleName = TString(outputName);
+  tupleName += TString("_") + TString(dataset) + TString("_") + TString(skim);
+  if (TString(fileset) != TString("")) tupleName += TString("_") + TString(fileset);
+  tupleName += TString("_tree.root");
+
   MonoPhotonTreeWriter *phplusmettree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter");
   phplusmettree->SetPhotonsFromBranch(kFALSE);
   phplusmettree->SetPhotonsName(photonCleaningMod->GetOutputName());
@@ -324,6 +344,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   phplusmettree->SetJetsName(theJetCleaning->GetOutputName());
   phplusmettree->SetPVFromBranch(kFALSE);
   phplusmettree->SetPVName(goodPVFilterMod->GetOutputName());
+  phplusmettree->SetLeptonsName(merger->GetOutputName());
+  phplusmettree->SetTupleName(tupleName);
   phplusmettree->SetIsData(isData);
 
   //------------------------------------------------------------------------------------------------

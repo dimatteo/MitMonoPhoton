@@ -1,4 +1,4 @@
-// $Id: MitPhysicsModsLinkDef.h,v 1.38 2012/11/14 20:05:37 sixie Exp $
+// $Id: MitMonoPhotonModsLinkDef.h,v 1.1 2013/05/31 18:20:56 dimatteo Exp $
 
 #ifndef MITMONOPHOTON_MODS_LINKDEF_H
 #define MITMONOPHOTON_MODS_LINKDEF_H
@@ -14,5 +14,4 @@
 #pragma link C++ namespace mithep;
 
 #pragma link C++ class mithep::MonoPhotonTreeWriter+;
-#pragma link C++ class mithep::MonoPhotonEvent+;
 #endif

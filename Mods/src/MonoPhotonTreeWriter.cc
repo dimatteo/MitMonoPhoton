@@ -1,8 +1,7 @@
 #include "MitMonoPhoton/Mods/interface/MonoPhotonTreeWriter.h"
 #include "MitAna/DataTree/interface/PhotonCol.h"
 #include "MitAna/DataTree/interface/PFCandidateCol.h"
-#include "MitAna/DataTree/interface/StableData.h"
-#include "MitAna/DataTree/interface/StableParticle.h"
+#include "MitAna/DataTree/interface/GenericParticle.h"
 #include "MitAna/DataTree/interface/PFMet.h"
 #include "MitPhysics/Init/interface/ModNames.h"
 #include "MitPhysics/Utils/interface/IsolationTools.h"
@@ -31,6 +30,7 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fElectronsName          (Names::gkElectronBrn),
   fMuonsName              (Names::gkMuonBrn),
   fJetsName               (Names::gkPFJetBrn),
+  fLeptonsName            (ModNames::gkMergedLeptonsName),
 
   fSuperClustersName      ("PFSuperClusters"),
   fTracksName             (Names::gkTrackBrn),
@@ -38,6 +38,7 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fPileUpDenName          (Names::gkPileupEnergyDensityBrn),
   fPileUpName             (Names::gkPileupInfoBrn),  
   fBeamspotName           (Names::gkBeamSpotBrn),
+  fMCEvInfoName           (Names::gkMCEvtInfoBrn),
 
   fIsData                 (false),
   fPhotonsFromBranch      (kTRUE),  
@@ -54,11 +55,13 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fTracks                 (0),
   fPV                     (0),
   fBeamspot               (0),
+  fMCEventInfo            (0),
   fPileUp                 (0),
   fPileUpDen              (0),
   fSuperClusters          (0),
 
-  fTupleName              ("hMonoPhotonTree"),
+  fOutputFile(0),
+  fTupleName("hMonoPhotonTree"),
 
   fNEventsSelected(0)
 
@@ -75,9 +78,6 @@ MonoPhotonTreeWriter::~MonoPhotonTreeWriter()
 void MonoPhotonTreeWriter::Process()
 {
 
-  //if(GetEventHeader()->EvtNum()==9008 || GetEventHeader()->EvtNum()==9008 || GetEventHeader()->EvtNum()==9010){
-  //  printf("check MonoPhotonTreeWriter 0\n");
-  // }
   // ------------------------------------------------------------  
   // Process entries of the tree. 
   LoadEventObject(fMetName,           fMet,           true);
@@ -96,14 +96,12 @@ void MonoPhotonTreeWriter::Process()
   if (!fIsData) {
     ReqBranch(fPileUpName,            fPileUp);
   }
+  ParticleOArr *leptons = GetObjThisEvt<ParticleOArr>(ModNames::gkMergedLeptonsName);
 
   fNEventsSelected++;
 
   // ------------------------------------------------------------  
   // load event based information
-  Float_t _numPU      = -1.;
-  Float_t _numPUminus = -1.;
-  Float_t _numPUplus  = -1.;
       
   if( !fIsData ) {
   LoadBranch(fPileUpName);
@@ -111,169 +109,186 @@ void MonoPhotonTreeWriter::Process()
   if( !fIsData ) {
     for (UInt_t i=0; i<fPileUp->GetEntries(); ++i) {
       const PileupInfo *puinfo = fPileUp->At(i);
-      if (puinfo->GetBunchCrossing() ==  0) _numPU      = puinfo->GetPU_NumMean();
-      if (puinfo->GetBunchCrossing() ==  1) _numPUminus = puinfo->GetPU_NumInteractions();
-      if (puinfo->GetBunchCrossing() == -1) _numPUplus  = puinfo->GetPU_NumInteractions();
+      if (puinfo->GetBunchCrossing() ==  0) fMitGPTree.npu_	    = puinfo->GetPU_NumMean();
+      if (puinfo->GetBunchCrossing() ==  1) fMitGPTree.npuPlusOne_  = puinfo->GetPU_NumInteractions();
+      if (puinfo->GetBunchCrossing() == -1) fMitGPTree.npuMinusOne_ = puinfo->GetPU_NumInteractions();
     }
   }
+  fMitGPTree.InitVariables();
 
-  fMonoPhotonEvent->nVtx = fPV->GetEntries();
-  fMonoPhotonEvent->bsX = fBeamspot->At(0)->X();
-  fMonoPhotonEvent->bsY = fBeamspot->At(0)->Y();
-  fMonoPhotonEvent->bsZ = fBeamspot->At(0)->Z();
-  fMonoPhotonEvent->bsSigmaZ = fBeamspot->At(0)->SigmaZ();
-  fMonoPhotonEvent->vtxX = (fMonoPhotonEvent->nVtx>0) ? fPV->At(0)->X() : -99.;
-  fMonoPhotonEvent->vtxY = (fMonoPhotonEvent->nVtx>0) ? fPV->At(0)->Y() : -99.;  
-  fMonoPhotonEvent->vtxZ = (fMonoPhotonEvent->nVtx>0) ? fPV->At(0)->Z() : -99.;
-  fMonoPhotonEvent->numPU      = _numPU;
-  fMonoPhotonEvent->numPUminus = _numPUminus;
-  fMonoPhotonEvent->numPUplus  = _numPUplus;
-  fMonoPhotonEvent->evt  = GetEventHeader()->EvtNum();
-  fMonoPhotonEvent->run  = GetEventHeader()->RunNum();
-  fMonoPhotonEvent->lumi = GetEventHeader()->LumiSec();
-  fMonoPhotonEvent->pfmet    = fMet->At(0)->Pt();
-  fMonoPhotonEvent->pfmetphi = fMet->At(0)->Phi();
-  fMonoPhotonEvent->pfmetSig = fMet->At(0)->PFMetSig();
-  fMonoPhotonEvent->pfSumEt  = fMet->At(0)->SumEt();
-  
+  fMitGPTree.run_   = GetEventHeader()->RunNum();
+  fMitGPTree.lumi_  = GetEventHeader()->LumiSec();
+  fMitGPTree.event_ = GetEventHeader()->EvtNum();
+  fMitGPTree.nvtx_  = fPV->GetEntries();
+  fMitGPTree.scale1fb_ = 1000.0;
+  fMitGPTree.dstype_ = MitGPTree::other;
+
+  fMitGPTree.met_    = fMet->At(0)->Pt();
+  fMitGPTree.metPhi_ = fMet->At(0)->Phi();
+  fMitGPTree.sumEt_  = fMet->At(0)->SumEt();
+  fMitGPTree.metSig_ = fMet->At(0)->PFMetSig();
+
+  // LEPTONS
+  fMitGPTree.nlep_ = leptons->GetEntries();
+  if (leptons->GetEntries() >= 1) {
+    const Particle *lep = leptons->At(0);
+    fMitGPTree.lep1_ = lep->Mom();
+    if     (lep->ObjType() == kMuon    ) fMitGPTree.lid1_ = 13;
+    else if(lep->ObjType() == kElectron) fMitGPTree.lid1_ = 11;
+    else                                 assert(0);
+    if(lep->Charge() < 0) fMitGPTree.lid1_ = -1 * fMitGPTree.lid1_;
+  }
+  if (leptons->GetEntries() >= 2) {
+    Particle *lep = leptons->At(1);
+    fMitGPTree.lep2_ = lep->Mom();
+    if     (lep->ObjType() == kMuon    ) fMitGPTree.lid2_ = 13;
+    else if(lep->ObjType() == kElectron) fMitGPTree.lid2_ = 11;
+    else                                 assert(0);
+    if(lep->Charge() < 0) fMitGPTree.lid2_ = -1 * fMitGPTree.lid2_;
+  }
+  if (leptons->GetEntries() >= 3) {
+    Particle *lep = leptons->At(2);
+    fMitGPTree.lep3_ = lep->Mom();
+    if     (lep->ObjType() == kMuon    ) fMitGPTree.lid3_ = 13;
+    else if(lep->ObjType() == kElectron) fMitGPTree.lid3_ = 11;
+    else                                 assert(0);
+    if(lep->Charge() < 0) fMitGPTree.lid3_ = -1 * fMitGPTree.lid3_;
+  }
+
+  //PHOTONS  
+  fMitGPTree.nphotons_ = fPhotons->GetEntries();
+  if(fPhotons->GetEntries() >= 1) {
+    const Photon *photon = fPhotons->At(0);
+    fMitGPTree.pho1_			  = photon->Mom();
+    fMitGPTree.phoHCALisoDR03_a1_	  = photon->HcalTowerSumEtDr03();
+    fMitGPTree.phoECALisoDR03_a1_	  = photon->EcalRecHitIsoDr03();
+    fMitGPTree.phoHollowConeTKisoDR03_a1_ = photon->HollowConeTrkIsoDr03();
+    fMitGPTree.phoHCALisoDR04_a1_	  = photon->HcalTowerSumEtDr04();
+    fMitGPTree.phoECALisoDR04_a1_	  = photon->EcalRecHitIsoDr04();
+    fMitGPTree.phoHollowConeTKisoDR04_a1_ = photon->HollowConeTrkIsoDr04();
+    fMitGPTree.phoCoviEtaiEta_a1_	  = photon->CoviEtaiEta();
+    fMitGPTree.phoR9_a1_		  = photon->SCluster()->R9();
+    fMitGPTree.phoSeedTime_a1_  	  = photon->SCluster()->SeedTime();
+    fMitGPTree.phoHadOverEm_a1_ 	  = photon->HadOverEm();
+  }
+  if(fPhotons->GetEntries() >= 2) {
+    const Photon *photon = fPhotons->At(1);
+    fMitGPTree.pho2_			  = photon->Mom();
+    fMitGPTree.phoHCALisoDR03_a2_	  = photon->HcalTowerSumEtDr03();
+    fMitGPTree.phoECALisoDR03_a2_	  = photon->EcalRecHitIsoDr03();
+    fMitGPTree.phoHollowConeTKisoDR03_a2_ = photon->HollowConeTrkIsoDr03();
+    fMitGPTree.phoHCALisoDR04_a2_	  = photon->HcalTowerSumEtDr04();
+    fMitGPTree.phoECALisoDR04_a2_	  = photon->EcalRecHitIsoDr04();
+    fMitGPTree.phoHollowConeTKisoDR04_a2_ = photon->HollowConeTrkIsoDr04();
+    fMitGPTree.phoCoviEtaiEta_a2_	  = photon->CoviEtaiEta();
+    fMitGPTree.phoR9_a2_		  = photon->SCluster()->R9();
+    fMitGPTree.phoSeedTime_a2_  	  = photon->SCluster()->SeedTime();
+    fMitGPTree.phoHadOverEm_a2_ 	  = photon->HadOverEm();
+  }
+  if(fPhotons->GetEntries() >= 3) {
+    const Photon *photon = fPhotons->At(2);
+    fMitGPTree.pho3_			  = photon->Mom();
+    fMitGPTree.phoHCALisoDR03_a3_	  = photon->HcalTowerSumEtDr03();
+    fMitGPTree.phoECALisoDR03_a3_	  = photon->EcalRecHitIsoDr03();
+    fMitGPTree.phoHollowConeTKisoDR03_a3_ = photon->HollowConeTrkIsoDr03();
+    fMitGPTree.phoHCALisoDR04_a3_	  = photon->HcalTowerSumEtDr04();
+    fMitGPTree.phoECALisoDR04_a3_	  = photon->EcalRecHitIsoDr04();
+    fMitGPTree.phoHollowConeTKisoDR04_a3_ = photon->HollowConeTrkIsoDr04();
+    fMitGPTree.phoCoviEtaiEta_a3_	  = photon->CoviEtaiEta();
+    fMitGPTree.phoR9_a3_		  = photon->SCluster()->R9();
+    fMitGPTree.phoSeedTime_a3_  	  = photon->SCluster()->SeedTime();
+    fMitGPTree.phoHadOverEm_a3_ 	  = photon->HadOverEm();
+  }
+  if(fPhotons->GetEntries() >= 4) {
+    const Photon *photon = fPhotons->At(3);
+    fMitGPTree.pho4_			  = photon->Mom();
+    fMitGPTree.phoHCALisoDR03_a4_	  = photon->HcalTowerSumEtDr03();
+    fMitGPTree.phoECALisoDR03_a4_	  = photon->EcalRecHitIsoDr03();
+    fMitGPTree.phoHollowConeTKisoDR03_a4_ = photon->HollowConeTrkIsoDr03();
+    fMitGPTree.phoHCALisoDR04_a4_	  = photon->HcalTowerSumEtDr04();
+    fMitGPTree.phoECALisoDR04_a4_	  = photon->EcalRecHitIsoDr04();
+    fMitGPTree.phoHollowConeTKisoDR04_a4_ = photon->HollowConeTrkIsoDr04();
+    fMitGPTree.phoCoviEtaiEta_a4_	  = photon->CoviEtaiEta();
+    fMitGPTree.phoR9_a4_		  = photon->SCluster()->R9();
+    fMitGPTree.phoSeedTime_a4_  	  = photon->SCluster()->SeedTime();
+    fMitGPTree.phoHadOverEm_a4_ 	  = photon->HadOverEm();
+  }
+
   //JETS
-  fMonoPhotonEvent->nJets = fJets->GetEntries();
-  for ( int arrayIndex=0; arrayIndex<fMonoPhotonEvent->kMaxJet; arrayIndex++ ) {
-    if ( fJets->GetEntries() > 0 && arrayIndex < (int) fJets->GetEntries() ) {
-      const Jet *jet = fJets->At(arrayIndex);
-      //kin
-      fMonoPhotonEvent->a_jetE[arrayIndex]    = jet->E();
-      fMonoPhotonEvent->a_jetPt[arrayIndex]   = jet->Pt();
-      fMonoPhotonEvent->a_jetEta[arrayIndex]  = jet->Eta();
-      fMonoPhotonEvent->a_jetPhi[arrayIndex]  = jet->Phi();
-      fMonoPhotonEvent->a_jetMass[arrayIndex] = jet->Mass();
-    }
-    else {
-      //kin
-      fMonoPhotonEvent->a_jetE[arrayIndex]    = -1;
-      fMonoPhotonEvent->a_jetPt[arrayIndex]   = -1;
-      fMonoPhotonEvent->a_jetEta[arrayIndex]  = -100;
-      fMonoPhotonEvent->a_jetPhi[arrayIndex]  = -100;
-      fMonoPhotonEvent->a_jetMass[arrayIndex] = -1;
-    }
+  fMitGPTree.njets_ = fJets->GetEntries();
+  if (fJets->GetEntries() >= 1) {
+    const Jet *jet = fJets->At(0);
+    fMitGPTree.jet1_     = jet->Mom();
+    fMitGPTree.jet1Btag_ = jet->CombinedSecondaryVertexBJetTagsDisc();
+  }
+  if (fJets->GetEntries() >= 2) {
+    const Jet *jet = fJets->At(1);
+    fMitGPTree.jet2_     = jet->Mom();
+    fMitGPTree.jet2Btag_ = jet->CombinedSecondaryVertexBJetTagsDisc();
+  }
+  if (fJets->GetEntries() >= 3) {
+    const Jet *jet = fJets->At(2);
+    fMitGPTree.jet3_     = jet->Mom();
+    fMitGPTree.jet3Btag_ = jet->CombinedSecondaryVertexBJetTagsDisc();
+  }
+  if (fJets->GetEntries() >= 4) {
+    const Jet *jet = fJets->At(3);
+    fMitGPTree.jet4_     = jet->Mom();
+    fMitGPTree.jet4Btag_ = jet->CombinedSecondaryVertexBJetTagsDisc();
   }
         
-  //PHOTONS  
-  fMonoPhotonEvent->nPhotons = fPhotons->GetEntries();
-  for ( int arrayIndex=0; arrayIndex<fMonoPhotonEvent->kMaxPh; arrayIndex++ ) {
-    if ( fPhotons->GetEntries() > 0 && arrayIndex < (int) fPhotons->GetEntries() ) {
-      const Photon *photon = fPhotons->At(arrayIndex);
-      //kin
-      fMonoPhotonEvent->a_photonE[arrayIndex] = photon->E();
-      fMonoPhotonEvent->a_photonEt[arrayIndex] = photon->Et();
-      fMonoPhotonEvent->a_photonEta[arrayIndex] = photon->Eta();
-      fMonoPhotonEvent->a_photonPhi[arrayIndex] = photon->Phi();
-      //iso
-      fMonoPhotonEvent->a_photonHCALisoDR03[arrayIndex] = photon->HcalTowerSumEtDr03();
-      fMonoPhotonEvent->a_photonECALisoDR03[arrayIndex] = photon->EcalRecHitIsoDr03();
-      fMonoPhotonEvent->a_photonHollowConeTKisoDR03[arrayIndex] = photon->HollowConeTrkIsoDr03();
-      fMonoPhotonEvent->a_photonHCALisoDR04[arrayIndex] = photon->HcalTowerSumEtDr04();
-      fMonoPhotonEvent->a_photonECALisoDR04[arrayIndex] = photon->EcalRecHitIsoDr04();
-      fMonoPhotonEvent->a_photonHollowConeTKisoDR04[arrayIndex] = photon->HollowConeTrkIsoDr04();
-      //shape
-      fMonoPhotonEvent->a_photonCoviEtaiEta[arrayIndex] = photon->CoviEtaiEta();
-      fMonoPhotonEvent->a_photonR9[arrayIndex] = photon->SCluster()->R9();
-      //misc
-      fMonoPhotonEvent->a_photonSeedTime[arrayIndex] = photon->SCluster()->SeedTime();
-      fMonoPhotonEvent->a_photonHadOverEm[arrayIndex] = photon->HadOverEm();
-     }
-     else {
-      //kin
-      fMonoPhotonEvent->a_photonE[arrayIndex] = -1;
-      fMonoPhotonEvent->a_photonEt[arrayIndex] = -1;
-      fMonoPhotonEvent->a_photonEta[arrayIndex] = -100;
-      fMonoPhotonEvent->a_photonPhi[arrayIndex] = -100;
-      //iso
-      fMonoPhotonEvent->a_photonHCALisoDR03[arrayIndex] = -1;
-      fMonoPhotonEvent->a_photonECALisoDR03[arrayIndex] = -1;
-      fMonoPhotonEvent->a_photonHollowConeTKisoDR03[arrayIndex] = -1;
-      fMonoPhotonEvent->a_photonHCALisoDR04[arrayIndex] = -1;
-      fMonoPhotonEvent->a_photonECALisoDR04[arrayIndex] = -1;
-      fMonoPhotonEvent->a_photonHollowConeTKisoDR04[arrayIndex] = -1;
-      //shape
-      fMonoPhotonEvent->a_photonCoviEtaiEta[arrayIndex] = -100;
-      fMonoPhotonEvent->a_photonR9[arrayIndex] = -1;
-      //misc
-      fMonoPhotonEvent->a_photonSeedTime[arrayIndex] = -10000;
-      fMonoPhotonEvent->a_photonHadOverEm[arrayIndex] = -1;
-    }
-  }
-
-  //ELECTRONS  
-  fMonoPhotonEvent->nElectrons = fElectrons->GetEntries();
-  for ( int arrayIndex=0; arrayIndex<fMonoPhotonEvent->kMaxEle; arrayIndex++ ) {
-    if ( fElectrons->GetEntries() > 0 && arrayIndex < (int) fElectrons->GetEntries() ) {
-      const Electron *ele = fElectrons->At(arrayIndex);
-      //kin
-      fMonoPhotonEvent->a_eleE[arrayIndex] = ele->E();
-      fMonoPhotonEvent->a_elePt[arrayIndex] = ele->Pt();
-      fMonoPhotonEvent->a_eleEta[arrayIndex] = ele->Eta();
-      fMonoPhotonEvent->a_elePhi[arrayIndex] = ele->Phi();
-    }
-    else {
-      //kin
-      fMonoPhotonEvent->a_eleE[arrayIndex] = -1;
-      fMonoPhotonEvent->a_elePt[arrayIndex] = -1;
-      fMonoPhotonEvent->a_eleEta[arrayIndex] = -100;
-      fMonoPhotonEvent->a_elePhi[arrayIndex] = -100;
-    }
-  }
-
-  //MUONS
-  fMonoPhotonEvent->nMuons = fMuons->GetEntries();
-  for ( int arrayIndex=0; arrayIndex<fMonoPhotonEvent->kMaxMu; arrayIndex++ ) {
-    if ( fMuons->GetEntries() > 0 && arrayIndex < (int) fMuons->GetEntries() ) {
-      const Muon *mu = fMuons->At(arrayIndex);
-      //kin
-      fMonoPhotonEvent->a_muE[arrayIndex] = mu->E();
-      fMonoPhotonEvent->a_muPt[arrayIndex] = mu->Pt();
-      fMonoPhotonEvent->a_muEta[arrayIndex] = mu->Eta();
-      fMonoPhotonEvent->a_muPhi[arrayIndex] = mu->Phi();
-    }
-    else {
-      //kin
-      fMonoPhotonEvent->a_muE[arrayIndex] = -1;
-      fMonoPhotonEvent->a_muPt[arrayIndex] = -1;
-      fMonoPhotonEvent->a_muEta[arrayIndex] = -100;
-      fMonoPhotonEvent->a_muPhi[arrayIndex] = -100;
-    }
-  }
-
   //TRACKS
-  fMonoPhotonEvent->nTracks = 0;
+  fMitGPTree.ntracks_ = 0;
   for(unsigned int i = 0; i < fTracks->GetEntries(); i++) {
     const mithep::Track* pTrack = fTracks->At(i);
     if(pTrack->Pt() <= 15) continue;
     Bool_t isLepton = kFALSE;
-    for (unsigned int arrayIndex=0; arrayIndex<fElectrons->GetEntries(); arrayIndex++ ) {
-       const Electron *ele = fElectrons->At(arrayIndex);
-      if(MathUtils::DeltaR(pTrack->Mom(), ele->Mom()) < 0.05) {
-        isLepton = kTRUE;
-        break;
-      }
-    }
-    for (unsigned int arrayIndex=0; arrayIndex<fMuons->GetEntries(); arrayIndex++ ) {
-       const Muon *mu = fMuons->At(arrayIndex);
-      if(MathUtils::DeltaR(pTrack->Mom(), mu->Mom()) < 0.05) {
+    for (unsigned int arrayIndex=0; arrayIndex<leptons->GetEntries(); arrayIndex++ ) {
+       const Particle *lep = leptons->At(arrayIndex);
+      if(MathUtils::DeltaR(pTrack->Mom(), lep->Mom()) < 0.05) {
         isLepton = kTRUE;
         break;
       }
     }
     if(isLepton == kTRUE) continue;
-    if(fMonoPhotonEvent->nTracks < fMonoPhotonEvent->kMaxTrack) {
-      fMonoPhotonEvent->a_trkPt[fMonoPhotonEvent->nTracks]  = pTrack->Pt();
-      fMonoPhotonEvent->a_trkEta[fMonoPhotonEvent->nTracks] = pTrack->Eta();
-      fMonoPhotonEvent->a_trkPhi[fMonoPhotonEvent->nTracks] = pTrack->Phi();
-    }
-    fMonoPhotonEvent->nTracks++;
+    GenericParticle *p = new GenericParticle(pTrack->Px(), pTrack->Py(), pTrack->Pz(), 
+                                             pTrack->P(), pTrack->Charge());
+    if(fMitGPTree.ntracks_ == 0) fMitGPTree.track1_ = p->Mom();
+    if(fMitGPTree.ntracks_ == 1) fMitGPTree.track2_ = p->Mom();
+    if(fMitGPTree.ntracks_ == 2) fMitGPTree.track3_ = p->Mom();
+    delete p;
+    fMitGPTree.ntracks_++;
   }
 
-  hMonoPhotonTuple -> Fill();
+  Double_t Q	     = 0.0;
+  Int_t    id1       = 0;
+  Double_t x1	     = 0.0;
+  Double_t pdf1      = 0.0;
+  Int_t    id2       = 0;
+  Double_t x2	     = 0.0;
+  Double_t pdf2      = 0.0;
+  Int_t    processId = 0;
+  if(fIsData == kFALSE){
+     LoadBranch(fMCEvInfoName);
+     Q         = fMCEventInfo->Scale();
+     id1       = fMCEventInfo->Id1();
+     x1        = fMCEventInfo->X1();
+     pdf1      = fMCEventInfo->Pdf1();
+     id2       = fMCEventInfo->Id2();
+     x2        = fMCEventInfo->X2();
+     pdf2      = fMCEventInfo->Pdf2();
+     processId = fMCEventInfo->ProcessId();
+  }
+  fMitGPTree.Q_         = Q;
+  fMitGPTree.id1_       = id1;
+  fMitGPTree.x1_        = x1;
+  fMitGPTree.pdf1_      = pdf1;
+  fMitGPTree.id2_       = id2;
+  fMitGPTree.x2_        = x2;
+  fMitGPTree.pdf2_      = pdf2;
+  fMitGPTree.processId_ = processId;
+
+  fMitGPTree.tree_->Fill();
   
   return;
 }
@@ -298,48 +313,21 @@ void MonoPhotonTreeWriter::SlaveBegin()
   ReqEventObject(fPileUpDenName,   fPileUpDen,    true);
   if (!fIsData) {
     ReqBranch(fPileUpName,         fPileUp);
+    ReqBranch(fMCEvInfoName,       fMCEventInfo);
   }
 
-  fMonoPhotonEvent = new MonoPhotonEvent;
-
-  hMonoPhotonTuple = new TTree(fTupleName.Data(),fTupleName.Data());
-    
-  //make flattish tree from classes so we don't have to rely on dictionaries for reading later
-  TClass *eclass = TClass::GetClass("mithep::MonoPhotonEvent");
-  TList  *elist  = eclass->GetListOfDataMembers();
-
-  for (int i=0; i<elist->GetEntries(); ++i) {
-    const TDataMember *tdm = static_cast<const TDataMember*>(elist->At(i));//ming
-    if (!(tdm->IsBasic() && tdm->IsPersistent())) continue;
-    if (TString(tdm->GetName()).BeginsWith("kMax")) continue;
-    TString typestring;
-    if (TString(tdm->GetTypeName()).BeginsWith("Char_t")) typestring = "B";
-    else if (TString(tdm->GetTypeName()).BeginsWith("UChar_t")) typestring = "b";
-    else if (TString(tdm->GetTypeName()).BeginsWith("Short_t")) typestring = "S";
-    else if (TString(tdm->GetTypeName()).BeginsWith("UShort_t")) typestring = "s";
-    else if (TString(tdm->GetTypeName()).BeginsWith("Int_t")) typestring = "I";
-    else if (TString(tdm->GetTypeName()).BeginsWith("UInt_t")) typestring = "i";
-    else if (TString(tdm->GetTypeName()).BeginsWith("Float_t")) typestring = "F";
-    else if (TString(tdm->GetTypeName()).BeginsWith("Double_t")) typestring = "D";
-    else if (TString(tdm->GetTypeName()).BeginsWith("Long64_t")) typestring = "L";
-    else if (TString(tdm->GetTypeName()).BeginsWith("ULong64_t")) typestring = "l";
-    else if (TString(tdm->GetTypeName()).BeginsWith("Bool_t")) typestring = "O";
-    else continue;
-    //determine if the data member is an array
-    bool dataMemberIsArray = false;
-    if (TString(tdm->GetName()).BeginsWith("a_")) dataMemberIsArray = true;
-    //printf("%s %s: %i\n",tdm->GetTypeName(),tdm->GetName(),int(tdm->GetOffset()));
-    Char_t *addr = (Char_t*)fMonoPhotonEvent;//ming:?
-    assert(sizeof(Char_t)==1);
-    if ( dataMemberIsArray ) hMonoPhotonTuple->Branch(tdm->GetName(),addr + tdm->GetOffset(),TString::Format("%s[10]/%s",tdm->GetName(),typestring.Data()));
-    else hMonoPhotonTuple->Branch(tdm->GetName(),addr + tdm->GetOffset(),TString::Format("%s/%s",tdm->GetName(),typestring.Data()));
-  }
-  
-  AddOutput(hMonoPhotonTuple);
+  //***********************************************************************************************
+  //Create Smurf Ntuple Tree  
+  //***********************************************************************************************
+  fOutputFile = new TFile(fTupleName.Data(), "RECREATE");
+  fMitGPTree.CreateTree(-1);
   
 }
 //--------------------------------------------------------------------------------------------------
 void MonoPhotonTreeWriter::SlaveTerminate()
 {
+  fOutputFile->cd();
+  fOutputFile->Write();
+  fOutputFile->Close();
   cout << "Processed events on MonoPhotonTreeWriter: " << fNEventsSelected << endl;
 }

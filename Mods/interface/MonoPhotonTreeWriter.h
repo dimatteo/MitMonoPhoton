@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------------------------
-// $Id: MonoPhotonTreeWriter.h,v 1.5 2013/06/22 01:16:12 dimatteo Exp $
+// $Id: MonoPhotonTreeWriter.h,v 1.6 2013/06/22 20:58:23 ceballos Exp $
 //
 // MonoPhotonTreeWriter
 //
@@ -28,6 +28,7 @@
 #include "MitAna/DataTree/interface/JetCol.h"
 #include "MitAna/DataTree/interface/PFJetCol.h"
 #include "MitAna/DataTree/interface/GenJetCol.h"
+#include "MitAna/DataTree/interface/MCEventInfo.h"
 #include "MitPhysics/Utils/interface/PhotonFix.h"
 #include "MitPhysics/Utils/interface/PhotonTools.h"
 #include "MitPhysics/Utils/interface/MVAMet.h"
@@ -36,96 +37,14 @@
 #include "MitPhysics/Utils/interface/VertexTools.h"
 #include "MitPhysics/Utils/interface/ElectronIDMVA.h"
 
+#include "MitMonoPhoton/Core/MitGPTree.h"
 
 class TNtuple;
 class TRandom3;
 
 namespace mithep 
 {
-  
-  class MonoPhotonEvent
-  {
-    public:  
-      // ------------ PHOTON STUFF -------------------
-      static const Int_t kMaxPh = 5;
-      Int_t   nPhotons;
-      //kin
-      Float_t a_photonE[kMaxPh];
-      Float_t a_photonEt[kMaxPh];
-      Float_t a_photonEta[kMaxPh];
-      Float_t a_photonPhi[kMaxPh];
-      //iso
-      Float_t a_photonHCALisoDR03[kMaxPh];
-      Float_t a_photonECALisoDR03[kMaxPh];
-      Float_t a_photonHollowConeTKisoDR03[kMaxPh];
-      Float_t a_photonHCALisoDR04[kMaxPh];
-      Float_t a_photonECALisoDR04[kMaxPh];
-      Float_t a_photonHollowConeTKisoDR04[kMaxPh];
-      //shape
-      Float_t a_photonCoviEtaiEta[kMaxPh];
-      Float_t a_photonR9[kMaxPh];
-      //misc
-      Float_t a_photonSeedTime[kMaxPh];
-      Float_t a_photonHadOverEm[kMaxPh];
 
-      // ------------ VERTEX STUFF -------------------
-      Float_t bsX;
-      Float_t bsY;
-      Float_t bsZ;
-      Float_t bsSigmaZ; 
-      Float_t vtxX;
-      Float_t vtxY;      
-      Float_t vtxZ;
-      Int_t   nVtx;
-      Float_t numPU;
-      Float_t numPUminus;
-      Float_t numPUplus;
-      UInt_t  evt;
-      UInt_t  run;
-      UInt_t  lumi;
-      UChar_t evtcat;
-
-      // ------------ MET STUFF -------------------
-      Float_t pfmet;
-      Float_t pfmetphi;
-      Float_t pfmetSig;
-      Float_t pfSumEt;
-
-      // ------------ JET STUFF -------------------
-      static const Int_t kMaxJet = 5;
-      Int_t   nJets;
-      Float_t a_jetE[kMaxJet];
-      Float_t a_jetPt[kMaxJet];
-      Float_t a_jetEta[kMaxJet];
-      Float_t a_jetPhi[kMaxJet];
-      Float_t a_jetMass[kMaxJet];
-
-      // ------------ ELECTRON STUFF -------------------
-      static const Int_t kMaxEle = 2;
-      Int_t   nElectrons;
-      Float_t a_eleE[kMaxEle];
-      Float_t a_elePt[kMaxEle];
-      Float_t a_eleEta[kMaxEle];
-      Float_t a_elePhi[kMaxEle];
-
-      // ------------ MUON STUFF -------------------
-      static const Int_t kMaxMu = 2;
-      Int_t   nMuons;
-      Float_t a_muE[kMaxMu];
-      Float_t a_muPt[kMaxMu];
-      Float_t a_muEta[kMaxMu];
-      Float_t a_muPhi[kMaxMu];
-
-      // ------------ Tracks STUFF -------------------
-      static const Int_t kMaxTrack = 5;
-      Int_t   nTracks;
-      Float_t a_trkPt[kMaxTrack];
-      Float_t a_trkEta[kMaxTrack];
-      Float_t a_trkPhi[kMaxTrack];
-
-  };
-  
-  
   class MonoPhotonTreeWriter : public BaseMod
   {
   public:
@@ -136,7 +55,7 @@ namespace mithep
 
     // setting all the input Names
     void                SetMetName(const char *n)         { fMetName= n;                 }
-    void                SetPhotonsName(const char *n)     { fPhotonsName= n;              }
+    void                SetPhotonsName(const char *n)     { fPhotonsName= n;             }
     void                SetPhotonsFromBranch(bool b)      { fPhotonsFromBranch = b;      }
     void                SetElectronsName(const char *n)   { fElectronsName = n;          }
     void                SetElectronsFromBranch(bool b)    { fElectronsFromBranch = b;    }
@@ -144,6 +63,7 @@ namespace mithep
     void                SetMuonsFromBranch(bool b)        { fMuonsFromBranch = b;        }
     void                SetJetsName(const char *n)        { fJetsName = n;               }
     void                SetJetsFromBranch(bool b)         { fJetsFromBranch = b;         }
+    void                SetLeptonsName(const char *n)     { fLeptonsName = n;            }
 
     void                SetSuperClustersName(const char *n){ fSuperClustersName = n;     }
     void                SetTracksName(const char *n)      { fTracksName = n;             }
@@ -168,6 +88,7 @@ namespace mithep
     TString             fElectronsName;
     TString             fMuonsName;
     TString             fJetsName;
+    TString             fLeptonsName;
 
     TString             fSuperClustersName;
     TString             fTracksName;
@@ -175,7 +96,8 @@ namespace mithep
     TString             fPileUpDenName;    
     TString             fPileUpName;
     TString             fBeamspotName;
-    
+    TString             fMCEvInfoName;
+
     // is it Data or MC?
     Bool_t              fIsData;
     
@@ -195,16 +117,16 @@ namespace mithep
     const TrackCol                *fTracks;
     const VertexCol               *fPV;
     const BeamSpotCol             *fBeamspot;
+    const MCEventInfo             *fMCEventInfo;
     const PileupInfoCol           *fPileUp;    
     const PileupEnergyDensityCol  *fPileUpDen;
     const SuperClusterCol         *fSuperClusters;   
     
     // --------------------------------
-    // ntuple Tuple
-    TString                        fTupleName;
-    MonoPhotonEvent*               fMonoPhotonEvent;
-    TTree*                         hMonoPhotonTuple;
-    
+    TFile	                   *fOutputFile;
+    TString	                   fTupleName;
+    MitGPTree                      fMitGPTree;
+
     Int_t                          fNEventsSelected;
 
     ClassDef(MonoPhotonTreeWriter, 1) // Photon identification module
