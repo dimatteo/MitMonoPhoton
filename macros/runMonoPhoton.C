@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.14 2013/06/23 14:40:30 ceballos Exp $
+// $Id: runMonoPhoton.C,v 1.15 2013/06/24 11:24:40 ceballos Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -227,6 +227,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   photreg->SetRegressionWeights(std::string((gSystem->Getenv("CMSSW_BASE") + TString("/src/MitPhysics/data/gbrv3ph_52x.root")).Data()));
   photreg->SetOutputName("GoodPhotonsRegr");
   photreg->SetApplyShowerRescaling(kTRUE);
+  photreg->SetMinNumPhotons(1);
   photreg->SetIsData(isData);
 
   PhotonIDMod *photonIDMod = new PhotonIDMod;
@@ -239,7 +240,6 @@ void runMonoPhoton(const char *fileset    = "0000",
   photonIDMod->SetApplyConversionId(kTRUE);
   photonIDMod->SetApplyFiduciality(kTRUE);       
   photonIDMod->SetIsData(isData);
-/*
   photonIDMod->SetPhotonsFromBranch(kFALSE);
   photonIDMod->SetInputName(photreg->GetOutputName());
   //get the photon with regression energy  
@@ -276,7 +276,6 @@ void runMonoPhoton(const char *fileset    = "0000",
   photonIDMod->SetDoShowerShapeScaling(kTRUE);
   photonIDMod->SetShowerShapeType("2012ShowerShape");
   photonIDMod->Set2012HCP(kTRUE);
-*/
 
   PhotonCleaningMod *photonCleaningMod = new PhotonCleaningMod;
   photonCleaningMod->SetCleanElectronsName(electronCleaning->GetOutputName());
