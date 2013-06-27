@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.15 2013/06/24 11:24:40 ceballos Exp $
+// $Id: runMonoPhoton.C,v 1.16 2013/06/24 12:02:22 ceballos Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -13,6 +13,7 @@
 #include "MitAna/DataTree/interface/PFJetCol.h"
 #include "MitPhysics/Init/interface/ModNames.h"
 #include "MitAna/DataTree/interface/Names.h"
+#include "MitPhysics/Mods/interface/GeneratorMod.h"
 #include "MitPhysics/Mods/interface/GoodPVFilterMod.h"
 #include "MitPhysics/Mods/interface/MuonIDMod.h"
 #include "MitPhysics/Mods/interface/ElectronIDMod.h"
@@ -105,6 +106,22 @@ void runMonoPhoton(const char *fileset    = "0000",
 
   printf("\n Run lumi worked\n");
 
+  // Generator info
+  GeneratorMod *generatorMod = new GeneratorMod;
+  generatorMod->SetPrintDebug(kFALSE);
+  generatorMod->SetPtLeptonMin(0.0);
+  generatorMod->SetEtaLeptonMax(2.7);
+  generatorMod->SetPtPhotonMin(15.0);
+  generatorMod->SetEtaPhotonMax(2.7);
+  generatorMod->SetPtRadPhotonMin(10.0);
+  generatorMod->SetEtaRadPhotonMax(2.7);
+  generatorMod->SetIsData(isData);
+  generatorMod->SetFillHist(!isData);
+  generatorMod->SetApplyISRFilter(kFALSE);
+  generatorMod->SetApplyVVFilter(kFALSE);
+  generatorMod->SetApplyVGFilter(kFALSE);
+  generatorMod->SetFilterBTEvents(kFALSE);
+
   //------------------------------------------------------------------------------------------------
   // HLT information : [TBF]
   //------------------------------------------------------------------------------------------------
@@ -161,8 +178,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   goodPVFilterMod->SetMinNDof         (4.0);
   goodPVFilterMod->SetMaxAbsZ         (24.0);
   goodPVFilterMod->SetMaxRho          (2.0);
-  goodPVFilterMod->SetAbortIfNotAccepted(kFALSE);
   goodPVFilterMod->SetIsMC(!isData);
+  goodPVFilterMod->SetVertexesName("PrimaryVertexes");
   
   //------------------------------------------------------------------------------------------------
   // object id and cleaning sequence
@@ -356,7 +373,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   // this is how it always starts
   runLumiSel      ->Add(mcselmod);
  
-  mcselmod->Add(goodPVFilterMod);
+  mcselmod->Add(generatorMod);
+  generatorMod->Add(goodPVFilterMod);
   goodPVFilterMod->Add(hltModP);
   // photon regression
   hltModP->Add(photreg);
