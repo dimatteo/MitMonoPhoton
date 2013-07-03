@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.16 2013/06/24 12:02:22 ceballos Exp $
+// $Id: runMonoPhoton.C,v 1.17 2013/06/27 18:38:15 ceballos Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -414,9 +414,9 @@ void runMonoPhoton(const char *fileset    = "0000",
   Dataset *d = NULL;
   TString bookstr = book;
   if (TString(skim).CompareTo("noskim") == 0)
-    d = c->FindDataset(bookstr,dataset,fileset);
+    d = c->FindDataset(bookstr,dataset,fileset,true);
   else 
-    d = c->FindDataset(bookstr,skimdataset.Data(),fileset);
+    d = c->FindDataset(bookstr,skimdataset.Data(),fileset,true);
   ana->AddDataset(d);
 
   //------------------------------------------------------------------------------------------------
