@@ -33,11 +33,19 @@ class MitGPTree {
     other
   };
 
+  enum Selection {
+    GoodPhoton      = 1UL<<0,    // good photon
+    Fake            = 1UL<<1,    // fake
+    BeamHalo        = 1UL<<2,    // beam halo
+    DiLepton        = 1UL<<3,    // dilepton
+  };
+
   /// variables
   unsigned int   event_;
   unsigned int   run_;
   unsigned int   lumi_;
   unsigned int   nvtx_;
+  unsigned int   cuts_;
   float          scale1fb_;
   float          met_;
   float          metPhi_;

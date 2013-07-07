@@ -117,6 +117,8 @@ void MonoPhotonTreeWriter::Process()
   }
   fMitGPTree.InitVariables();
 
+  fMitGPTree.cuts_ = 0;  
+
   fMitGPTree.run_   = GetEventHeader()->RunNum();
   fMitGPTree.lumi_  = GetEventHeader()->LumiSec();
   fMitGPTree.event_ = GetEventHeader()->EvtNum();
