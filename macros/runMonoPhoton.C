@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.17 2013/06/27 18:38:15 ceballos Exp $
+// $Id: runMonoPhoton.C,v 1.18 2013/07/03 15:48:22 dimatteo Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -145,6 +145,7 @@ void runMonoPhoton(const char *fileset    = "0000",
     
   hltModP->SetTrigObjsName("MyHltPhotObjs");
   hltModP->SetAbortIfNotAccepted(isData);
+  hltModP->SetPrintTable(kFALSE); // set to true to print HLT table
   if(isData == kFALSE){ // ugly, but it works
     hltModP->AddTrigger("HLT_Mu15_v9");
     hltModP->AddTrigger("!HLT_Mu15_v9");
@@ -158,6 +159,12 @@ void runMonoPhoton(const char *fileset    = "0000",
     hltModP->AddTrigger("!HLT_Mu12_v14");
     hltModP->AddTrigger("HLT_Mu12_v16");
     hltModP->AddTrigger("!HLT_Mu12_v16");
+    // // MC signal triggers
+    // hltModP->AddTrigger("HLT_Photon135_v*);
+    // hltModP->AddTrigger("HLT_Photon150_v*);
+    // hltModP->AddTrigger("HLT_Photon160_v*);
+    // // Eventual OR with Pho+X
+    // hltModP->AddTrigger("HLT_Photon70_CaloIdXL_PFMET100_v*");
   }
 
   //------------------------------------------------------------------------------------------------
