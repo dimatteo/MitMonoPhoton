@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.18 2013/07/03 15:48:22 dimatteo Exp $
+// $Id: runMonoPhoton.C,v 1.19 2013/07/08 03:16:24 dimatteo Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -160,9 +160,9 @@ void runMonoPhoton(const char *fileset    = "0000",
     hltModP->AddTrigger("HLT_Mu12_v16");
     hltModP->AddTrigger("!HLT_Mu12_v16");
     // // MC signal triggers
-    // hltModP->AddTrigger("HLT_Photon135_v*);
-    // hltModP->AddTrigger("HLT_Photon150_v*);
-    // hltModP->AddTrigger("HLT_Photon160_v*);
+    // hltModP->AddTrigger("HLT_Photon135_v*");
+    // hltModP->AddTrigger("HLT_Photon150_v*");
+    // hltModP->AddTrigger("HLT_Photon160_v*");
     // // Eventual OR with Pho+X
     // hltModP->AddTrigger("HLT_Photon70_CaloIdXL_PFMET100_v*");
   }
