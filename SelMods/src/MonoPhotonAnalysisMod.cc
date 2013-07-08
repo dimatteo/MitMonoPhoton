@@ -28,13 +28,22 @@ MonoPhotonAnalysisMod::MonoPhotonAnalysisMod(const char *name, const char *title
   // define all the Branches to load
   fMetBranchName                 ("PFMet"),
   fPhotonsBranchName             (Names::gkPhotonBrn),
+  fElectronsBranchName           (Names::gkElectronBrn),
+  fMuonsBranchName               (Names::gkMuonBrn),
+  fLeptonsName             (ModNames::gkMergedLeptonsName),
   fMetFromBranch                 (kTRUE),
   fPhotonsFromBranch             (kTRUE),
+  fElectronsFromBranch           (kTRUE),
+  fMuonsFromBranch               (kTRUE),
+
   // ----------------------------------------
   // Collections....
   fPhotons                       (0),
+  fElectrons                     (0),
+  fMuons                         (0),
   fMet                           (0),
   fMinNumPhotons                 (1),
+  fMinNumLeptons                 (2),
   fMinPhotonEt                   (30),
   fMaxPhotonEta                  (2.4),
   fMinMetEt                      (30),
@@ -61,6 +70,8 @@ void MonoPhotonAnalysisMod::SlaveBegin()
   // Load Branches
   ReqEventObject(fMetBranchName,    fMet,      fMetFromBranch);
   ReqEventObject(fPhotonsBranchName, fPhotons,  fPhotonsFromBranch); 
+  ReqEventObject(fElectronsBranchName, fElectrons, fElectronsFromBranch);
+  ReqEventObject(fMuonsBranchName, fMuons, fMuonsFromBranch);
 
   // Create your histograms here
   //*************************************************************************************************
@@ -89,6 +100,11 @@ void MonoPhotonAnalysisMod::SlaveBegin()
   os4<<"Met >= "<<fMinMetEt;
   s4 = os4.str();
   const char* labelCut4 = s4.c_str();
+  std::ostringstream os5;
+  std::string s5;
+  os5<<"N Leptons >= "<<fMinNumLeptons;
+  s5 = os5.str();
+  const char* labelCut5 = s5.c_str();
   
   // Set selection histogram bin labels
   fMonoPhotonSelection->GetXaxis()->TAxis::SetBinLabel(1, "All Events");
@@ -96,6 +112,7 @@ void MonoPhotonAnalysisMod::SlaveBegin()
   fMonoPhotonSelection->GetXaxis()->TAxis::SetBinLabel(3, labelCut2);
   fMonoPhotonSelection->GetXaxis()->TAxis::SetBinLabel(4, labelCut3);
   fMonoPhotonSelection->GetXaxis()->TAxis::SetBinLabel(5, labelCut4);
+  fMonoPhotonSelection->GetXaxis()->TAxis::SetBinLabel(6, labelCut5);
 
   //***********************************************************************************************
   // Histograms after preselection
@@ -111,16 +128,22 @@ void MonoPhotonAnalysisMod::Process()
   // Process entries of the tree.
   LoadEventObject(fPhotonsBranchName,   fPhotons);
   assert(fPhotons);
+  LoadEventObject(fElectronsBranchName,   fElectrons);
+  assert(fElectrons);
+  LoadEventObject(fMuonsBranchName,    fMuons);
+  assert(fMuons);
   LoadEventObject(fMetBranchName,   fMet);
   assert(fMet);
+  ParticleOArr *leptons = GetObjThisEvt<ParticleOArr>(fLeptonsName);
 
   //*********************************************************************************************
   // Define Cuts
   //*********************************************************************************************
-  const int nCuts = 4;
+  const int nCuts = 5;
   bool passCut[nCuts] = {
 	  false, 
 	  false, 
+	  false,
 	  false,
 	  false,
 	  };
@@ -160,6 +183,11 @@ void MonoPhotonAnalysisMod::Process()
   //***********************************************************************************************
   const Met *stdMet = fMet->At(0);
   if ( stdMet->Pt() >= fMinMetEt )  passCut[3] = true;
+
+  //***********************************************************************************************
+  // Discard events with too few leptons
+  //***********************************************************************************************
+  if ((leptons->GetEntries() >= fMinNumLeptons) || (fElectrons->GetEntries() >= fMinNumLeptons) || (fMuons->GetEntries() >= fMinNumLeptons)) passCut[4] = true;
 	  
   //*********************************************************************************************
   // Make Selection Histograms. Number of events passing each level of cut

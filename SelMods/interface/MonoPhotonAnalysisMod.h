@@ -43,14 +43,25 @@ namespace mithep
 
       // setting all the input Names
       void                SetInputPhotonsName(const char *n){ fPhotonsBranchName= n;        }
+      void                SetInputElectronsName(const char *n){ fElectronsBranchName= n;    }
+      void                SetInputMuonsName(const char*n){ fMuonsBranchName= n;             }
+      void	          SetInputLeptonsName(const char*n){ fLeptonsName = n; }
       void                SetInputMetName(const char *n){ fMetBranchName= n;        }
       void                SetPhotonsFromBranch(Bool_t b)    { fPhotonsFromBranch = b; }
+      void                SetElectronsFromBranch(Bool_t b)   { fElectronsFromBranch = b; }
+      void                SetMuonsFromBranch(Bool_t b)    { fMuonsFromBranch = b; }
       void                SetMetFromBranch(Bool_t b)    { fMetFromBranch = b; }
 
     protected:
       TString                  fPhotonsBranchName;	   //name of input photon branch
       TString                  fMetBranchName;           //name of input met branch
+      TString                  fElectronsBranchName;      //name of input electron branch
+      TString                  fMuonsBranchName;         //name of input muon branch
+      TString                  fLeptonsName;
+
       Bool_t                   fPhotonsFromBranch;       //photons are loaded from a branch
+      Bool_t                   fElectronsFromBranch;     //electrons are loaded from a branch
+      Bool_t                   fMuonsFromBranch;         //muons are loaded from a branch
       Bool_t                   fMetFromBranch;           //met is loaded from a branch
       
       TH1D                    *fMonoPhotonSelection;     //histogram for cut flow monitoring
@@ -60,11 +71,14 @@ namespace mithep
 
       const PhotonCol         *fPhotons;
       const PFMetCol          *fMet;
+      const ElectronCol       *fElectrons;
+      const MuonCol           *fMuons;
 
       void         SetMinNumPhotons(Int_t n)   { fMinNumPhotons = n; }
       void         SetMinPhotonEt(Double_t x)  { fMinPhotonEt = x;   }
       void         SetMaxPhotonEta(Double_t x) { fMaxPhotonEta = x;  }
       void         SetMinMetEt(Double_t x)     { fMinMetEt = x;      }
+      void         SetMinNumLeptons(Int_t n)   { fMinNumLeptons = n; }
 
       void         Begin();
       void         Process();
@@ -73,6 +87,7 @@ namespace mithep
       void         Terminate();      
 
       unsigned int fMinNumPhotons;
+      unsigned int fMinNumLeptons;
       Double_t     fMinPhotonEt;
       Double_t     fMaxPhotonEta;
       Double_t     fMinMetEt;
