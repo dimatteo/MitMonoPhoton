@@ -43,7 +43,7 @@ MonoPhotonAnalysisMod::MonoPhotonAnalysisMod(const char *name, const char *title
   fMuons                         (0),
   fMet                           (0),
   fMinNumPhotons                 (1),
-  fMinNumLeptons                 (2),
+  fMinNumLeptons                 (0),
   fMinPhotonEt                   (30),
   fMaxPhotonEta                  (2.4),
   fMinMetEt                      (30),
