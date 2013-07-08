@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.19 2013/07/08 03:16:24 dimatteo Exp $
+// $Id: runMonoPhoton.C,v 1.20 2013/07/08 03:46:14 dimatteo Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -347,16 +347,39 @@ void runMonoPhoton(const char *fileset    = "0000",
   //------------------------------------------------------------------------------------------------
   MonoPhotonAnalysisMod         *phplusmet = new MonoPhotonAnalysisMod("MonoPhotonSelector");
   phplusmet->SetInputPhotonsName(photonCleaningMod->GetOutputName()); //identified photons
+  phplusmet->SetInputElectronsName(electronCleaning->GetOutputName()); //identified electrons
+  phplusmet->SetInputMuonsName(muonIdMod->GetOutputName()); //muons
   phplusmet->SetPhotonsFromBranch(kFALSE);
+  phplusmet->SetElectronsFromBranch(kFALSE);
+  phplusmet->SetMuonsFromBranch(kFALSE);
   phplusmet->SetMinNumPhotons(1);
+  phplusmet->SetMinNumLeptons(0);
   phplusmet->SetMinPhotonEt(100);
   phplusmet->SetMaxPhotonEta(2.4);
   phplusmet->SetMinMetEt(100);
+  
+  MonoPhotonAnalysisMod         *dilepton = new MonoPhotonAnalysisMod("MonoPhotonSelector_dilepton");
+  dilepton->SetInputPhotonsName(photonCleaningMod->GetOutputName()); //identified photons
+  dilepton->SetInputElectronsName(electronCleaning->GetOutputName()); //identified electrons
+  dilepton->SetInputMuonsName(muonIdMod->GetOutputName()); //muons
+  dilepton->SetPhotonsFromBranch(kFALSE);
+  dilepton->SetElectronsFromBranch(kFALSE);
+  dilepton->SetMuonsFromBranch(kFALSE);
+  dilepton->SetMinNumPhotons(1);
+  dilepton->SetMinNumLeptons(2);
+  dilepton->SetMinPhotonEt(0);
+  dilepton->SetMaxPhotonEta(2.4);
+  dilepton->SetMinMetEt(0);
 
   TString tupleName = TString(outputName);
   tupleName += TString("_") + TString(dataset) + TString("_") + TString(skim);
   if (TString(fileset) != TString("")) tupleName += TString("_") + TString(fileset);
   tupleName += TString("_tree.root");
+  
+  TString tupleName_dilepton = TString(outputName);
+  tupleName_dilepton += TString("_") + TString(dataset) + TString("_") + TString(skim);
+  if (TString(fileset) != TString("")) tupleName_dilepton += TString("_") + TString(fileset);
+  tupleName_dilepton += TString("_tree_dilepton.root");
 
   MonoPhotonTreeWriter *phplusmettree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter");
   phplusmettree->SetPhotonsFromBranch(kFALSE);
@@ -373,6 +396,22 @@ void runMonoPhoton(const char *fileset    = "0000",
   phplusmettree->SetIsData(isData);
   phplusmettree->SetProcessID(0);
   phplusmettree->SetTupleName(tupleName);
+  
+  MonoPhotonTreeWriter *dileptontree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter_dilepton");
+  dileptontree->SetPhotonsFromBranch(kFALSE);
+  dileptontree->SetPhotonsName(photonCleaningMod->GetOutputName());
+  dileptontree->SetElectronsFromBranch(kFALSE);
+  dileptontree->SetElectronsName(electronCleaning->GetOutputName());
+  dileptontree->SetMuonsFromBranch(kFALSE);
+  dileptontree->SetMuonsName(muonIdMod->GetOutputName());
+  dileptontree->SetJetsFromBranch(kFALSE);
+  dileptontree->SetJetsName(theJetCleaning->GetOutputName());
+  dileptontree->SetPVFromBranch(kFALSE);
+  dileptontree->SetPVName(goodPVFilterMod->GetOutputName());
+  dileptontree->SetLeptonsName(merger->GetOutputName());
+  dileptontree->SetIsData(isData);
+  dileptontree->SetProcessID(0);
+  dileptontree->SetTupleName(tupleName_dilepton);
 
   //------------------------------------------------------------------------------------------------
   // making analysis chain
@@ -401,6 +440,10 @@ void runMonoPhoton(const char *fileset    = "0000",
   // Gamma+met selection
   theJetCleaning   ->Add(phplusmet);
   phplusmet        ->Add(phplusmettree);
+  
+  // Dilepton selection
+  theJetCleaning    ->Add(dilepton);
+  dilepton          ->Add(dileptontree);
 
   //------------------------------------------------------------------------------------------------
   // setup analysis
