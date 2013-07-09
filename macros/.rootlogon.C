@@ -19,6 +19,7 @@
   // Mono Photon macros to compile etc.
   gSystem->AddIncludePath("-I$CMSSW_BASE/src/");
   gSystem->AddIncludePath("-I$CMSSW_RELEASE_BASE/src/");
+  gSystem->AddIncludePath("-I$CMSSW_BASE/src/MitMonoPhoton/SelMods/interface");
   gSystem->AddIncludePath("-I$CMSSW_BASE/src/MitMonoPhoton/Mods/interface");
   gSystem->AddIncludePath("-I$CMSSW_BASE/src/MitHtt/Mods/interface");
   gSystem->AddIncludePath("-I$CMSSW_BASE/src/MitAna/macros");
