@@ -78,6 +78,7 @@ namespace mithep
       void         SetMinPhotonEt(Double_t x)  { fMinPhotonEt = x;   }
       void         SetMaxPhotonEta(Double_t x) { fMaxPhotonEta = x;  }
       void         SetMinMetEt(Double_t x)     { fMinMetEt = x;      }
+      void         SetMaxMetEt(Double_t x)     { fMaxMetEt = x;      }
       void         SetMinNumLeptons(Int_t n)   { fMinNumLeptons = n; }
 
       void         Begin();
@@ -91,6 +92,7 @@ namespace mithep
       Double_t     fMinPhotonEt;
       Double_t     fMaxPhotonEta;
       Double_t     fMinMetEt;
+      Double_t     fMaxMetEt;
 
       Int_t                    fNEventsSelected;         //selected events
 

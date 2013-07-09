@@ -47,6 +47,7 @@ MonoPhotonAnalysisMod::MonoPhotonAnalysisMod(const char *name, const char *title
   fMinPhotonEt                   (30),
   fMaxPhotonEta                  (2.4),
   fMinMetEt                      (30),
+  fMaxMetEt                      (9999),
   // Counters....
   fNEventsSelected(0)
 {
@@ -77,7 +78,7 @@ void MonoPhotonAnalysisMod::SlaveBegin()
   //*************************************************************************************************
   // Selection Histograms
   //*************************************************************************************************
-  AddTH1(fMonoPhotonSelection,"hMonoPhotonSelection", ";Cuts;Number of Events",             5, 0, 5);
+  AddTH1(fMonoPhotonSelection,"hMonoPhotonSelection", ";Cuts;Number of Events",             6, 0, 6);
   
   // Create const char* labels with cut values
   std::ostringstream os1;
@@ -179,10 +180,10 @@ void MonoPhotonAnalysisMod::Process()
   if ( nHardEtaPh > 0 ) passCut[2] = true;
 
   //***********************************************************************************************
-  // Discard events with soft met
+  // Discard events with soft/hard met
   //***********************************************************************************************
   const Met *stdMet = fMet->At(0);
-  if ( stdMet->Pt() >= fMinMetEt )  passCut[3] = true;
+  if ( (stdMet->Pt() >= fMinMetEt) && (stdMet->Pt() < fMaxMetEt) )  passCut[3] = true;
 
   //***********************************************************************************************
   // Discard events with too few leptons
