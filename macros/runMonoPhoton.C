@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.21 2013/07/08 18:40:40 cferko Exp $
+// $Id: runMonoPhoton.C,v 1.22 2013/07/09 01:45:12 dimatteo Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -383,7 +383,6 @@ void runMonoPhoton(const char *fileset    = "0000",
   phfake->SetMinPhotonEt(100);
   phfake->SetMaxPhotonEta(2.4);
   phfake->SetMinMetEt(0);
-  phfake->SetMaxMetEt(30);
 
   MonoPhotonAnalysisMod         *beamhalo = new MonoPhotonAnalysisMod("MonoPhotonSelector_beamhalo");
   beamhalo->SetInputPhotonsName(photreg->GetOutputName()); //all photons
