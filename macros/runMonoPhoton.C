@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.20 2013/07/08 03:46:14 dimatteo Exp $
+// $Id: runMonoPhoton.C,v 1.21 2013/07/08 18:40:40 cferko Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -371,6 +371,33 @@ void runMonoPhoton(const char *fileset    = "0000",
   dilepton->SetMaxPhotonEta(2.4);
   dilepton->SetMinMetEt(0);
 
+  MonoPhotonAnalysisMod         *phfake = new MonoPhotonAnalysisMod("MonoPhotonSelector_phfake");
+  phfake->SetInputPhotonsName(photreg->GetOutputName()); //all photons
+  phfake->SetInputElectronsName(electronCleaning->GetOutputName()); //identified electrons
+  phfake->SetInputMuonsName(muonIdMod->GetOutputName()); //muons
+  phfake->SetPhotonsFromBranch(kFALSE);
+  phfake->SetElectronsFromBranch(kFALSE);
+  phfake->SetMuonsFromBranch(kFALSE);
+  phfake->SetMinNumPhotons(1);
+  phfake->SetMinNumLeptons(0);
+  phfake->SetMinPhotonEt(100);
+  phfake->SetMaxPhotonEta(2.4);
+  phfake->SetMinMetEt(0);
+  phfake->SetMaxMetEt(30);
+
+  MonoPhotonAnalysisMod         *beamhalo = new MonoPhotonAnalysisMod("MonoPhotonSelector_beamhalo");
+  beamhalo->SetInputPhotonsName(photreg->GetOutputName()); //all photons
+  beamhalo->SetInputElectronsName(electronCleaning->GetOutputName()); //identified electrons
+  beamhalo->SetInputMuonsName(muonIdMod->GetOutputName()); //muons
+  beamhalo->SetPhotonsFromBranch(kFALSE);
+  beamhalo->SetElectronsFromBranch(kFALSE);
+  beamhalo->SetMuonsFromBranch(kFALSE);
+  beamhalo->SetMinNumPhotons(1);
+  beamhalo->SetMinNumLeptons(0);
+  beamhalo->SetMinPhotonEt(100);
+  beamhalo->SetMaxPhotonEta(2.4);
+  beamhalo->SetMinMetEt(100);
+
   TString tupleName = TString(outputName);
   tupleName += TString("_") + TString(dataset) + TString("_") + TString(skim);
   if (TString(fileset) != TString("")) tupleName += TString("_") + TString(fileset);
@@ -380,6 +407,16 @@ void runMonoPhoton(const char *fileset    = "0000",
   tupleName_dilepton += TString("_") + TString(dataset) + TString("_") + TString(skim);
   if (TString(fileset) != TString("")) tupleName_dilepton += TString("_") + TString(fileset);
   tupleName_dilepton += TString("_tree_dilepton.root");
+
+  TString tupleName_phfake = TString(outputName);
+  tupleName_phfake += TString("_") + TString(dataset) + TString("_") + TString(skim);
+  if (TString(fileset) != TString("")) tupleName_phfake += TString("_") + TString(fileset);
+  tupleName_phfake += TString("_tree_phfake.root");
+
+  TString tupleName_beamhalo = TString(outputName);
+  tupleName_beamhalo += TString("_") + TString(dataset) + TString("_") + TString(skim);
+  if (TString(fileset) != TString("")) tupleName_beamhalo += TString("_") + TString(fileset);
+  tupleName_beamhalo += TString("_tree_beamhalo.root");
 
   MonoPhotonTreeWriter *phplusmettree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter");
   phplusmettree->SetPhotonsFromBranch(kFALSE);
@@ -413,6 +450,38 @@ void runMonoPhoton(const char *fileset    = "0000",
   dileptontree->SetProcessID(0);
   dileptontree->SetTupleName(tupleName_dilepton);
 
+  MonoPhotonTreeWriter *phfaketree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter_phfake");
+  phfaketree->SetPhotonsFromBranch(kFALSE);
+  phfaketree->SetPhotonsName(photonCleaningMod->GetOutputName());
+  phfaketree->SetElectronsFromBranch(kFALSE);
+  phfaketree->SetElectronsName(electronCleaning->GetOutputName());
+  phfaketree->SetMuonsFromBranch(kFALSE);
+  phfaketree->SetMuonsName(muonIdMod->GetOutputName());
+  phfaketree->SetJetsFromBranch(kFALSE);
+  phfaketree->SetJetsName(theJetCleaning->GetOutputName());
+  phfaketree->SetPVFromBranch(kFALSE);
+  phfaketree->SetPVName(goodPVFilterMod->GetOutputName());
+  phfaketree->SetLeptonsName(merger->GetOutputName());
+  phfaketree->SetIsData(isData);
+  phfaketree->SetProcessID(0);
+  phfaketree->SetTupleName(tupleName_phfake);
+
+  MonoPhotonTreeWriter *beamhalotree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter_beamhalo");
+  beamhalotree->SetPhotonsFromBranch(kFALSE);
+  beamhalotree->SetPhotonsName(photonCleaningMod->GetOutputName());
+  beamhalotree->SetElectronsFromBranch(kFALSE);
+  beamhalotree->SetElectronsName(electronCleaning->GetOutputName());
+  beamhalotree->SetMuonsFromBranch(kFALSE);
+  beamhalotree->SetMuonsName(muonIdMod->GetOutputName());
+  beamhalotree->SetJetsFromBranch(kFALSE);
+  beamhalotree->SetJetsName(theJetCleaning->GetOutputName());
+  beamhalotree->SetPVFromBranch(kFALSE);
+  beamhalotree->SetPVName(goodPVFilterMod->GetOutputName());
+  beamhalotree->SetLeptonsName(merger->GetOutputName());
+  beamhalotree->SetIsData(isData);
+  beamhalotree->SetProcessID(0);
+  beamhalotree->SetTupleName(tupleName_beamhalo);
+
   //------------------------------------------------------------------------------------------------
   // making analysis chain
   //------------------------------------------------------------------------------------------------
@@ -428,22 +497,30 @@ void runMonoPhoton(const char *fileset    = "0000",
   photreg          ->Add(SepPUMod); 
   SepPUMod         ->Add(muonIdMod);
   muonIdMod        ->Add(eleIdMod);
-  eleIdMod	   ->Add(electronCleaning);
+  eleIdMod         ->Add(electronCleaning);
   electronCleaning ->Add(merger);
   merger           ->Add(photonIDMod);
-  photonIDMod	   ->Add(photonCleaningMod);
+  photonIDMod      ->Add(photonCleaningMod);
   photonCleaningMod->Add(pubJet);
   pubJet           ->Add(jetCorr);
   jetCorr          ->Add(theJetID);
-  theJetID	   ->Add(theJetCleaning);
+  theJetID         ->Add(theJetCleaning);
    
   // Gamma+met selection
   theJetCleaning   ->Add(phplusmet);
   phplusmet        ->Add(phplusmettree);
   
   // Dilepton selection
-  theJetCleaning    ->Add(dilepton);
-  dilepton          ->Add(dileptontree);
+  theJetCleaning   ->Add(dilepton);
+  dilepton         ->Add(dileptontree);
+
+  // Fake photon selection
+  theJetCleaning   ->Add(phfake);
+  phfake         ->Add(phfaketree);
+
+  // Beam Halo selection
+  theJetCleaning    ->Add(beamhalo);
+  beamhalo          ->Add(beamhalotree);
 
   //------------------------------------------------------------------------------------------------
   // setup analysis
