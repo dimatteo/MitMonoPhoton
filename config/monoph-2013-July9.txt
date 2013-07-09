@@ -5,13 +5,38 @@
 #Summer2013
 #==============================================================================================================================================================
 #=   MC   =====================================================================================================================================================
-#t2mit/filefi/029  s12-zgllg-v7a                   noskim        Z#gamma->ll#gamma               132.6        1.0    -1.0    ~  
-##Just for testing
-#t2mit/filefi/029    s12-h125gg-vh-v7a               noskim         H-125->#gamma#gamma             0.03742      1.0    -1.0    ~
-t2mit/filefi/030    s12-qcdht1000-v7a               noskim         QCD~HT~1000                     0.03742      1.0    -1.0    ~
-t2mit/filefi/029    s12-h105gg-gf-v7a               noskim         H-105->#gamma#gamma             0.03742      1.0    -1.0    ~
-#t2mit/filefi/029   s12-h125gg-vh-v7a             noskim         h->#gamma#gamma~125~GeV         0.03742     1.0     -1.0   ~ 
+t2mit/filefi/031   s12-zgptg130-v7c              noskim         Z#gamma->#nu#nu#gamma           0.074             1.0     -1.0     ~  
+t2mit/filefi/031   s12-wjets-ptw100-v7a          noskim         W->l#nu                         221.3             1.0     -1.0     ~  
+t2mit/filefi/031   s12-wgptg130-v7a              noskim         W#gamma->l#nu#gamma             0.2571            1.0     -1.0     ~  
+t2mit/filefi/031   s12-qcdht100-250-v7a          noskim         QCD                             1.036E7           1.0     -1.0     ~  
+t2mit/filefi/031   s12-qcdht250-500-v7a          noskim         QCD                             276000.0          1.0     -1.0     ~  
+t2mit/filefi/031   s12-qcdht500-1000-v7a         noskim         QCD                             8426.0            1.0     -1.0     ~  
+t2mit/filefi/031   s12-qcdht1000-v7a             noskim         QCD                             204.0             1.0     -1.0     ~  
+t2mit/filefi/031   s12-2pibo10_25-v7a            noskim         ff->#gamma#gamma                236.4             1.0     -1.0     ~  
+t2mit/filefi/031   s12-2pibo25_250-v7a           noskim         ff->#gamma#gamma                25.41             1.0     -1.0     ~  
+t2mit/filefi/031   s12-2pibo250-v7a              noskim         ff->#gamma#gamma                0.0108            1.0     -1.0     ~  
+t2mit/filefi/031   s12-2pibx10_25-v7a            noskim         gg->#gamma#gamma                424.8             1.0     -1.0     ~  
+t2mit/filefi/031   s12-2pibx25_250-v7a           noskim         gg->#gamma#gamma                15.54             1.0     -1.0     ~  
+t2mit/filefi/031   s12-2pibx250-v7a              noskim         gg->#gamma#gamma                0.0011805         1.0     -1.0     ~  
+t2mit/filefi/031   s12-pj50_80-v7a               noskim         #gamma+jets                     3322.309          1.0     -1.0     ~
+t2mit/filefi/031   s12-pj80_120-v7a              noskim         #gamma+jets                     558.2865          1.0     -1.0     ~
+t2mit/filefi/031   s12-pj120_170-v7a             noskim         #gamma+jets                     108.0068          1.0     -1.0     ~
+t2mit/filefi/031   s12-pj170_300-v7a             noskim         #gamma+jets                     30.12207          1.0     -1.0     ~
+t2mit/filefi/031   s12-pj300_470-v7a             noskim         #gamma+jets                     2.138632          1.0     -1.0     ~
+t2mit/filefi/031   s12-pj470_800-v7a             noskim         #gamma+jets                     0.2119244         1.0     -1.0     ~
+t2mit/filefi/031   s12-pj800_1400-v7a            noskim         #gamma+jets                     0.007077847       1.0     -1.0     ~
+t2mit/filefi/031   s12-pj1400_1800-v7a           noskim         #gamma+jets                     0.000045103       1.0     -1.0     ~
+t2mit/filefi/031   s12-pj1800-v7a                noskim         #gamma+jets                     0.000001867       1.0     -1.0     ~
+t2mit/filefi/031   s12-pj1400_1800-v7a           noskim         #gamma+jets                     0.000045103       1.0     -1.0     ~
+t2mit/filefi/031   s12-zgllgptg130-v7a           noskim         Z#gamma->ll#gamma~PT~130        0.0478            1.0     -1.0     ~
+t2mit/filefi/031   s12-zgllg-v7a                 noskim         Z#gamma->ll#gamma               132.6             1.0     -1.0     ~
 #==============================================================================================================================================================
 #=  DATA  =====================================================================================================================================================
-#t2mit/filefi/025 r11a-pho-j16-v1-bp              noskim         data                            -1.0         1.0   -1.0    augmented_nov08_rereco.json
-#t2mit/filefi/025 r11b-pho-j16-v1-bp              noskim         data                            -1.0         1.0   -1.0    augmented_nov08_rereco.json
+t2mit/filefi/031   r12a-pho-j22-v1               noskim         data                            -1.0              1.0     -1.0     Cert_190456-203742_8TeV_22Jan2013ReReco_Collisions12_JSON.txt
+t2mit/filefi/031   r12b-sph-j22-v1               noskim         data                            -1.0              1.0     -1.0     Cert_190456-203742_8TeV_22Jan2013ReReco_Collisions12_JSON.txt
+t2mit/filefi/031   r12c-sph-j22-v1               noskim         data                            -1.0              1.0     -1.0     Cert_190456-203742_8TeV_22Jan2013ReReco_Collisions12_JSON.txt
+t2mit/filefi/031   r12d-sph-j22-v1               noskim         data                            -1.0              1.0     -1.0     Cert_190456-203742_8TeV_22Jan2013ReReco_Collisions12_JSON.txt
+t2mit/filefi/031   r12a-phh-j22-v1               noskim         data                            -1.0              1.0     -1.0     Cert_190456-203742_8TeV_22Jan2013ReReco_Collisions12_JSON.txt
+t2mit/filefi/031   r12b-phh-j22-v1               noskim         data                            -1.0              1.0     -1.0     Cert_190456-203742_8TeV_22Jan2013ReReco_Collisions12_JSON.txt
+t2mit/filefi/031   r12c-phh-j22-v1               noskim         data                            -1.0              1.0     -1.0     Cert_190456-203742_8TeV_22Jan2013ReReco_Collisions12_JSON.txt
+t2mit/filefi/031   r12d-phh-j22-v1               noskim         data                            -1.0              1.0     -1.0     Cert_190456-203742_8TeV_22Jan2013ReReco_Collisions12_JSON.txt
