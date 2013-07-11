@@ -30,6 +30,7 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fElectronsName          (Names::gkElectronBrn),
   fMuonsName              (Names::gkMuonBrn),
   fJetsName               (Names::gkPFJetBrn),
+  fCosmicsName            ("CosmicMuons"),//"CosmicMuons"),
   fLeptonsName            (ModNames::gkMergedLeptonsName),
 
   fSuperClustersName      ("PFSuperClusters"),
@@ -45,6 +46,7 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fElectronsFromBranch    (kTRUE),  
   fMuonsFromBranch        (kTRUE),  
   fJetsFromBranch         (kTRUE),
+  fCosmicsFromBranch      (kTRUE),
   fPVFromBranch           (kTRUE),
 
   // ----------------------------------------
@@ -52,6 +54,7 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fElectrons              (0),
   fMuons                  (0),
   fJets                   (0),
+  fCosmics                (0),
   fTracks                 (0),
   fPV                     (0),
   fBeamspot               (0),
@@ -86,6 +89,7 @@ void MonoPhotonTreeWriter::Process()
   LoadEventObject(fElectronsName,     fElectrons,     fElectronsFromBranch);
   LoadEventObject(fMuonsName,         fMuons,         fMuonsFromBranch);
   LoadEventObject(fJetsName,          fJets,          fJetsFromBranch);
+  LoadEventObject(fCosmicsName,       fCosmics,       fCosmicsFromBranch);
 
   LoadEventObject(fPVName,            fPV,            fPVFromBranch);    
   LoadEventObject(fBeamspotName,      fBeamspot);
@@ -172,9 +176,48 @@ void MonoPhotonTreeWriter::Process()
     fMitGPTree.phoECALisoDR04_a1_	  = photon->EcalRecHitIsoDr04();
     fMitGPTree.phoHollowConeTKisoDR04_a1_ = photon->HollowConeTrkIsoDr04();
     fMitGPTree.phoCoviEtaiEta_a1_	  = photon->CoviEtaiEta();
+    fMitGPTree.phoCoviPhiiPhi_a1_	  = photon->SCluster()->Cluster(0)->CoviPhiiPhi();
     fMitGPTree.phoR9_a1_		  = photon->SCluster()->R9();
     fMitGPTree.phoSeedTime_a1_  	  = photon->SCluster()->SeedTime();
     fMitGPTree.phoHadOverEm_a1_ 	  = photon->HadOverEm();
+    fMitGPTree.phoLeadTimeSpan_a1_  	  = photon->SCluster()->LeadTimeSpan();
+    fMitGPTree.phoSubLeadTimeSpan_a1_  	  = photon->SCluster()->SubLeadTimeSpan();
+    fMitGPTree.phoMipChi2_a1_ = photon->MipChi2();
+    fMitGPTree.phoMipTotEnergy_a1_ = photon->MipTotEnergy();
+    fMitGPTree.phoMipSlope_a1_ = photon->MipSlope();
+    fMitGPTree.phoMipIntercept_a1_ = photon->MipIntercept();
+    fMitGPTree.phoMipNhitCone_a1_ = photon->MipNhitCone();
+    fMitGPTree.phoMipIsHalo_a1_ = photon->MipIsHalo();
+    // get the best matched HBHE hit
+    if ( photon->MatchHePlusEn() > 0 && photon->MatchHeMinusEn() < 0 ) {
+      fMitGPTree.phoMatchHeEta_a1_ = photon->MatchHePlusPos().Eta();
+      fMitGPTree.phoMatchHePhi_a1_ = photon->MatchHePlusPos().Phi();
+      fMitGPTree.phoMatchHeEn_a1_ = photon->MatchHePlusEn();
+      fMitGPTree.phoMatchHeTime_a1_ = photon->MatchHePlusTime();
+    }
+    else if ( photon->MatchHePlusEn() < 0 && photon->MatchHeMinusEn() > 0 ) {
+      fMitGPTree.phoMatchHeEta_a1_ = photon->MatchHeMinusPos().Eta();
+      fMitGPTree.phoMatchHePhi_a1_ = photon->MatchHeMinusPos().Phi();
+      fMitGPTree.phoMatchHeEn_a1_ = photon->MatchHeMinusEn();
+      fMitGPTree.phoMatchHeTime_a1_ = photon->MatchHeMinusTime();
+    }
+    else if ( photon->MatchHePlusEn() > 0 && photon->MatchHeMinusEn() > 0 ) {
+      // in case you have a matched rh on both HE sides take the closest one in phi
+      float corrDeltaPhiPlus = GetCorrDeltaPhi(photon->Mom().phi(), photon->MatchHePlusPos().Phi());
+      float corrDeltaPhiMinus = GetCorrDeltaPhi(photon->Mom().phi(), photon->MatchHeMinusPos().Phi());
+      if (corrDeltaPhiPlus < corrDeltaPhiMinus) {
+        fMitGPTree.phoMatchHeEta_a1_ = photon->MatchHePlusPos().Eta();
+        fMitGPTree.phoMatchHePhi_a1_ = photon->MatchHePlusPos().Phi();
+        fMitGPTree.phoMatchHeEn_a1_ = photon->MatchHePlusEn();
+        fMitGPTree.phoMatchHeTime_a1_ = photon->MatchHePlusTime();
+      }
+      else {
+        fMitGPTree.phoMatchHeEta_a1_ = photon->MatchHeMinusPos().Eta();
+        fMitGPTree.phoMatchHePhi_a1_ = photon->MatchHeMinusPos().Phi();
+        fMitGPTree.phoMatchHeEn_a1_ = photon->MatchHeMinusEn();
+        fMitGPTree.phoMatchHeTime_a1_ = photon->MatchHeMinusTime();
+      }
+    }
   }
   if(fPhotons->GetEntries() >= 2) {
     const Photon *photon = fPhotons->At(1);
@@ -186,13 +229,51 @@ void MonoPhotonTreeWriter::Process()
     fMitGPTree.phoECALisoDR04_a2_	  = photon->EcalRecHitIsoDr04();
     fMitGPTree.phoHollowConeTKisoDR04_a2_ = photon->HollowConeTrkIsoDr04();
     fMitGPTree.phoCoviEtaiEta_a2_	  = photon->CoviEtaiEta();
+    fMitGPTree.phoCoviPhiiPhi_a2_	  = photon->SCluster()->Cluster(0)->CoviPhiiPhi();
     fMitGPTree.phoR9_a2_		  = photon->SCluster()->R9();
     fMitGPTree.phoSeedTime_a2_  	  = photon->SCluster()->SeedTime();
     fMitGPTree.phoHadOverEm_a2_ 	  = photon->HadOverEm();
+    fMitGPTree.phoLeadTimeSpan_a2_  	  = photon->SCluster()->LeadTimeSpan();
+    fMitGPTree.phoSubLeadTimeSpan_a2_  	  = photon->SCluster()->SubLeadTimeSpan();
+    fMitGPTree.phoMipChi2_a2_ = photon->MipChi2();
+    fMitGPTree.phoMipTotEnergy_a2_ = photon->MipTotEnergy();
+    fMitGPTree.phoMipSlope_a2_ = photon->MipSlope();
+    fMitGPTree.phoMipIntercept_a2_ = photon->MipIntercept();
+    fMitGPTree.phoMipNhitCone_a2_ = photon->MipNhitCone();
+    fMitGPTree.phoMipIsHalo_a2_ = photon->MipIsHalo();
+    // get the best matched HBHE hit
+    if ( photon->MatchHePlusEn() > 0 && photon->MatchHeMinusEn() < 0 ) {
+      fMitGPTree.phoMatchHeEta_a2_ = photon->MatchHePlusPos().Eta();
+      fMitGPTree.phoMatchHePhi_a2_ = photon->MatchHePlusPos().Phi();
+      fMitGPTree.phoMatchHeEn_a2_ = photon->MatchHePlusEn();
+      fMitGPTree.phoMatchHeTime_a2_ = photon->MatchHePlusTime();
+    }
+    else if ( photon->MatchHePlusEn() < 0 && photon->MatchHeMinusEn() > 0 ) {
+      fMitGPTree.phoMatchHeEta_a2_ = photon->MatchHeMinusPos().Eta();
+      fMitGPTree.phoMatchHePhi_a2_ = photon->MatchHeMinusPos().Phi();
+      fMitGPTree.phoMatchHeEn_a2_ = photon->MatchHeMinusEn();
+      fMitGPTree.phoMatchHeTime_a2_ = photon->MatchHeMinusTime();
+    }
+    else if ( photon->MatchHePlusEn() > 0 && photon->MatchHeMinusEn() > 0 ) {
+      // in case you have a matched rh on both HE sides take the closest one in phi
+      float corrDeltaPhiPlus = GetCorrDeltaPhi(photon->Mom().phi(), photon->MatchHePlusPos().Phi());
+      float corrDeltaPhiMinus = GetCorrDeltaPhi(photon->Mom().phi(), photon->MatchHeMinusPos().Phi());
+      if (corrDeltaPhiPlus < corrDeltaPhiMinus) {
+        fMitGPTree.phoMatchHeEta_a2_ = photon->MatchHePlusPos().Eta();
+        fMitGPTree.phoMatchHePhi_a2_ = photon->MatchHePlusPos().Phi();
+        fMitGPTree.phoMatchHeEn_a2_ = photon->MatchHePlusEn();
+        fMitGPTree.phoMatchHeTime_a2_ = photon->MatchHePlusTime();
+      }
+      else {
+        fMitGPTree.phoMatchHeEta_a2_ = photon->MatchHeMinusPos().Eta();
+        fMitGPTree.phoMatchHePhi_a2_ = photon->MatchHeMinusPos().Phi();
+        fMitGPTree.phoMatchHeEn_a2_ = photon->MatchHeMinusEn();
+        fMitGPTree.phoMatchHeTime_a2_ = photon->MatchHeMinusTime();
+      }
+    }
   }
   if(fPhotons->GetEntries() >= 3) {
     const Photon *photon = fPhotons->At(2);
-    fMitGPTree.pho3_			  = photon->Mom();
     fMitGPTree.phoHCALisoDR03_a3_	  = photon->HcalTowerSumEtDr03();
     fMitGPTree.phoECALisoDR03_a3_	  = photon->EcalRecHitIsoDr03();
     fMitGPTree.phoHollowConeTKisoDR03_a3_ = photon->HollowConeTrkIsoDr03();
@@ -200,13 +281,51 @@ void MonoPhotonTreeWriter::Process()
     fMitGPTree.phoECALisoDR04_a3_	  = photon->EcalRecHitIsoDr04();
     fMitGPTree.phoHollowConeTKisoDR04_a3_ = photon->HollowConeTrkIsoDr04();
     fMitGPTree.phoCoviEtaiEta_a3_	  = photon->CoviEtaiEta();
+    fMitGPTree.phoCoviPhiiPhi_a3_	  = photon->SCluster()->Cluster(0)->CoviPhiiPhi();
     fMitGPTree.phoR9_a3_		  = photon->SCluster()->R9();
     fMitGPTree.phoSeedTime_a3_  	  = photon->SCluster()->SeedTime();
     fMitGPTree.phoHadOverEm_a3_ 	  = photon->HadOverEm();
+    fMitGPTree.phoLeadTimeSpan_a3_  	  = photon->SCluster()->LeadTimeSpan();
+    fMitGPTree.phoSubLeadTimeSpan_a3_  	  = photon->SCluster()->SubLeadTimeSpan();
+    fMitGPTree.phoMipChi2_a3_ = photon->MipChi2();
+    fMitGPTree.phoMipTotEnergy_a3_ = photon->MipTotEnergy();
+    fMitGPTree.phoMipSlope_a3_ = photon->MipSlope();
+    fMitGPTree.phoMipIntercept_a3_ = photon->MipIntercept();
+    fMitGPTree.phoMipNhitCone_a3_ = photon->MipNhitCone();
+    fMitGPTree.phoMipIsHalo_a3_ = photon->MipIsHalo();
+    // get the best matched HBHE hit
+    if ( photon->MatchHePlusEn() > 0 && photon->MatchHeMinusEn() < 0 ) {
+      fMitGPTree.phoMatchHeEta_a3_ = photon->MatchHePlusPos().Eta();
+      fMitGPTree.phoMatchHePhi_a3_ = photon->MatchHePlusPos().Phi();
+      fMitGPTree.phoMatchHeEn_a3_ = photon->MatchHePlusEn();
+      fMitGPTree.phoMatchHeTime_a3_ = photon->MatchHePlusTime();
+    }
+    else if ( photon->MatchHePlusEn() < 0 && photon->MatchHeMinusEn() > 0 ) {
+      fMitGPTree.phoMatchHeEta_a3_ = photon->MatchHeMinusPos().Eta();
+      fMitGPTree.phoMatchHePhi_a3_ = photon->MatchHeMinusPos().Phi();
+      fMitGPTree.phoMatchHeEn_a3_ = photon->MatchHeMinusEn();
+      fMitGPTree.phoMatchHeTime_a3_ = photon->MatchHeMinusTime();
+    }
+    else if ( photon->MatchHePlusEn() > 0 && photon->MatchHeMinusEn() > 0 ) {
+      // in case you have a matched rh on both HE sides take the closest one in phi
+      float corrDeltaPhiPlus = GetCorrDeltaPhi(photon->Mom().phi(), photon->MatchHePlusPos().Phi());
+      float corrDeltaPhiMinus = GetCorrDeltaPhi(photon->Mom().phi(), photon->MatchHeMinusPos().Phi());
+      if (corrDeltaPhiPlus < corrDeltaPhiMinus) {
+        fMitGPTree.phoMatchHeEta_a3_ = photon->MatchHePlusPos().Eta();
+        fMitGPTree.phoMatchHePhi_a3_ = photon->MatchHePlusPos().Phi();
+        fMitGPTree.phoMatchHeEn_a3_ = photon->MatchHePlusEn();
+        fMitGPTree.phoMatchHeTime_a3_ = photon->MatchHePlusTime();
+      }
+      else {
+        fMitGPTree.phoMatchHeEta_a3_ = photon->MatchHeMinusPos().Eta();
+        fMitGPTree.phoMatchHePhi_a3_ = photon->MatchHeMinusPos().Phi();
+        fMitGPTree.phoMatchHeEn_a3_ = photon->MatchHeMinusEn();
+        fMitGPTree.phoMatchHeTime_a3_ = photon->MatchHeMinusTime();
+      }
+    }
   }
   if(fPhotons->GetEntries() >= 4) {
     const Photon *photon = fPhotons->At(3);
-    fMitGPTree.pho4_			  = photon->Mom();
     fMitGPTree.phoHCALisoDR03_a4_	  = photon->HcalTowerSumEtDr03();
     fMitGPTree.phoECALisoDR03_a4_	  = photon->EcalRecHitIsoDr03();
     fMitGPTree.phoHollowConeTKisoDR03_a4_ = photon->HollowConeTrkIsoDr03();
@@ -214,9 +333,48 @@ void MonoPhotonTreeWriter::Process()
     fMitGPTree.phoECALisoDR04_a4_	  = photon->EcalRecHitIsoDr04();
     fMitGPTree.phoHollowConeTKisoDR04_a4_ = photon->HollowConeTrkIsoDr04();
     fMitGPTree.phoCoviEtaiEta_a4_	  = photon->CoviEtaiEta();
+    fMitGPTree.phoCoviPhiiPhi_a4_	  = photon->SCluster()->Cluster(0)->CoviPhiiPhi();
     fMitGPTree.phoR9_a4_		  = photon->SCluster()->R9();
     fMitGPTree.phoSeedTime_a4_  	  = photon->SCluster()->SeedTime();
     fMitGPTree.phoHadOverEm_a4_ 	  = photon->HadOverEm();
+    fMitGPTree.phoLeadTimeSpan_a4_  	  = photon->SCluster()->LeadTimeSpan();
+    fMitGPTree.phoSubLeadTimeSpan_a4_  	  = photon->SCluster()->SubLeadTimeSpan();
+    fMitGPTree.phoMipChi2_a4_ = photon->MipChi2();
+    fMitGPTree.phoMipTotEnergy_a4_ = photon->MipTotEnergy();
+    fMitGPTree.phoMipSlope_a4_ = photon->MipSlope();
+    fMitGPTree.phoMipIntercept_a4_ = photon->MipIntercept();
+    fMitGPTree.phoMipNhitCone_a4_ = photon->MipNhitCone();
+    fMitGPTree.phoMipIsHalo_a4_ = photon->MipIsHalo();
+    // get the best matched HBHE hit
+    if ( photon->MatchHePlusEn() > 0 && photon->MatchHeMinusEn() < 0 ) {
+      fMitGPTree.phoMatchHeEta_a4_ = photon->MatchHePlusPos().Eta();
+      fMitGPTree.phoMatchHePhi_a4_ = photon->MatchHePlusPos().Phi();
+      fMitGPTree.phoMatchHeEn_a4_ = photon->MatchHePlusEn();
+      fMitGPTree.phoMatchHeTime_a4_ = photon->MatchHePlusTime();
+    }
+    else if ( photon->MatchHePlusEn() < 0 && photon->MatchHeMinusEn() > 0 ) {
+      fMitGPTree.phoMatchHeEta_a4_ = photon->MatchHeMinusPos().Eta();
+      fMitGPTree.phoMatchHePhi_a4_ = photon->MatchHeMinusPos().Phi();
+      fMitGPTree.phoMatchHeEn_a4_ = photon->MatchHeMinusEn();
+      fMitGPTree.phoMatchHeTime_a4_ = photon->MatchHeMinusTime();
+    }
+    else if ( photon->MatchHePlusEn() > 0 && photon->MatchHeMinusEn() > 0 ) {
+      // in case you have a matched rh on both HE sides take the closest one in phi
+      float corrDeltaPhiPlus = GetCorrDeltaPhi(photon->Mom().phi(), photon->MatchHePlusPos().Phi());
+      float corrDeltaPhiMinus = GetCorrDeltaPhi(photon->Mom().phi(), photon->MatchHeMinusPos().Phi());
+      if (corrDeltaPhiPlus < corrDeltaPhiMinus) {
+        fMitGPTree.phoMatchHeEta_a4_ = photon->MatchHePlusPos().Eta();
+        fMitGPTree.phoMatchHePhi_a4_ = photon->MatchHePlusPos().Phi();
+        fMitGPTree.phoMatchHeEn_a4_ = photon->MatchHePlusEn();
+        fMitGPTree.phoMatchHeTime_a4_ = photon->MatchHePlusTime();
+      }
+      else {
+        fMitGPTree.phoMatchHeEta_a4_ = photon->MatchHeMinusPos().Eta();
+        fMitGPTree.phoMatchHePhi_a4_ = photon->MatchHeMinusPos().Phi();
+        fMitGPTree.phoMatchHeEn_a4_ = photon->MatchHeMinusEn();
+        fMitGPTree.phoMatchHeTime_a4_ = photon->MatchHeMinusTime();
+      }
+    }
   }
 
   //JETS
@@ -241,7 +399,20 @@ void MonoPhotonTreeWriter::Process()
     fMitGPTree.jet4_     = jet->Mom();
     fMitGPTree.jet4Btag_ = jet->CombinedSecondaryVertexBJetTagsDisc();
   }
-        
+   
+  //COSMIC MUONS
+  fMitGPTree.ncosmics_ = 0;
+  for(unsigned int i = 0; i < fCosmics->GetEntries(); i++) {
+    const mithep::Muon* cMuon = fCosmics->At(i);
+    //save only cosmics with an associated valid standalone track
+    if(!cMuon->HasStandaloneTrk() || !cMuon->IsStandaloneMuon()) continue;
+
+    if(fMitGPTree.ncosmics_ == 0) fMitGPTree.cosmic1_ = cMuon->Mom();
+    if(fMitGPTree.ncosmics_ == 1) fMitGPTree.cosmic2_ = cMuon->Mom();
+    if(fMitGPTree.ncosmics_ == 2) fMitGPTree.cosmic3_ = cMuon->Mom();
+    fMitGPTree.ncosmics_++;
+  }
+     
   //TRACKS
   fMitGPTree.ntracks_ = 0;
   for(unsigned int i = 0; i < fTracks->GetEntries(); i++) {
@@ -308,6 +479,7 @@ void MonoPhotonTreeWriter::SlaveBegin()
   ReqEventObject(fElectronsName,     fElectrons,      fElectronsFromBranch);
   ReqEventObject(fMuonsName,         fMuons,          fMuonsFromBranch);
   ReqEventObject(fJetsName,          fJets,           fJetsFromBranch);
+  ReqEventObject(fCosmicsName,       fCosmics,        fCosmicsFromBranch);
 
   ReqEventObject(fSuperClustersName,  fSuperClusters, true);
   ReqEventObject(fTracksName,         fTracks,        true);
@@ -335,4 +507,13 @@ void MonoPhotonTreeWriter::SlaveTerminate()
   fOutputFile->Write();
   fOutputFile->Close();
   cout << "Processed events on MonoPhotonTreeWriter: " << fNEventsSelected << endl;
+}
+
+//--------------------------------------------------------------------------------------------------
+float MonoPhotonTreeWriter::GetCorrDeltaPhi(float phi1, float phi2)
+{
+  float corrDeltaPhi = TMath::Abs(phi1 - phi2);
+  if (corrDeltaPhi > TMath::Pi())
+    corrDeltaPhi = TMath::TwoPi() - corrDeltaPhi;     
+  return corrDeltaPhi;
 }

@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.22 2013/07/09 01:45:12 dimatteo Exp $
+// $Id: runMonoPhoton.C,v 1.23 2013/07/09 14:03:41 tsamson Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -426,6 +426,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   phplusmettree->SetMuonsName(muonIdMod->GetOutputName());
   phplusmettree->SetJetsFromBranch(kFALSE);
   phplusmettree->SetJetsName(theJetCleaning->GetOutputName());
+  phplusmettree->SetCosmicsFromBranch(kTRUE);
   phplusmettree->SetPVFromBranch(kFALSE);
   phplusmettree->SetPVName(goodPVFilterMod->GetOutputName());
   phplusmettree->SetLeptonsName(merger->GetOutputName());
@@ -442,6 +443,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   dileptontree->SetMuonsName(muonIdMod->GetOutputName());
   dileptontree->SetJetsFromBranch(kFALSE);
   dileptontree->SetJetsName(theJetCleaning->GetOutputName());
+  phplusmettree->SetCosmicsFromBranch(kTRUE);
   dileptontree->SetPVFromBranch(kFALSE);
   dileptontree->SetPVName(goodPVFilterMod->GetOutputName());
   dileptontree->SetLeptonsName(merger->GetOutputName());
@@ -458,6 +460,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   phfaketree->SetMuonsName(muonIdMod->GetOutputName());
   phfaketree->SetJetsFromBranch(kFALSE);
   phfaketree->SetJetsName(theJetCleaning->GetOutputName());
+  phplusmettree->SetCosmicsFromBranch(kTRUE);
   phfaketree->SetPVFromBranch(kFALSE);
   phfaketree->SetPVName(goodPVFilterMod->GetOutputName());
   phfaketree->SetLeptonsName(merger->GetOutputName());
@@ -474,6 +477,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   beamhalotree->SetMuonsName(muonIdMod->GetOutputName());
   beamhalotree->SetJetsFromBranch(kFALSE);
   beamhalotree->SetJetsName(theJetCleaning->GetOutputName());
+  phplusmettree->SetCosmicsFromBranch(kTRUE);
   beamhalotree->SetPVFromBranch(kFALSE);
   beamhalotree->SetPVName(goodPVFilterMod->GetOutputName());
   beamhalotree->SetLeptonsName(merger->GetOutputName());

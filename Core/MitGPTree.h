@@ -37,7 +37,7 @@ class MitGPTree {
     GoodPhoton      = 1UL<<0,    // good photon
     Fake            = 1UL<<1,    // fake
     BeamHalo        = 1UL<<2,    // beam halo
-    DiLepton        = 1UL<<3,    // dilepton
+    DiLepton        = 1UL<<3     // dilepton
   };
 
   /// variables
@@ -70,9 +70,22 @@ class MitGPTree {
   float phoECALisoDR04_a1_;
   float phoHollowConeTKisoDR04_a1_;
   float phoCoviEtaiEta_a1_;
+  float phoCoviPhiiPhi_a1_;
   float phoR9_a1_;
   float phoSeedTime_a1_;
   float phoHadOverEm_a1_;
+  float phoLeadTimeSpan_a1_;
+  float phoSubLeadTimeSpan_a1_;
+  float phoMipChi2_a1_;
+  float phoMipTotEnergy_a1_;
+  float phoMipSlope_a1_;
+  float phoMipIntercept_a1_;
+  int   phoMipNhitCone_a1_;
+  bool  phoMipIsHalo_a1_;
+  float phoMatchHeEta_a1_;
+  float phoMatchHePhi_a1_;
+  float phoMatchHeEn_a1_;
+  float phoMatchHeTime_a1_;
   LorentzVector  pho2_;
   float phoHCALisoDR03_a2_;
   float phoECALisoDR03_a2_;
@@ -81,9 +94,22 @@ class MitGPTree {
   float phoECALisoDR04_a2_;
   float phoHollowConeTKisoDR04_a2_;
   float phoCoviEtaiEta_a2_;
+  float phoCoviPhiiPhi_a2_;
   float phoR9_a2_;
   float phoSeedTime_a2_;
   float phoHadOverEm_a2_;
+  float phoLeadTimeSpan_a2_;
+  float phoSubLeadTimeSpan_a2_;
+  float phoMipChi2_a2_;
+  float phoMipTotEnergy_a2_;
+  float phoMipSlope_a2_;
+  float phoMipIntercept_a2_;
+  int   phoMipNhitCone_a2_;
+  bool  phoMipIsHalo_a2_;
+  float phoMatchHeEta_a2_;
+  float phoMatchHePhi_a2_;
+  float phoMatchHeEn_a2_;
+  float phoMatchHeTime_a2_;
   LorentzVector  pho3_;
   float phoHCALisoDR03_a3_;
   float phoECALisoDR03_a3_;
@@ -92,9 +118,22 @@ class MitGPTree {
   float phoECALisoDR04_a3_;
   float phoHollowConeTKisoDR04_a3_;
   float phoCoviEtaiEta_a3_;
+  float phoCoviPhiiPhi_a3_;
   float phoR9_a3_;
   float phoSeedTime_a3_;
   float phoHadOverEm_a3_;
+  float phoLeadTimeSpan_a3_;
+  float phoSubLeadTimeSpan_a3_;
+  float phoMipChi2_a3_;
+  float phoMipTotEnergy_a3_;
+  float phoMipSlope_a3_;
+  float phoMipIntercept_a3_;
+  int   phoMipNhitCone_a3_;
+  bool  phoMipIsHalo_a3_;
+  float phoMatchHeEta_a3_;
+  float phoMatchHePhi_a3_;
+  float phoMatchHeEn_a3_;
+  float phoMatchHeTime_a3_;
   LorentzVector  pho4_;
   float phoHCALisoDR03_a4_;
   float phoECALisoDR03_a4_;
@@ -103,9 +142,22 @@ class MitGPTree {
   float phoECALisoDR04_a4_;
   float phoHollowConeTKisoDR04_a4_;
   float phoCoviEtaiEta_a4_;
+  float phoCoviPhiiPhi_a4_;
   float phoR9_a4_;
   float phoSeedTime_a4_;
   float phoHadOverEm_a4_;
+  float phoLeadTimeSpan_a4_;
+  float phoSubLeadTimeSpan_a4_;
+  float phoMipChi2_a4_;
+  float phoMipTotEnergy_a4_;
+  float phoMipSlope_a4_;
+  float phoMipIntercept_a4_;
+  int   phoMipNhitCone_a4_;
+  bool  phoMipIsHalo_a4_;
+  float phoMatchHeEta_a4_;
+  float phoMatchHePhi_a4_;
+  float phoMatchHeEn_a4_;
+  float phoMatchHeTime_a4_;
 
   unsigned int   njets_;
   LorentzVector  jet1_;
@@ -121,6 +173,11 @@ class MitGPTree {
   LorentzVector  track1_;
   LorentzVector  track2_;
   LorentzVector  track3_;
+
+  unsigned int   ncosmics_;
+  LorentzVector  cosmic1_;
+  LorentzVector  cosmic2_;
+  LorentzVector  cosmic3_;
 
   float          Q_;
   float          id1_;
@@ -147,7 +204,8 @@ class MitGPTree {
     lepPtr1_(&lep1_),lepPtr2_(&lep2_),lepPtr3_(&lep3_),
     phoPtr1_(&pho1_),phoPtr2_(&pho2_),phoPtr3_(&pho3_),phoPtr4_(&pho4_),
     jetPtr1_(&jet1_),jetPtr2_(&jet2_),jetPtr3_(&jet3_),jetPtr4_(&jet4_),
-    trackPtr1_(&track1_),trackPtr2_(&track2_),trackPtr3_(&track3_){}
+    trackPtr1_(&track1_),trackPtr2_(&track2_),trackPtr3_(&track3_),
+    cosmicPtr1_(&cosmic1_),cosmicPtr2_(&cosmic2_),cosmicPtr3_(&cosmic3_){}
   /// default destructor
   ~MitGPTree(){
     if (f_) f_->Close();  
@@ -209,9 +267,22 @@ class MitGPTree {
     tree_->Branch("phoECALisoDR04_a1"         , &phoECALisoDR04_a1_         , "phoECALisoDR04_a1/F");
     tree_->Branch("phoHollowConeTKisoDR04_a1" , &phoHollowConeTKisoDR04_a1_ , "phoHollowConeTKisoDR04_a1/F");
     tree_->Branch("phoCoviEtaiEta_a1"         , &phoCoviEtaiEta_a1_         , "phoCoviEtaiEta_a1/F");
+    tree_->Branch("phoCoviPhiiPhi_a1"         , &phoCoviPhiiPhi_a1_         , "phoCoviPhiiPhi_a1/F");
     tree_->Branch("phoR9_a1"                  , &phoR9_a1_                  , "phoR9_a1/F");
     tree_->Branch("phoSeedTime_a1"            , &phoSeedTime_a1_            , "phoSeedTime_a1/F");
     tree_->Branch("phoHadOverEm_a1"           , &phoHadOverEm_a1_           , "phoHadOverEm_a1/F");
+    tree_->Branch("phoLeadTimeSpan_a1"        , &phoLeadTimeSpan_a1_        , "phoLeadTimeSpan_a1/F");
+    tree_->Branch("phoSubLeadTimeSpan_a1"     , &phoSubLeadTimeSpan_a1_     , "phoSubLeadTimeSpan_a1/F");
+    tree_->Branch("phoMipChi2_a1"             , &phoMipChi2_a1_             , "phoMipChi2_a1/F");
+    tree_->Branch("phoMipTotEnergy_a1"        , &phoMipTotEnergy_a1_        , "phoMipTotEnergy_a1/F");
+    tree_->Branch("phoMipSlope_a1"            , &phoMipSlope_a1_            , "phoMipSlope_a1/F");
+    tree_->Branch("phoMipIntercept_a1"        , &phoMipIntercept_a1_        , "phoMipIntercept_a1/F");
+    tree_->Branch("phoMipNhitCone_a1"         , &phoMipNhitCone_a1_         , "phoMipNhitCone_a1/I");
+    tree_->Branch("phoMipIsHalo_a1"           , &phoMipIsHalo_a1_           , "phoMipIsHalo_a1/B");
+    tree_->Branch("phoMatchHeEta_a1"          , &phoMatchHeEta_a1_          , "phoMatchHeEta_a1/F");
+    tree_->Branch("phoMatchHePhi_a1"          , &phoMatchHePhi_a1_          , "phoMatchHePhi_a1/F");
+    tree_->Branch("phoMatchHeEn_a1"           , &phoMatchHeEn_a1_           , "phoMatchHeEn_a1/F");
+    tree_->Branch("phoMatchHeTime_a1"         , &phoMatchHeTime_a1_         , "phoMatchHeTime_a1/F");
     tree_->Branch("pho2"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &phoPtr2_);
     tree_->Branch("phoHCALisoDR03_a2"         , &phoHCALisoDR03_a2_         , "phoHCALisoDR03_a2/F");
     tree_->Branch("phoECALisoDR03_a2"         , &phoECALisoDR03_a2_         , "phoECALisoDR03_a2/F");
@@ -220,9 +291,22 @@ class MitGPTree {
     tree_->Branch("phoECALisoDR04_a2"         , &phoECALisoDR04_a2_         , "phoECALisoDR04_a2/F");
     tree_->Branch("phoHollowConeTKisoDR04_a2" , &phoHollowConeTKisoDR04_a2_ , "phoHollowConeTKisoDR04_a2/F");
     tree_->Branch("phoCoviEtaiEta_a2"         , &phoCoviEtaiEta_a2_         , "phoCoviEtaiEta_a2/F");
+    tree_->Branch("phoCoviPhiiPhi_a2"         , &phoCoviPhiiPhi_a2_         , "phoCoviPhiiPhi_a2/F");
     tree_->Branch("phoR9_a2"                  , &phoR9_a2_                  , "phoR9_a2/F");
     tree_->Branch("phoSeedTime_a2"            , &phoSeedTime_a2_            , "phoSeedTime_a2/F");
     tree_->Branch("phoHadOverEm_a2"           , &phoHadOverEm_a2_           , "phoHadOverEm_a2/F");
+    tree_->Branch("phoLeadTimeSpan_a2"        , &phoLeadTimeSpan_a2_        , "phoLeadTimeSpan_a2/F");
+    tree_->Branch("phoSubLeadTimeSpan_a2"     , &phoSubLeadTimeSpan_a2_     , "phoSubLeadTimeSpan_a2/F");
+    tree_->Branch("phoMipChi2_a2"             , &phoMipChi2_a2_             , "phoMipChi2_a2/F");
+    tree_->Branch("phoMipTotEnergy_a2"        , &phoMipTotEnergy_a2_        , "phoMipTotEnergy_a2/F");
+    tree_->Branch("phoMipSlope_a2"            , &phoMipSlope_a2_            , "phoMipSlope_a2/F");
+    tree_->Branch("phoMipIntercept_a2"        , &phoMipIntercept_a2_        , "phoMipIntercept_a2/F");
+    tree_->Branch("phoMipNhitCone_a2"         , &phoMipNhitCone_a2_         , "phoMipNhitCone_a2/I");
+    tree_->Branch("phoMipIsHalo_a2"           , &phoMipIsHalo_a2_           , "phoMipIsHalo_a2/B");
+    tree_->Branch("phoMatchHeEta_a2"          , &phoMatchHeEta_a2_          , "phoMatchHeEta_a2/F");
+    tree_->Branch("phoMatchHePhi_a2"          , &phoMatchHePhi_a2_          , "phoMatchHePhi_a2/F");
+    tree_->Branch("phoMatchHeEn_a2"           , &phoMatchHeEn_a2_           , "phoMatchHeEn_a2/F");
+    tree_->Branch("phoMatchHeTime_a2"         , &phoMatchHeTime_a2_         , "phoMatchHeTime_a2/F");
     tree_->Branch("pho3"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &phoPtr3_);
     tree_->Branch("phoHCALisoDR03_a3"         , &phoHCALisoDR03_a3_         , "phoHCALisoDR03_a3/F");
     tree_->Branch("phoECALisoDR03_a3"         , &phoECALisoDR03_a3_         , "phoECALisoDR03_a3/F");
@@ -231,9 +315,22 @@ class MitGPTree {
     tree_->Branch("phoECALisoDR04_a3"         , &phoECALisoDR04_a3_         , "phoECALisoDR04_a3/F");
     tree_->Branch("phoHollowConeTKisoDR04_a3" , &phoHollowConeTKisoDR04_a3_ , "phoHollowConeTKisoDR04_a3/F");
     tree_->Branch("phoCoviEtaiEta_a3"         , &phoCoviEtaiEta_a3_         , "phoCoviEtaiEta_a3/F");
+    tree_->Branch("phoCoviPhiiPhi_a3"         , &phoCoviPhiiPhi_a3_         , "phoCoviPhiiPhi_a3/F");
     tree_->Branch("phoR9_a3"                  , &phoR9_a3_                  , "phoR9_a3/F");
     tree_->Branch("phoSeedTime_a3"            , &phoSeedTime_a3_            , "phoSeedTime_a3/F");
     tree_->Branch("phoHadOverEm_a3"           , &phoHadOverEm_a3_           , "phoHadOverEm_a3/F");
+    tree_->Branch("phoLeadTimeSpan_a3"        , &phoLeadTimeSpan_a3_        , "phoLeadTimeSpan_a3/F");
+    tree_->Branch("phoSubLeadTimeSpan_a3"     , &phoSubLeadTimeSpan_a3_     , "phoSubLeadTimeSpan_a3/F");
+    tree_->Branch("phoMipChi2_a3"             , &phoMipChi2_a3_             , "phoMipChi2_a3/F");
+    tree_->Branch("phoMipTotEnergy_a3"        , &phoMipTotEnergy_a3_        , "phoMipTotEnergy_a3/F");
+    tree_->Branch("phoMipSlope_a3"            , &phoMipSlope_a3_            , "phoMipSlope_a3/F");
+    tree_->Branch("phoMipIntercept_a3"        , &phoMipIntercept_a3_        , "phoMipIntercept_a3/F");
+    tree_->Branch("phoMipNhitCone_a3"         , &phoMipNhitCone_a3_         , "phoMipNhitCone_a3/I");
+    tree_->Branch("phoMipIsHalo_a3"           , &phoMipIsHalo_a3_           , "phoMipIsHalo_a3/B");
+    tree_->Branch("phoMatchHeEta_a3"          , &phoMatchHeEta_a3_          , "phoMatchHeEta_a3/F");
+    tree_->Branch("phoMatchHePhi_a3"          , &phoMatchHePhi_a3_          , "phoMatchHePhi_a3/F");
+    tree_->Branch("phoMatchHeEn_a3"           , &phoMatchHeEn_a3_           , "phoMatchHeEn_a3/F");
+    tree_->Branch("phoMatchHeTime_a3"         , &phoMatchHeTime_a3_         , "phoMatchHeTime_a3/F");
     tree_->Branch("pho4"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &phoPtr4_);
     tree_->Branch("phoHCALisoDR03_a4"         , &phoHCALisoDR03_a4_         , "phoHCALisoDR03_a4/F");
     tree_->Branch("phoECALisoDR03_a4"         , &phoECALisoDR03_a4_         , "phoECALisoDR03_a4/F");
@@ -242,9 +339,22 @@ class MitGPTree {
     tree_->Branch("phoECALisoDR04_a4"         , &phoECALisoDR04_a4_         , "phoECALisoDR04_a4/F");
     tree_->Branch("phoHollowConeTKisoDR04_a4" , &phoHollowConeTKisoDR04_a4_ , "phoHollowConeTKisoDR04_a4/F");
     tree_->Branch("phoCoviEtaiEta_a4"         , &phoCoviEtaiEta_a4_         , "phoCoviEtaiEta_a4/F");
+    tree_->Branch("phoCoviPhiiPhi_a4"         , &phoCoviPhiiPhi_a4_         , "phoCoviPhiiPhi_a4/F");
     tree_->Branch("phoR9_a4"                  , &phoR9_a4_                  , "phoR9_a4/F");
     tree_->Branch("phoSeedTime_a4"            , &phoSeedTime_a4_            , "phoSeedTime_a4/F");
     tree_->Branch("phoHadOverEm_a4"           , &phoHadOverEm_a4_           , "phoHadOverEm_a4/F");
+    tree_->Branch("phoLeadTimeSpan_a4"        , &phoLeadTimeSpan_a4_        , "phoLeadTimeSpan_a4/F");
+    tree_->Branch("phoSubLeadTimeSpan_a4"     , &phoSubLeadTimeSpan_a4_     , "phoSubLeadTimeSpan_a4/F");
+    tree_->Branch("phoMipChi2_a4"             , &phoMipChi2_a4_             , "phoMipChi2_a4/F");
+    tree_->Branch("phoMipTotEnergy_a4"        , &phoMipTotEnergy_a4_        , "phoMipTotEnergy_a4/F");
+    tree_->Branch("phoMipSlope_a4"            , &phoMipSlope_a4_            , "phoMipSlope_a4/F");
+    tree_->Branch("phoMipIntercept_a4"        , &phoMipIntercept_a4_        , "phoMipIntercept_a4/F");
+    tree_->Branch("phoMipNhitCone_a4"         , &phoMipNhitCone_a4_         , "phoMipNhitCone_a4/I");
+    tree_->Branch("phoMipIsHalo_a4"           , &phoMipIsHalo_a4_           , "phoMipIsHalo_a4/B");
+    tree_->Branch("phoMatchHeEta_a4"          , &phoMatchHeEta_a4_          , "phoMatchHeEta_a4/F");
+    tree_->Branch("phoMatchHePhi_a4"          , &phoMatchHePhi_a4_          , "phoMatchHePhi_a4/F");
+    tree_->Branch("phoMatchHeEn_a4"           , &phoMatchHeEn_a4_           , "phoMatchHeEn_a4/F");
+    tree_->Branch("phoMatchHeTime_a4"         , &phoMatchHeTime_a4_         , "phoMatchHeTime_a4/F");
 
     tree_->Branch("njets"        , &njets_        ,   "njets/i");
     tree_->Branch("jet1"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &jetPtr1_);
@@ -260,6 +370,11 @@ class MitGPTree {
     tree_->Branch("track1"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &trackPtr1_);
     tree_->Branch("track2"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &trackPtr2_);
     tree_->Branch("track3"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &trackPtr3_);
+
+    tree_->Branch("ncosmics"        , &ncosmics_        ,   "ncosmics/i");
+    tree_->Branch("cosmic1"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &cosmicPtr1_);
+    tree_->Branch("cosmic2"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &cosmicPtr2_);
+    tree_->Branch("cosmic3"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &cosmicPtr3_);
 
     tree_->Branch("Q",             &Q_	  ,     "Q/F");
     tree_->Branch("id1",           &id1_  ,     "id1/F");
@@ -314,9 +429,22 @@ class MitGPTree {
     tree_->SetBranchAddress("phoECALisoDR04_a1"         , &phoECALisoDR04_a1_);
     tree_->SetBranchAddress("phoHollowConeTKisoDR04_a1" , &phoHollowConeTKisoDR04_a1_ );
     tree_->SetBranchAddress("phoCoviEtaiEta_a1"         , &phoCoviEtaiEta_a1_);
+    tree_->SetBranchAddress("phoCoviPhiiPhi_a1"         , &phoCoviPhiiPhi_a1_);
     tree_->SetBranchAddress("phoR9_a1"                  , &phoR9_a1_);
     tree_->SetBranchAddress("phoSeedTime_a1"            , &phoSeedTime_a1_);
     tree_->SetBranchAddress("phoHadOverEm_a1"           , &phoHadOverEm_a1_);
+    tree_->SetBranchAddress("phoLeadTimeSpan_a1"        , &phoLeadTimeSpan_a1_);
+    tree_->SetBranchAddress("phoSubLeadTimeSpan_a1"     , &phoSubLeadTimeSpan_a1_);
+    tree_->SetBranchAddress("phoMipChi2_a1"             , &phoMipChi2_a1_);
+    tree_->SetBranchAddress("phoMipTotEnergy_a1"        , &phoMipTotEnergy_a1_);
+    tree_->SetBranchAddress("phoMipSlope_a1"            , &phoMipSlope_a1_);
+    tree_->SetBranchAddress("phoMipIntercept_a1"        , &phoMipIntercept_a1_);
+    tree_->SetBranchAddress("phoMipNhitCone_a1"         , &phoMipNhitCone_a1_);
+    tree_->SetBranchAddress("phoMipIsHalo_a1"           , &phoMipIsHalo_a1_);
+    tree_->SetBranchAddress("phoMatchHeEta_a1"          , &phoMatchHeEta_a1_);
+    tree_->SetBranchAddress("phoMatchHePhi_a1"          , &phoMatchHePhi_a1_);
+    tree_->SetBranchAddress("phoMatchHeEn_a1"           , &phoMatchHeEn_a1_);
+    tree_->SetBranchAddress("phoMatchHeTime_a1"         , &phoMatchHeTime_a1_);
     tree_->SetBranchAddress("pho1"                      , &phoPtr1_);
     tree_->SetBranchAddress("phoHCALisoDR03_a2"         , &phoHCALisoDR03_a2_);
     tree_->SetBranchAddress("phoECALisoDR03_a2"         , &phoECALisoDR03_a2_);
@@ -325,9 +453,22 @@ class MitGPTree {
     tree_->SetBranchAddress("phoECALisoDR04_a2"         , &phoECALisoDR04_a2_);
     tree_->SetBranchAddress("phoHollowConeTKisoDR04_a2" , &phoHollowConeTKisoDR04_a2_ );
     tree_->SetBranchAddress("phoCoviEtaiEta_a2"         , &phoCoviEtaiEta_a2_);
+    tree_->SetBranchAddress("phoCoviPhiiPhi_a2"         , &phoCoviPhiiPhi_a2_);
     tree_->SetBranchAddress("phoR9_a2"                  , &phoR9_a2_);
     tree_->SetBranchAddress("phoSeedTime_a2"            , &phoSeedTime_a2_);
     tree_->SetBranchAddress("phoHadOverEm_a2"           , &phoHadOverEm_a2_);
+    tree_->SetBranchAddress("phoLeadTimeSpan_a2"        , &phoLeadTimeSpan_a2_);
+    tree_->SetBranchAddress("phoSubLeadTimeSpan_a2"     , &phoSubLeadTimeSpan_a2_);
+    tree_->SetBranchAddress("phoMipChi2_a2"             , &phoMipChi2_a2_);
+    tree_->SetBranchAddress("phoMipTotEnergy_a2"        , &phoMipTotEnergy_a2_);
+    tree_->SetBranchAddress("phoMipSlope_a2"            , &phoMipSlope_a2_);
+    tree_->SetBranchAddress("phoMipIntercept_a2"        , &phoMipIntercept_a2_);
+    tree_->SetBranchAddress("phoMipNhitCone_a2"         , &phoMipNhitCone_a2_);
+    tree_->SetBranchAddress("phoMipIsHalo_a2"           , &phoMipIsHalo_a2_);
+    tree_->SetBranchAddress("phoMatchHeEta_a2"          , &phoMatchHeEta_a2_);
+    tree_->SetBranchAddress("phoMatchHePhi_a2"          , &phoMatchHePhi_a2_);
+    tree_->SetBranchAddress("phoMatchHeEn_a2"           , &phoMatchHeEn_a2_);
+    tree_->SetBranchAddress("phoMatchHeTime_a2"         , &phoMatchHeTime_a2_);
     tree_->SetBranchAddress("pho3"                      , &phoPtr3_);
     tree_->SetBranchAddress("phoHCALisoDR03_a3"         , &phoHCALisoDR03_a3_);
     tree_->SetBranchAddress("phoECALisoDR03_a3"         , &phoECALisoDR03_a3_);
@@ -336,9 +477,22 @@ class MitGPTree {
     tree_->SetBranchAddress("phoECALisoDR04_a3"         , &phoECALisoDR04_a3_);
     tree_->SetBranchAddress("phoHollowConeTKisoDR04_a3" , &phoHollowConeTKisoDR04_a3_ );
     tree_->SetBranchAddress("phoCoviEtaiEta_a3"         , &phoCoviEtaiEta_a3_);
+    tree_->SetBranchAddress("phoCoviPhiiPhi_a3"         , &phoCoviPhiiPhi_a3_);
     tree_->SetBranchAddress("phoR9_a3"                  , &phoR9_a3_);
     tree_->SetBranchAddress("phoSeedTime_a3"            , &phoSeedTime_a3_);
     tree_->SetBranchAddress("phoHadOverEm_a3"           , &phoHadOverEm_a3_);
+    tree_->SetBranchAddress("phoLeadTimeSpan_a3"        , &phoLeadTimeSpan_a3_);
+    tree_->SetBranchAddress("phoSubLeadTimeSpan_a3"     , &phoSubLeadTimeSpan_a3_);
+    tree_->SetBranchAddress("phoMipChi2_a3"             , &phoMipChi2_a3_);
+    tree_->SetBranchAddress("phoMipTotEnergy_a3"        , &phoMipTotEnergy_a3_);
+    tree_->SetBranchAddress("phoMipSlope_a3"            , &phoMipSlope_a3_);
+    tree_->SetBranchAddress("phoMipIntercept_a3"        , &phoMipIntercept_a3_);
+    tree_->SetBranchAddress("phoMipNhitCone_a3"         , &phoMipNhitCone_a3_);
+    tree_->SetBranchAddress("phoMipIsHalo_a3"           , &phoMipIsHalo_a3_);
+    tree_->SetBranchAddress("phoMatchHeEta_a3"          , &phoMatchHeEta_a3_);
+    tree_->SetBranchAddress("phoMatchHePhi_a3"          , &phoMatchHePhi_a3_);
+    tree_->SetBranchAddress("phoMatchHeEn_a3"           , &phoMatchHeEn_a3_);
+    tree_->SetBranchAddress("phoMatchHeTime_a3"         , &phoMatchHeTime_a3_);
     tree_->SetBranchAddress("pho4"                      , &phoPtr4_);
     tree_->SetBranchAddress("phoHCALisoDR03_a4"         , &phoHCALisoDR03_a4_);
     tree_->SetBranchAddress("phoECALisoDR03_a4"         , &phoECALisoDR03_a4_);
@@ -347,9 +501,22 @@ class MitGPTree {
     tree_->SetBranchAddress("phoECALisoDR04_a4"         , &phoECALisoDR04_a4_);
     tree_->SetBranchAddress("phoHollowConeTKisoDR04_a4" , &phoHollowConeTKisoDR04_a4_ );
     tree_->SetBranchAddress("phoCoviEtaiEta_a4"         , &phoCoviEtaiEta_a4_);
+    tree_->SetBranchAddress("phoCoviPhiiPhi_a4"         , &phoCoviPhiiPhi_a4_);
     tree_->SetBranchAddress("phoR9_a4"                  , &phoR9_a4_);
     tree_->SetBranchAddress("phoSeedTime_a4"            , &phoSeedTime_a4_);
     tree_->SetBranchAddress("phoHadOverEm_a4"           , &phoHadOverEm_a4_);
+    tree_->SetBranchAddress("phoLeadTimeSpan_a4"        , &phoLeadTimeSpan_a4_);
+    tree_->SetBranchAddress("phoSubLeadTimeSpan_a4"     , &phoSubLeadTimeSpan_a4_);
+    tree_->SetBranchAddress("phoMipChi2_a4"             , &phoMipChi2_a4_);
+    tree_->SetBranchAddress("phoMipTotEnergy_a4"        , &phoMipTotEnergy_a4_);
+    tree_->SetBranchAddress("phoMipSlope_a4"            , &phoMipSlope_a4_);
+    tree_->SetBranchAddress("phoMipIntercept_a4"        , &phoMipIntercept_a4_);
+    tree_->SetBranchAddress("phoMipNhitCone_a4"         , &phoMipNhitCone_a4_);
+    tree_->SetBranchAddress("phoMipIsHalo_a4"           , &phoMipIsHalo_a4_);
+    tree_->SetBranchAddress("phoMatchHeEta_a4"          , &phoMatchHeEta_a4_);
+    tree_->SetBranchAddress("phoMatchHePhi_a4"          , &phoMatchHePhi_a4_);
+    tree_->SetBranchAddress("phoMatchHeEn_a4"           , &phoMatchHeEn_a4_);
+    tree_->SetBranchAddress("phoMatchHeTime_a4"         , &phoMatchHeTime_a4_);
 
     tree_->SetBranchAddress("njets",         &njets_);
     tree_->SetBranchAddress("jet1",          &jetPtr1_);
@@ -365,6 +532,11 @@ class MitGPTree {
     tree_->SetBranchAddress("track1",        &trackPtr1_);
     tree_->SetBranchAddress("track2",        &trackPtr2_);
     tree_->SetBranchAddress("track3",        &trackPtr3_);
+
+    tree_->SetBranchAddress("ncosmics",       &ncosmics_);
+    tree_->SetBranchAddress("cosmic1",        &cosmicPtr1_);
+    tree_->SetBranchAddress("cosmic2",        &cosmicPtr2_);
+    tree_->SetBranchAddress("cosmic3",        &cosmicPtr3_);
 
     tree_->SetBranchAddress("Q",	     &Q_);
     tree_->SetBranchAddress("id1",	     &id1_);
@@ -397,6 +569,10 @@ class MitGPTree {
   LorentzVector* trackPtr1_;
   LorentzVector* trackPtr2_;
   LorentzVector* trackPtr3_;
+  LorentzVector* cosmicPtr1_;
+  LorentzVector* cosmicPtr2_;
+  LorentzVector* cosmicPtr3_;
+
 }; 
 
 inline void 
@@ -423,49 +599,101 @@ MitGPTree::InitVariables(){
 
   nphotons_      = 0;
   pho1_       	 = LorentzVector();
-  phoHCALisoDR03_a1_ = 0.0;
-  phoECALisoDR03_a1_ = 0.0;
-  phoHollowConeTKisoDR03_a1_ = 0.0;
-  phoHCALisoDR04_a1_ = 0.0;
-  phoECALisoDR04_a1_ = 0.0;
-  phoHollowConeTKisoDR04_a1_ = 0.0;
-  phoCoviEtaiEta_a1_ = 0.0;
-  phoR9_a1_ = 0.0;
-  phoSeedTime_a1_ = 0.0;
-  phoHadOverEm_a1_ = 0.0;  
+  phoHCALisoDR03_a1_ = -1.0;
+  phoECALisoDR03_a1_ = -1.0;
+  phoHollowConeTKisoDR03_a1_ = -1.0;
+  phoHCALisoDR04_a1_ = -1.0;
+  phoECALisoDR04_a1_ = -1.0;
+  phoHollowConeTKisoDR04_a1_ = -1.0;
+  phoCoviEtaiEta_a1_ = -1.0;
+  phoCoviPhiiPhi_a1_ = -1.0;
+  phoR9_a1_ = -1.0;
+  phoSeedTime_a1_ = -999.0;
+  phoHadOverEm_a1_ = -1.0;  
+  phoLeadTimeSpan_a1_ = -999.0;
+  phoSubLeadTimeSpan_a1_ = -999.0;
+  phoMipChi2_a1_ = -1.0;
+  phoMipTotEnergy_a1_ = -1.0;
+  phoMipSlope_a1_ = -999.0;
+  phoMipIntercept_a1_ = -999.0;
+  phoMipNhitCone_a1_ = 0;
+  phoMipIsHalo_a1_ = false;
+  phoMatchHeEta_a1_ = -1.0;
+  phoMatchHePhi_a1_ = -1.0;
+  phoMatchHeEn_a1_ = -1.0;
+  phoMatchHeTime_a1_ = -999.0;
   pho2_       	 = LorentzVector();
-  phoHCALisoDR03_a2_ = 0.0;
-  phoECALisoDR03_a2_ = 0.0;
-  phoHollowConeTKisoDR03_a2_ = 0.0;
-  phoHCALisoDR04_a2_ = 0.0;
-  phoECALisoDR04_a2_ = 0.0;
-  phoHollowConeTKisoDR04_a2_ = 0.0;
-  phoCoviEtaiEta_a2_ = 0.0;
-  phoR9_a2_ = 0.0;
-  phoSeedTime_a2_ = 0.0;
-  phoHadOverEm_a2_ = 0.0;  
+  phoHCALisoDR03_a2_ = -1.0;
+  phoECALisoDR03_a2_ = -1.0;
+  phoHollowConeTKisoDR03_a2_ = -1.0;
+  phoHCALisoDR04_a2_ = -1.0;
+  phoECALisoDR04_a2_ = -1.0;
+  phoHollowConeTKisoDR04_a2_ = -1.0;
+  phoCoviEtaiEta_a2_ = -1.0;
+  phoCoviPhiiPhi_a2_ = -1.0;
+  phoR9_a2_ = -1.0;
+  phoSeedTime_a2_ = -999.0;
+  phoHadOverEm_a2_ = -1.0;  
+  phoLeadTimeSpan_a2_ = -999.0;
+  phoSubLeadTimeSpan_a2_ = -999.0;
+  phoMipChi2_a2_ = -1.0;
+  phoMipTotEnergy_a2_ = -1.0;
+  phoMipSlope_a2_ = -999.0;
+  phoMipIntercept_a2_ = -999.0;
+  phoMipNhitCone_a2_ = 0;
+  phoMipIsHalo_a2_ = false;
+  phoMatchHeEta_a2_ = -1.0;
+  phoMatchHePhi_a2_ = -1.0;
+  phoMatchHeEn_a2_ = -1.0;
+  phoMatchHeTime_a2_ = -999.0;
   pho3_       	 = LorentzVector();
-  phoHCALisoDR03_a3_ = 0.0;
-  phoECALisoDR03_a3_ = 0.0;
-  phoHollowConeTKisoDR03_a3_ = 0.0;
-  phoHCALisoDR04_a3_ = 0.0;
-  phoECALisoDR04_a3_ = 0.0;
-  phoHollowConeTKisoDR04_a3_ = 0.0;
-  phoCoviEtaiEta_a3_ = 0.0;
-  phoR9_a3_ = 0.0;
-  phoSeedTime_a3_ = 0.0;
-  phoHadOverEm_a3_ = 0.0;  
+  phoHCALisoDR03_a3_ = -1.0;
+  phoECALisoDR03_a3_ = -1.0;
+  phoHollowConeTKisoDR03_a3_ = -1.0;
+  phoHCALisoDR04_a3_ = -1.0;
+  phoECALisoDR04_a3_ = -1.0;
+  phoHollowConeTKisoDR04_a3_ = -1.0;
+  phoCoviEtaiEta_a3_ = -1.0;
+  phoCoviPhiiPhi_a3_ = -1.0;
+  phoR9_a3_ = -1.0;
+  phoSeedTime_a3_ = -999.0;
+  phoHadOverEm_a3_ = -1.0;  
+  phoLeadTimeSpan_a3_ = -999.0;
+  phoSubLeadTimeSpan_a3_ = -999.0;
+  phoMipChi2_a3_ = -1.0;
+  phoMipTotEnergy_a3_ = -1.0;
+  phoMipSlope_a3_ = -999.0;
+  phoMipIntercept_a3_ = -999.0;
+  phoMipNhitCone_a3_ = 0;
+  phoMipIsHalo_a3_ = false;
+  phoMatchHeEta_a3_ = -1.0;
+  phoMatchHePhi_a3_ = -1.0;
+  phoMatchHeEn_a3_ = -1.0;
+  phoMatchHeTime_a3_ = -999.0;
   pho4_       	 = LorentzVector();
-  phoHCALisoDR03_a4_ = 0.0;
-  phoECALisoDR03_a4_ = 0.0;
-  phoHollowConeTKisoDR03_a4_ = 0.0;
-  phoHCALisoDR04_a4_ = 0.0;
-  phoECALisoDR04_a4_ = 0.0;
-  phoHollowConeTKisoDR04_a4_ = 0.0;
-  phoCoviEtaiEta_a4_ = 0.0;
-  phoR9_a4_ = 0.0;
-  phoSeedTime_a4_ = 0.0;
-  phoHadOverEm_a4_ = 0.0;  
+  phoHCALisoDR03_a4_ = -1.0;
+  phoECALisoDR03_a4_ = -1.0;
+  phoHollowConeTKisoDR03_a4_ = -1.0;
+  phoHCALisoDR04_a4_ = -1.0;
+  phoECALisoDR04_a4_ = -1.0;
+  phoHollowConeTKisoDR04_a4_ = -1.0;
+  phoCoviEtaiEta_a4_ = -1.0;
+  phoCoviPhiiPhi_a4_ = -1.0;
+  phoR9_a4_ = -1.0;
+  phoSeedTime_a4_ = -999.0;
+  phoHadOverEm_a4_ = -1.0;  
+  phoLeadTimeSpan_a4_ = -999.0;
+  phoSubLeadTimeSpan_a4_ = -999.0;
+  phoMipChi2_a4_ = -1.0;
+  phoMipTotEnergy_a4_ = -1.0;
+  phoMipSlope_a4_ = -999.0;
+  phoMipIntercept_a4_ = -999.0;
+  phoMipNhitCone_a4_ = 0;
+  phoMipIsHalo_a4_ = false;
+  phoMatchHeEta_a4_ = -1.0;
+  phoMatchHePhi_a4_ = -1.0;
+  phoMatchHeEn_a4_ = -1.0;
+  phoMatchHeTime_a4_ = -999.0;
 
   njets_ = 0;
   jet1_     = LorentzVector();
@@ -481,6 +709,11 @@ MitGPTree::InitVariables(){
   track1_ = LorentzVector();
   track2_ = LorentzVector();
   track3_ = LorentzVector();
+
+  ncosmics_ = 0;
+  cosmic1_ = LorentzVector();
+  cosmic2_ = LorentzVector();
+  cosmic3_ = LorentzVector();
 
   Q_		 = -999.;
   id1_  	 = -999.;

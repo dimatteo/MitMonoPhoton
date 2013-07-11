@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------------------------
-// $Id: MonoPhotonTreeWriter.h,v 1.7 2013/06/23 14:31:17 ceballos Exp $
+// $Id: MonoPhotonTreeWriter.h,v 1.8 2013/06/23 14:40:30 ceballos Exp $
 //
 // MonoPhotonTreeWriter
 //
@@ -64,6 +64,8 @@ namespace mithep
     void                SetJetsName(const char *n)        { fJetsName = n;               }
     void                SetJetsFromBranch(bool b)         { fJetsFromBranch = b;         }
     void                SetLeptonsName(const char *n)     { fLeptonsName = n;            }
+    void                SetCosmicsName(const char *n)     { fCosmicsName = n;            }
+    void                SetCosmicsFromBranch(bool b)      { fCosmicsFromBranch = b;      }
 
     void                SetSuperClustersName(const char *n){ fSuperClustersName = n;     }
     void                SetTracksName(const char *n)      { fTracksName = n;             }
@@ -89,6 +91,7 @@ namespace mithep
     TString             fMuonsName;
     TString             fJetsName;
     TString             fLeptonsName;
+    TString             fCosmicsName;
 
     TString             fSuperClustersName;
     TString             fTracksName;
@@ -106,6 +109,7 @@ namespace mithep
     Bool_t              fElectronsFromBranch;
     Bool_t              fMuonsFromBranch;
     Bool_t              fJetsFromBranch;
+    Bool_t              fCosmicsFromBranch;
     Bool_t              fPVFromBranch;
 
     const PFMetCol                *fMet;
@@ -113,6 +117,7 @@ namespace mithep
     const ElectronCol             *fElectrons;
     const MuonCol                 *fMuons;
     const JetCol                  *fJets;
+    const MuonCol                 *fCosmics;
 
     const TrackCol                *fTracks;
     const VertexCol               *fPV;
@@ -124,11 +129,14 @@ namespace mithep
     
     // --------------------------------
     Int_t                          fDecay;
-    TFile	                  *fOutputFile;
-    TString	                   fTupleName;
+    TFile                         *fOutputFile;
+    TString	                       fTupleName;
     MitGPTree                      fMitGPTree;
 
     Int_t                          fNEventsSelected;
+
+    // auxiliary functions
+    float GetCorrDeltaPhi(float phi1, float phi2);
 
     ClassDef(MonoPhotonTreeWriter, 1) // Photon identification module
       };
