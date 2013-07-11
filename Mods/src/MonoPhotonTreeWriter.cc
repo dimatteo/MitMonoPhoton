@@ -274,6 +274,7 @@ void MonoPhotonTreeWriter::Process()
   }
   if(fPhotons->GetEntries() >= 3) {
     const Photon *photon = fPhotons->At(2);
+    fMitGPTree.pho3_                      = photon->Mom();
     fMitGPTree.phoHCALisoDR03_a3_	  = photon->HcalTowerSumEtDr03();
     fMitGPTree.phoECALisoDR03_a3_	  = photon->EcalRecHitIsoDr03();
     fMitGPTree.phoHollowConeTKisoDR03_a3_ = photon->HollowConeTrkIsoDr03();
@@ -326,6 +327,7 @@ void MonoPhotonTreeWriter::Process()
   }
   if(fPhotons->GetEntries() >= 4) {
     const Photon *photon = fPhotons->At(3);
+    fMitGPTree.pho4_                      = photon->Mom();
     fMitGPTree.phoHCALisoDR03_a4_	  = photon->HcalTowerSumEtDr03();
     fMitGPTree.phoECALisoDR03_a4_	  = photon->EcalRecHitIsoDr03();
     fMitGPTree.phoHollowConeTKisoDR03_a4_ = photon->HollowConeTrkIsoDr03();
