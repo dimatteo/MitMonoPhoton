@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.23 2013/07/09 14:03:41 tsamson Exp $
+// $Id: runMonoPhoton.C,v 1.24 2013/07/11 04:58:35 dimatteo Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -253,6 +253,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   photreg->SetApplyShowerRescaling(kTRUE);
   photreg->SetMinNumPhotons(1);
   photreg->SetIsData(isData);
+  photreg->SetDoPreselection(kFALSE);
 
   PhotonIDMod *photonIDMod = new PhotonIDMod;
   photonIDMod->SetPtMin(20.0);
@@ -453,7 +454,7 @@ void runMonoPhoton(const char *fileset    = "0000",
 
   MonoPhotonTreeWriter *phfaketree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter_phfake");
   phfaketree->SetPhotonsFromBranch(kFALSE);
-  phfaketree->SetPhotonsName(photonCleaningMod->GetOutputName());
+  phfaketree->SetPhotonsName(photreg->GetOutputName());
   phfaketree->SetElectronsFromBranch(kFALSE);
   phfaketree->SetElectronsName(electronCleaning->GetOutputName());
   phfaketree->SetMuonsFromBranch(kFALSE);
@@ -470,7 +471,7 @@ void runMonoPhoton(const char *fileset    = "0000",
 
   MonoPhotonTreeWriter *beamhalotree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter_beamhalo");
   beamhalotree->SetPhotonsFromBranch(kFALSE);
-  beamhalotree->SetPhotonsName(photonCleaningMod->GetOutputName());
+  beamhalotree->SetPhotonsName(photreg->GetOutputName());
   beamhalotree->SetElectronsFromBranch(kFALSE);
   beamhalotree->SetElectronsName(electronCleaning->GetOutputName());
   beamhalotree->SetMuonsFromBranch(kFALSE);
@@ -519,11 +520,11 @@ void runMonoPhoton(const char *fileset    = "0000",
 
   // Fake photon selection
   theJetCleaning   ->Add(phfake);
-  phfake         ->Add(phfaketree);
+  phfake           ->Add(phfaketree);
 
   // Beam Halo selection
-  theJetCleaning    ->Add(beamhalo);
-  beamhalo          ->Add(beamhalotree);
+  theJetCleaning   ->Add(beamhalo);
+  beamhalo         ->Add(beamhalotree);
 
   //------------------------------------------------------------------------------------------------
   // setup analysis
