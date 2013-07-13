@@ -30,7 +30,7 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fElectronsName          (Names::gkElectronBrn),
   fMuonsName              (Names::gkMuonBrn),
   fJetsName               (Names::gkPFJetBrn),
-  fCosmicsName            ("CosmicMuons"),//"CosmicMuons"),
+  fCosmicsName            ("CosmicMuons"),
   fLeptonsName            (ModNames::gkMergedLeptonsName),
 
   fSuperClustersName      ("PFSuperClusters"),
@@ -40,6 +40,9 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fPileUpName             (Names::gkPileupInfoBrn),  
   fBeamspotName           (Names::gkBeamSpotBrn),
   fMCEvInfoName           (Names::gkMCEvtInfoBrn),
+  fAllElectronsName       ("Electrons"),
+  fConversionsName        ("MergedConversions"),
+  fPfCandidatesName       ("PFCandidates"),
 
   fIsData                 (false),
   fPhotonsFromBranch      (kTRUE),  
@@ -62,6 +65,9 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fPileUp                 (0),
   fPileUpDen              (0),
   fSuperClusters          (0),
+  fAllElectrons           (0),
+  fConversions            (0),
+  fPfCandidates           (0),
 
   fDecay(0),
   fOutputFile(0),
@@ -96,6 +102,9 @@ void MonoPhotonTreeWriter::Process()
   
   LoadEventObject(fSuperClustersName, fSuperClusters);
   LoadEventObject(fTracksName,        fTracks,        true);
+  LoadEventObject(fAllElectronsName,  fAllElectrons);
+  LoadEventObject(fConversionsName,   fConversions);
+  LoadEventObject(fPfCandidatesName,  fPfCandidates);
 
   LoadEventObject(fPileUpDenName,     fPileUpDen,     true);
   if (!fIsData) {
@@ -165,18 +174,32 @@ void MonoPhotonTreeWriter::Process()
   }
 
   //PHOTONS  
+  float rho; //needed for isolation variables
+  if (fPileUpDen->At(0)->RhoKt6PFJets()>0.) rho = fPileUpDen->At(0)->RhoKt6PFJets();
+  else rho = fPileUpDen->At(0)->Rho();
+
   fMitGPTree.nphotons_ = fPhotons->GetEntries();
   if(fPhotons->GetEntries() >= 1) {
     const Photon *photon = fPhotons->At(0);
+    //Get the relevant quantities for this photon
+    unsigned int wVtxInd = 0;
+    float trackIsoSel03   = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.3, 0.0, fPfCandidates);
+    float trackIsoWorst04 = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.4, 0.00, fPfCandidates, &wVtxInd, fPV);
+    float ecalIso3        = IsolationTools::PFGammaIsolation(photon, 0.3, 0.0, fPfCandidates);
+    float ecalIso4        = IsolationTools::PFGammaIsolation(photon, 0.4, 0.0, fPfCandidates);
+    float combIso1 = (ecalIso3+trackIsoSel03   + 2.5 - 0.09*rho)*50./photon->Et();
+    float combIso2 = (ecalIso4+trackIsoWorst04 + 2.5 - 0.23*rho)*50./(photon->MomVtx(fPV->At(wVtxInd)->Position()).Pt());
+    float combIso3 = (trackIsoSel03)*50./photon->Et();
+    Bool_t PassEleVetoRaw = PhotonTools::PassElectronVetoConvRecovery(photon, fAllElectrons, fConversions, fBeamspot->At(0));  
+    //Fill the photons branches
     fMitGPTree.pho1_			  = photon->Mom();
-    fMitGPTree.phoHCALisoDR03_a1_	  = photon->HcalTowerSumEtDr03();
-    fMitGPTree.phoECALisoDR03_a1_	  = photon->EcalRecHitIsoDr03();
-    fMitGPTree.phoHollowConeTKisoDR03_a1_ = photon->HollowConeTrkIsoDr03();
-    fMitGPTree.phoHCALisoDR04_a1_	  = photon->HcalTowerSumEtDr04();
-    fMitGPTree.phoECALisoDR04_a1_	  = photon->EcalRecHitIsoDr04();
-    fMitGPTree.phoHollowConeTKisoDR04_a1_ = photon->HollowConeTrkIsoDr04();
+    fMitGPTree.phoCombIso1_a1_	  = combIso1;
+    fMitGPTree.phoCombIso2_a1_	  = combIso2;
+    fMitGPTree.phoCombIso3_a1_ = combIso3;
+    fMitGPTree.phoPassEleVeto_a1_	  = PassEleVetoRaw;
+    fMitGPTree.phoHasPixelSeed_a1_ = photon->HasPixelSeed();
     fMitGPTree.phoCoviEtaiEta_a1_	  = photon->CoviEtaiEta();
-    fMitGPTree.phoCoviPhiiPhi_a1_	  = photon->SCluster()->Cluster(0)->CoviPhiiPhi();
+    fMitGPTree.phoCoviPhiiPhi_a1_	  = TMath::Sqrt(TMath::Abs(photon->SCluster()->Seed()->CoviPhiiPhi()));
     fMitGPTree.phoR9_a1_		  = photon->SCluster()->R9();
     fMitGPTree.phoSeedTime_a1_  	  = photon->SCluster()->SeedTime();
     fMitGPTree.phoHadOverEm_a1_ 	  = photon->HadOverEm();
@@ -221,15 +244,25 @@ void MonoPhotonTreeWriter::Process()
   }
   if(fPhotons->GetEntries() >= 2) {
     const Photon *photon = fPhotons->At(1);
+    //Get the relevant quantities for this photon
+    unsigned int wVtxInd = 0;
+    float trackIsoSel03   = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.3, 0.0, fPfCandidates);
+    float trackIsoWorst04 = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.4, 0.00, fPfCandidates, &wVtxInd, fPV);
+    float ecalIso3        = IsolationTools::PFGammaIsolation(photon, 0.3, 0.0, fPfCandidates);
+    float ecalIso4        = IsolationTools::PFGammaIsolation(photon, 0.4, 0.0, fPfCandidates);
+    float combIso1 = (ecalIso3+trackIsoSel03   + 2.5 - 0.09*rho)*50./photon->Et();
+    float combIso2 = (ecalIso4+trackIsoWorst04 + 2.5 - 0.23*rho)*50./(photon->MomVtx(fPV->At(wVtxInd)->Position()).Pt());
+    float combIso3 = (trackIsoSel03)*50./photon->Et();
+    Bool_t PassEleVetoRaw = PhotonTools::PassElectronVetoConvRecovery(photon, fAllElectrons, fConversions, fBeamspot->At(0));  
+    //Fill the photons branches
     fMitGPTree.pho2_			  = photon->Mom();
-    fMitGPTree.phoHCALisoDR03_a2_	  = photon->HcalTowerSumEtDr03();
-    fMitGPTree.phoECALisoDR03_a2_	  = photon->EcalRecHitIsoDr03();
-    fMitGPTree.phoHollowConeTKisoDR03_a2_ = photon->HollowConeTrkIsoDr03();
-    fMitGPTree.phoHCALisoDR04_a2_	  = photon->HcalTowerSumEtDr04();
-    fMitGPTree.phoECALisoDR04_a2_	  = photon->EcalRecHitIsoDr04();
-    fMitGPTree.phoHollowConeTKisoDR04_a2_ = photon->HollowConeTrkIsoDr04();
+    fMitGPTree.phoCombIso1_a2_	  = combIso1;
+    fMitGPTree.phoCombIso2_a2_	  = combIso2;
+    fMitGPTree.phoCombIso3_a2_ = combIso3;
+    fMitGPTree.phoPassEleVeto_a2_	  = PassEleVetoRaw;
+    fMitGPTree.phoHasPixelSeed_a2_ = photon->HasPixelSeed();
     fMitGPTree.phoCoviEtaiEta_a2_	  = photon->CoviEtaiEta();
-    fMitGPTree.phoCoviPhiiPhi_a2_	  = photon->SCluster()->Cluster(0)->CoviPhiiPhi();
+    fMitGPTree.phoCoviPhiiPhi_a2_	  = TMath::Sqrt(TMath::Abs(photon->SCluster()->Seed()->CoviPhiiPhi()));
     fMitGPTree.phoR9_a2_		  = photon->SCluster()->R9();
     fMitGPTree.phoSeedTime_a2_  	  = photon->SCluster()->SeedTime();
     fMitGPTree.phoHadOverEm_a2_ 	  = photon->HadOverEm();
@@ -274,15 +307,25 @@ void MonoPhotonTreeWriter::Process()
   }
   if(fPhotons->GetEntries() >= 3) {
     const Photon *photon = fPhotons->At(2);
-    fMitGPTree.pho3_                      = photon->Mom();
-    fMitGPTree.phoHCALisoDR03_a3_	  = photon->HcalTowerSumEtDr03();
-    fMitGPTree.phoECALisoDR03_a3_	  = photon->EcalRecHitIsoDr03();
-    fMitGPTree.phoHollowConeTKisoDR03_a3_ = photon->HollowConeTrkIsoDr03();
-    fMitGPTree.phoHCALisoDR04_a3_	  = photon->HcalTowerSumEtDr04();
-    fMitGPTree.phoECALisoDR04_a3_	  = photon->EcalRecHitIsoDr04();
-    fMitGPTree.phoHollowConeTKisoDR04_a3_ = photon->HollowConeTrkIsoDr04();
+    //Get the relevant quantities for this photon
+    unsigned int wVtxInd = 0;
+    float trackIsoSel03   = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.3, 0.0, fPfCandidates);
+    float trackIsoWorst04 = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.4, 0.00, fPfCandidates, &wVtxInd, fPV);
+    float ecalIso3        = IsolationTools::PFGammaIsolation(photon, 0.3, 0.0, fPfCandidates);
+    float ecalIso4        = IsolationTools::PFGammaIsolation(photon, 0.4, 0.0, fPfCandidates);
+    float combIso1 = (ecalIso3+trackIsoSel03   + 2.5 - 0.09*rho)*50./photon->Et();
+    float combIso2 = (ecalIso4+trackIsoWorst04 + 2.5 - 0.23*rho)*50./(photon->MomVtx(fPV->At(wVtxInd)->Position()).Pt());
+    float combIso3 = (trackIsoSel03)*50./photon->Et();
+    Bool_t PassEleVetoRaw = PhotonTools::PassElectronVetoConvRecovery(photon, fAllElectrons, fConversions, fBeamspot->At(0));  
+    //Fill the photons branches
+    fMitGPTree.pho3_              = photon->Mom();
+    fMitGPTree.phoCombIso1_a3_	  = combIso1;
+    fMitGPTree.phoCombIso2_a3_	  = combIso2;
+    fMitGPTree.phoCombIso3_a3_ = combIso3;
+    fMitGPTree.phoPassEleVeto_a3_	  = PassEleVetoRaw;
+    fMitGPTree.phoHasPixelSeed_a3_ = photon->HasPixelSeed();
     fMitGPTree.phoCoviEtaiEta_a3_	  = photon->CoviEtaiEta();
-    fMitGPTree.phoCoviPhiiPhi_a3_	  = photon->SCluster()->Cluster(0)->CoviPhiiPhi();
+    fMitGPTree.phoCoviPhiiPhi_a3_	  = TMath::Sqrt(TMath::Abs(photon->SCluster()->Seed()->CoviPhiiPhi()));
     fMitGPTree.phoR9_a3_		  = photon->SCluster()->R9();
     fMitGPTree.phoSeedTime_a3_  	  = photon->SCluster()->SeedTime();
     fMitGPTree.phoHadOverEm_a3_ 	  = photon->HadOverEm();
@@ -327,15 +370,25 @@ void MonoPhotonTreeWriter::Process()
   }
   if(fPhotons->GetEntries() >= 4) {
     const Photon *photon = fPhotons->At(3);
+    //Get the relevant quantities for this photon
+    unsigned int wVtxInd = 0;
+    float trackIsoSel03   = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.3, 0.0, fPfCandidates);
+    float trackIsoWorst04 = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.4, 0.00, fPfCandidates, &wVtxInd, fPV);
+    float ecalIso3        = IsolationTools::PFGammaIsolation(photon, 0.3, 0.0, fPfCandidates);
+    float ecalIso4        = IsolationTools::PFGammaIsolation(photon, 0.4, 0.0, fPfCandidates);
+    float combIso1 = (ecalIso3+trackIsoSel03   + 2.5 - 0.09*rho)*50./photon->Et();
+    float combIso2 = (ecalIso4+trackIsoWorst04 + 2.5 - 0.23*rho)*50./(photon->MomVtx(fPV->At(wVtxInd)->Position()).Pt());
+    float combIso3 = (trackIsoSel03)*50./photon->Et();
+    Bool_t PassEleVetoRaw = PhotonTools::PassElectronVetoConvRecovery(photon, fAllElectrons, fConversions, fBeamspot->At(0));  
+    //Fill the photons branches
     fMitGPTree.pho4_                      = photon->Mom();
-    fMitGPTree.phoHCALisoDR03_a4_	  = photon->HcalTowerSumEtDr03();
-    fMitGPTree.phoECALisoDR03_a4_	  = photon->EcalRecHitIsoDr03();
-    fMitGPTree.phoHollowConeTKisoDR03_a4_ = photon->HollowConeTrkIsoDr03();
-    fMitGPTree.phoHCALisoDR04_a4_	  = photon->HcalTowerSumEtDr04();
-    fMitGPTree.phoECALisoDR04_a4_	  = photon->EcalRecHitIsoDr04();
-    fMitGPTree.phoHollowConeTKisoDR04_a4_ = photon->HollowConeTrkIsoDr04();
+    fMitGPTree.phoCombIso1_a4_	  = combIso1;
+    fMitGPTree.phoCombIso2_a4_	  = combIso2;
+    fMitGPTree.phoCombIso3_a4_ = combIso3;
+    fMitGPTree.phoPassEleVeto_a4_	  = PassEleVetoRaw;
+    fMitGPTree.phoHasPixelSeed_a4_ = photon->HasPixelSeed();
     fMitGPTree.phoCoviEtaiEta_a4_	  = photon->CoviEtaiEta();
-    fMitGPTree.phoCoviPhiiPhi_a4_	  = photon->SCluster()->Cluster(0)->CoviPhiiPhi();
+    fMitGPTree.phoCoviPhiiPhi_a4_	  = TMath::Sqrt(TMath::Abs(photon->SCluster()->Seed()->CoviPhiiPhi()));
     fMitGPTree.phoR9_a4_		  = photon->SCluster()->R9();
     fMitGPTree.phoSeedTime_a4_  	  = photon->SCluster()->SeedTime();
     fMitGPTree.phoHadOverEm_a4_ 	  = photon->HadOverEm();
@@ -488,6 +541,9 @@ void MonoPhotonTreeWriter::SlaveBegin()
 
   ReqEventObject(fPVName,             fPV,            fPVFromBranch);    
   ReqEventObject(fBeamspotName,       fBeamspot,      true);
+  ReqEventObject(fAllElectronsName,   fAllElectrons,  true);
+  ReqEventObject(fConversionsName,    fConversions,   true);
+  ReqEventObject(fPfCandidatesName,   fPfCandidates,   true);
 
   ReqEventObject(fPileUpDenName,   fPileUpDen,    true);
   if (!fIsData) {

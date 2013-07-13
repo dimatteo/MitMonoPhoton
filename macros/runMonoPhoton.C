@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.24 2013/07/11 04:58:35 dimatteo Exp $
+// $Id: runMonoPhoton.C,v 1.25 2013/07/11 15:41:54 dimatteo Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -260,8 +260,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   photonIDMod->SetOutputName("GoodPhotons");
   photonIDMod->SetIDType("BaseLineCiCPFNoPresel");
   photonIDMod->SetIsoType("NoIso");
-  photonIDMod->SetApplyElectronVeto(kTRUE);
-  photonIDMod->SetApplyPixelSeed(kTRUE);
+  photonIDMod->SetApplyElectronVeto(kFALSE);
+  photonIDMod->SetApplyPixelSeed(kFALSE);
   photonIDMod->SetApplyConversionId(kTRUE);
   photonIDMod->SetApplyFiduciality(kTRUE);       
   photonIDMod->SetIsData(isData);

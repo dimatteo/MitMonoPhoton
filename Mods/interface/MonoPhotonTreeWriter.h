@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------------------------
-// $Id: MonoPhotonTreeWriter.h,v 1.8 2013/06/23 14:40:30 ceballos Exp $
+// $Id: MonoPhotonTreeWriter.h,v 1.9 2013/07/11 04:58:34 dimatteo Exp $
 //
 // MonoPhotonTreeWriter
 //
@@ -100,6 +100,9 @@ namespace mithep
     TString             fPileUpName;
     TString             fBeamspotName;
     TString             fMCEvInfoName;
+    TString             fAllElectronsName;
+    TString             fConversionsName;
+    TString             fPfCandidatesName;
 
     // is it Data or MC?
     Bool_t              fIsData;
@@ -119,13 +122,16 @@ namespace mithep
     const JetCol                  *fJets;
     const MuonCol                 *fCosmics;
 
+    const SuperClusterCol         *fSuperClusters;   
     const TrackCol                *fTracks;
     const VertexCol               *fPV;
     const BeamSpotCol             *fBeamspot;
     const MCEventInfo             *fMCEventInfo;
     const PileupInfoCol           *fPileUp;    
     const PileupEnergyDensityCol  *fPileUpDen;
-    const SuperClusterCol         *fSuperClusters;   
+    const ElectronCol             *fAllElectrons;
+    const DecayParticleCol        *fConversions;  
+    const PFCandidateCol          *fPfCandidates;  
     
     // --------------------------------
     Int_t                          fDecay;
