@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.25 2013/07/11 15:41:54 dimatteo Exp $
+// $Id: runMonoPhoton.C,v 1.26 2013/07/13 00:20:34 dimatteo Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -96,15 +96,21 @@ void runMonoPhoton(const char *fileset    = "0000",
   runLumiSel->SetAcceptMC(!isData);
   // only select on run- and lumisection numbers when valid json file present
   if ((jsonFile.CompareTo("/home/cmsprod/cms/json/~") != 0) &&
-      (jsonFile.CompareTo("/home/cmsprod/cms/json/-") != 0)   ) {
+      (jsonFile.CompareTo("/home/cmsprod/cms/json/-") != 0)) {
     runLumiSel->AddJSONFile(jsonFile.Data());
   }
-  if ((jsonFile.CompareTo("/home/cmsprod/cms/json/-") == 0)   ) {
+  if ((jsonFile.CompareTo("/home/cmsprod/cms/json/-") == 0)) {
     printf("\n WARNING -- Looking at data without JSON file: always accept.\n\n");
     runLumiSel->SetAbortIfNotAccepted(kFALSE);   // accept all events if there is no valid JSON file
   }
 
   printf("\n Run lumi worked\n");
+
+  // Dataset Flags
+  bool isDataSinglePh     = false;
+  bool isDataPhHad        = false;
+  if (TString(dataset).Contains("-pho-") || TString(dataset).Contains("-sph-")) isDataSinglePh = true;
+  if (TString(dataset).Contains("-phh-")) isDataPhHad = true;
 
   // Generator info
   GeneratorMod *generatorMod = new GeneratorMod;
@@ -123,7 +129,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   generatorMod->SetFilterBTEvents(kFALSE);
 
   //------------------------------------------------------------------------------------------------
-  // HLT information : [TBF]
+  // HLT information
   //------------------------------------------------------------------------------------------------
   HLTMod *hltModP = new HLTMod("HLTModP");
   
@@ -132,40 +138,35 @@ void runMonoPhoton(const char *fileset    = "0000",
   //------------------------------------------------------------------------------------------------
   hltModP->AddTrigger("HLT_Photon75_CaloIdVL_v*",160404,165087); 
   hltModP->AddTrigger("HLT_Photon125_v*",165088,163869); 
-  hltModP->AddTrigger("HLT_Photon135_v*",167039,999999); 
+  hltModP->AddTrigger("HLT_Photon135_v*",167039,190455); 
 
   //------------------------------------------------------------------------------------------------
   // Run2012
   //------------------------------------------------------------------------------------------------
-  hltModP->AddTrigger("HLT_Photon135_v*",0,999999); 
-  hltModP->AddTrigger("HLT_Photon150_v*",0,999999); 
-  hltModP->AddTrigger("HLT_Photon160_v*",0,999999); 
-  // Eventual OR with Pho+X
-  //hltModP->AddTrigger("HLT_Photon70_CaloIdXL_PFMET100*",0,999999); 
+  if (isData){//DATA
+    if (isDataSinglePh){
+      hltModP->AddTrigger("HLT_Photon135_v*",190456,193686); 
+      hltModP->AddTrigger("HLT_Photon150_v*",193687,199695); 
+      hltModP->AddTrigger("HLT_Photon135_v*",199696,209151); 
+    }
+    else if (isDataPhHad){
+      hltModP->AddTrigger("!HLT_Photon135_v*&HLT_Photon70_CaloIdXL_PFMET100_v*",190456,193686); 
+      hltModP->AddTrigger("!HLT_Photon150_v*&HLT_Photon70_CaloIdXL_PFMET100_v*",193687,199695); 
+      hltModP->AddTrigger("!HLT_Photon135_v*&HLT_Photon70_CaloIdXL_PFMET100_v*",199696,209151); 
+    }
+    else{
+      printf("ERROR, WRONG DATASET IDENTIFICATION FOR: %s\n",dataset);
+      return;
+    }
+  }
+  else{//MC
+    hltModP->AddTrigger("HLT_Photon135_v*",0,999999); 
+    hltModP->AddTrigger("HLT_Photon70_CaloIdXL_PFMET100*",0,999999); 
+  }
     
   hltModP->SetTrigObjsName("MyHltPhotObjs");
   hltModP->SetAbortIfNotAccepted(isData);
   hltModP->SetPrintTable(kFALSE); // set to true to print HLT table
-  if(isData == kFALSE){ // ugly, but it works
-    hltModP->AddTrigger("HLT_Mu15_v9");
-    hltModP->AddTrigger("!HLT_Mu15_v9");
-    hltModP->AddTrigger("HLT_Mu15_v2");
-    hltModP->AddTrigger("!HLT_Mu15_v2");
-    hltModP->AddTrigger("HLT_Mu9");
-    hltModP->AddTrigger("!HLT_Mu9");
-    hltModP->AddTrigger("HLT_Mu12_v13");
-    hltModP->AddTrigger("!HLT_Mu12_v13");
-    hltModP->AddTrigger("HLT_Mu12_v14");
-    hltModP->AddTrigger("!HLT_Mu12_v14");
-    hltModP->AddTrigger("HLT_Mu12_v16");
-    hltModP->AddTrigger("!HLT_Mu12_v16");
-    // // MC signal triggers
-    // hltModP->AddTrigger("HLT_Photon135_v*");
-    // hltModP->AddTrigger("HLT_Photon150_v*");
-    // hltModP->AddTrigger("HLT_Photon160_v*");
-    // // Eventual OR with Pho+X
-    // hltModP->AddTrigger("HLT_Photon70_CaloIdXL_PFMET100_v*");
-  }
 
   //------------------------------------------------------------------------------------------------
   // split pfcandidates to PFPU and PFnoPU
@@ -398,26 +399,6 @@ void runMonoPhoton(const char *fileset    = "0000",
   beamhalo->SetMaxPhotonEta(2.4);
   beamhalo->SetMinMetEt(100);
 
-  TString tupleName = TString(outputName);
-  tupleName += TString("_") + TString(dataset) + TString("_") + TString(skim);
-  if (TString(fileset) != TString("")) tupleName += TString("_") + TString(fileset);
-  tupleName += TString("_tree.root");
-  
-  TString tupleName_dilepton = TString(outputName);
-  tupleName_dilepton += TString("_") + TString(dataset) + TString("_") + TString(skim);
-  if (TString(fileset) != TString("")) tupleName_dilepton += TString("_") + TString(fileset);
-  tupleName_dilepton += TString("_tree_dilepton.root");
-
-  TString tupleName_phfake = TString(outputName);
-  tupleName_phfake += TString("_") + TString(dataset) + TString("_") + TString(skim);
-  if (TString(fileset) != TString("")) tupleName_phfake += TString("_") + TString(fileset);
-  tupleName_phfake += TString("_tree_phfake.root");
-
-  TString tupleName_beamhalo = TString(outputName);
-  tupleName_beamhalo += TString("_") + TString(dataset) + TString("_") + TString(skim);
-  if (TString(fileset) != TString("")) tupleName_beamhalo += TString("_") + TString(fileset);
-  tupleName_beamhalo += TString("_tree_beamhalo.root");
-
   MonoPhotonTreeWriter *phplusmettree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter");
   phplusmettree->SetPhotonsFromBranch(kFALSE);
   phplusmettree->SetPhotonsName(photonCleaningMod->GetOutputName());
@@ -433,7 +414,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   phplusmettree->SetLeptonsName(merger->GetOutputName());
   phplusmettree->SetIsData(isData);
   phplusmettree->SetProcessID(0);
-  phplusmettree->SetTupleName(tupleName);
+  phplusmettree->SetFillNtupleType(0);
   
   MonoPhotonTreeWriter *dileptontree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter_dilepton");
   dileptontree->SetPhotonsFromBranch(kFALSE);
@@ -450,7 +431,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   dileptontree->SetLeptonsName(merger->GetOutputName());
   dileptontree->SetIsData(isData);
   dileptontree->SetProcessID(0);
-  dileptontree->SetTupleName(tupleName_dilepton);
+  dileptontree->SetFillNtupleType(1);//dilepton
 
   MonoPhotonTreeWriter *phfaketree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter_phfake");
   phfaketree->SetPhotonsFromBranch(kFALSE);
@@ -467,7 +448,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   phfaketree->SetLeptonsName(merger->GetOutputName());
   phfaketree->SetIsData(isData);
   phfaketree->SetProcessID(0);
-  phfaketree->SetTupleName(tupleName_phfake);
+  phfaketree->SetFillNtupleType(2);//phfake;
 
   MonoPhotonTreeWriter *beamhalotree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter_beamhalo");
   beamhalotree->SetPhotonsFromBranch(kFALSE);
@@ -484,7 +465,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   beamhalotree->SetLeptonsName(merger->GetOutputName());
   beamhalotree->SetIsData(isData);
   beamhalotree->SetProcessID(0);
-  beamhalotree->SetTupleName(tupleName_beamhalo);
+  beamhalotree->SetFillNtupleType(3);//beamhalo
 
   //------------------------------------------------------------------------------------------------
   // making analysis chain

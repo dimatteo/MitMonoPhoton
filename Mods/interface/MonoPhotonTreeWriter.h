@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------------------------
-// $Id: MonoPhotonTreeWriter.h,v 1.9 2013/07/11 04:58:34 dimatteo Exp $
+// $Id: MonoPhotonTreeWriter.h,v 1.10 2013/07/13 00:20:33 dimatteo Exp $
 //
 // MonoPhotonTreeWriter
 //
@@ -78,6 +78,7 @@ namespace mithep
 
     void                SetProcessID(Int_t n)             { fDecay = n;                  }
     void                SetTupleName(const char* c)       { fTupleName = c;              }
+    void                SetFillNtupleType(Int_t d)        { fFillNtupleType= d;          }
 
   protected:
     void                Process();
@@ -137,6 +138,7 @@ namespace mithep
     Int_t                          fDecay;
     TFile                         *fOutputFile;
     TString	                       fTupleName;
+    Int_t                          fFillNtupleType;
     MitGPTree                      fMitGPTree;
 
     Int_t                          fNEventsSelected;

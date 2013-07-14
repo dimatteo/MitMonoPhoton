@@ -72,6 +72,7 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fDecay(0),
   fOutputFile(0),
   fTupleName("hMonoPhotonTree"),
+  fFillNtupleType(0),
 
   fNEventsSelected(0)
 
@@ -116,6 +117,7 @@ void MonoPhotonTreeWriter::Process()
 
   // ------------------------------------------------------------  
   // load event based information
+  fMitGPTree.InitVariables();
       
   if( !fIsData ) {
   LoadBranch(fPileUpName);
@@ -128,7 +130,6 @@ void MonoPhotonTreeWriter::Process()
       if (puinfo->GetBunchCrossing() == -1) fMitGPTree.npuMinusOne_ = puinfo->GetPU_NumInteractions();
     }
   }
-  fMitGPTree.InitVariables();
 
   fMitGPTree.cuts_ = 0;  
 
@@ -554,16 +555,15 @@ void MonoPhotonTreeWriter::SlaveBegin()
   //***********************************************************************************************
   //Create Smurf Ntuple Tree  
   //***********************************************************************************************
-  fOutputFile = new TFile(fTupleName.Data(), "RECREATE");
-  fMitGPTree.CreateTree(-1);
-  
+  fMitGPTree.CreateTree(fFillNtupleType);
+  AddOutput(fMitGPTree.tree_);
 }
 //--------------------------------------------------------------------------------------------------
 void MonoPhotonTreeWriter::SlaveTerminate()
 {
-  fOutputFile->cd();
-  fOutputFile->Write();
-  fOutputFile->Close();
+  //fOutputFile->cd();
+  //fOutputFile->Write();
+  //fOutputFile->Close();
   cout << "Processed events on MonoPhotonTreeWriter: " << fNEventsSelected << endl;
 }
 

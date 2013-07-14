@@ -213,12 +213,14 @@ class MitGPTree {
   /// load a MitGPTree
   void LoadTree(const char* file, int type = -1){
     // to load three different ntuples in the same job DMTree0/1
-    // type == 0/1 if all variables was added
+    // type == 0/1/2/3 if all variables was added
     // type = -1 (default) if a minimum set of variables was added with tree as name
     f_ = TFile::Open(file);
     assert(f_);
-    if     (type == 0) tree_ = dynamic_cast<TTree*>(f_->Get("DMTree0"));
-    else if(type == 1) tree_ = dynamic_cast<TTree*>(f_->Get("DMTree1"));
+    if     (type == 0) tree_ = dynamic_cast<TTree*>(f_->Get("MPhoTree"));
+    else if(type == 1) tree_ = dynamic_cast<TTree*>(f_->Get("MPhoTreeDiLepton"));
+    else if(type == 2) tree_ = dynamic_cast<TTree*>(f_->Get("MPhoTreePhFake"));
+    else if(type == 3) tree_ = dynamic_cast<TTree*>(f_->Get("MPhoTreeBeamHalo"));
     else               tree_ = dynamic_cast<TTree*>(f_->Get("tree"));
     assert(tree_);
   }
@@ -227,10 +229,12 @@ class MitGPTree {
   void CreateTree(int type = -1){
     assert(type==type); // just to suppress warnings
     // to create three different ntuples in the same job DMTree0/1
-    // type == 0/1 add all variables
-    // type = -1 (default) add a minimum set of variables with tree as name
-    if     (type == 0) tree_ = new TTree("DMTree0","Smurf ntuples");
-    else if(type == 1) tree_ = new TTree("DMTree1","Smurf ntuples");
+    // type == 0/1/2/3 if all variables was added
+    // type = -1 (default) if a minimum set of variables was added with tree as name
+    if     (type == 0) tree_ = new TTree("MPhoTree","Smurf ntuples");
+    else if(type == 1) tree_ = new TTree("MPhoTreeDiLepton","Smurf ntuples");
+    else if(type == 2) tree_ = new TTree("MPhoTreePhFake","Smurf ntuples");
+    else if(type == 3) tree_ = new TTree("MPhoTreeBeamHalo","Smurf ntuples");
     else               tree_ = new TTree("tree","Smurf ntuples");
     f_ = 0;
     InitVariables();
