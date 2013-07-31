@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.27 2013/07/14 02:13:59 dimatteo Exp $
+// $Id: runMonoPhoton.C,v 1.29 2013/07/31 22:39:52 dimatteo Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -196,27 +196,16 @@ void runMonoPhoton(const char *fileset    = "0000",
   // Lepton Selection 
   //-----------------------------------
   ElectronIDMod* eleIdMod = new ElectronIDMod;
-  eleIdMod -> SetPtMin(10);  
-  eleIdMod -> SetEtaMax(2.5);
-  eleIdMod -> SetApplyEcalFiducial(true);
-  eleIdMod -> SetIDType("Hgg_LeptonTag_2012IdHCP");  
-  eleIdMod -> SetElectronMVAWeightsSubdet0Pt10To20(TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/ElectronMVAWeights/ElectronID_BDTG_EGamma2012NonTrigV0_Cat1.weights.xml"))));
-  eleIdMod -> SetElectronMVAWeightsSubdet1Pt10To20(TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/ElectronMVAWeights/ElectronID_BDTG_EGamma2012NonTrigV0_Cat2.weights.xml"))));  
-  eleIdMod -> SetElectronMVAWeightsSubdet2Pt10To20(TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/ElectronMVAWeights/ElectronID_BDTG_EGamma2012NonTrigV0_Cat3.weights.xml"))));  
-  eleIdMod -> SetElectronMVAWeightsSubdet0Pt20ToInf(TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/ElectronMVAWeights/ElectronID_BDTG_EGamma2012NonTrigV0_Cat4.weights.xml")))); 
-  eleIdMod -> SetElectronMVAWeightsSubdet1Pt20ToInf(TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/ElectronMVAWeights/ElectronID_BDTG_EGamma2012NonTrigV0_Cat5.weights.xml")))); 
-  eleIdMod -> SetElectronMVAWeightsSubdet2Pt20ToInf(TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/ElectronMVAWeights/ElectronID_BDTG_EGamma2012NonTrigV0_Cat6.weights.xml")))); 
-  eleIdMod -> SetWhichVertex(-1);
-  eleIdMod -> SetD0Cut(0.02);
-  eleIdMod -> SetDZCut(0.2); //h  
-  eleIdMod -> SetIsoType("PFIso_HggLeptonTag2012HCP"); //h
-  eleIdMod -> SetOutputName("HggLeptonTagElectrons");
-  eleIdMod -> SetRhoType(RhoUtilities::CMS_RHO_RHOKT6PFJETS);
-  eleIdMod -> SetPFNoPileUpName("pfnopileupcands");
-  eleIdMod -> SetInvertNExpectedHitsInnerCut(kFALSE);
-  eleIdMod -> SetNExpectedHitsInnerCut(1);   
-  eleIdMod -> SetApplyConversionFilterType1(kTRUE);
-  eleIdMod -> SetPVName(Names::gkPVBeamSpotBrn);   
+  eleIdMod->SetIDType("VBTFWorkingPointLowPtId");
+  eleIdMod->SetIsoType("PFIso");
+  eleIdMod->SetApplyConversionFilterType1(kTRUE);
+  eleIdMod->SetApplyConversionFilterType2(kFALSE);
+  eleIdMod->SetChargeFilter(kFALSE);
+  eleIdMod->SetApplyD0Cut(kTRUE);
+  eleIdMod->SetApplyDZCut(kTRUE);
+  eleIdMod->SetWhichVertex(-1);
+  eleIdMod->SetNExpectedHitsInnerCut(0);
+  eleIdMod->SetGoodElectronsName("GoodElectronsBS");
 
   MuonIDMod* muonIdMod = new MuonIDMod;
   // base kinematics
