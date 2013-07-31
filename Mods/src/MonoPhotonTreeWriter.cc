@@ -43,6 +43,7 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fAllElectronsName       ("Electrons"),
   fConversionsName        ("MergedConversions"),
   fPfCandidatesName       ("PFCandidates"),
+  fHltObjsName            (Names::gkHltObjBrn),
 
   fIsData                 (false),
   fPhotonsFromBranch      (kTRUE),  
@@ -68,6 +69,7 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fAllElectrons           (0),
   fConversions            (0),
   fPfCandidates           (0),
+  fHltObjs                (0),
 
   fDecay(0),
   fOutputFile(0),
@@ -112,7 +114,12 @@ void MonoPhotonTreeWriter::Process()
     ReqBranch(fPileUpName,            fPileUp);
   }
   ParticleOArr *leptons = GetObjThisEvt<ParticleOArr>(ModNames::gkMergedLeptonsName);
-
+  const TriggerObjectCol *fHltObjs = GetHLTObjects(fHltObjsName);
+  if (!fHltObjs){
+    printf("HLTEvtSelMod::TriggerObjectCol not found\n");
+    return;
+  }
+  
   fNEventsSelected++;
 
   // ------------------------------------------------------------  
@@ -242,6 +249,12 @@ void MonoPhotonTreeWriter::Process()
         fMitGPTree.phoMatchHeTime_a1_ = photon->MatchHeMinusTime();
       }
     }
+    // get the HLT matched object information
+    for (UInt_t i=0; i<fHltObjs->GetEntries(); i++) {
+      const TriggerObject *trigobj = fHltObjs->At(i);
+      if (trigobj->TriggerType()==TriggerObject::TriggerPhoton && MathUtils::DeltaR(photon->SCluster(),trigobj)<0.3)
+        fMitGPTree.phoIsTrigger_a1_ = true;
+    }
   }
   if(fPhotons->GetEntries() >= 2) {
     const Photon *photon = fPhotons->At(1);
@@ -304,6 +317,12 @@ void MonoPhotonTreeWriter::Process()
         fMitGPTree.phoMatchHeEn_a2_ = photon->MatchHeMinusEn();
         fMitGPTree.phoMatchHeTime_a2_ = photon->MatchHeMinusTime();
       }
+    }
+    // get the HLT matched object information
+    for (UInt_t i=0; i<fHltObjs->GetEntries(); i++) {
+      const TriggerObject *trigobj = fHltObjs->At(i);
+      if (trigobj->TriggerType()==TriggerObject::TriggerPhoton && MathUtils::DeltaR(photon->SCluster(),trigobj)<0.3)
+        fMitGPTree.phoIsTrigger_a2_ = true;
     }
   }
   if(fPhotons->GetEntries() >= 3) {
@@ -368,6 +387,12 @@ void MonoPhotonTreeWriter::Process()
         fMitGPTree.phoMatchHeTime_a3_ = photon->MatchHeMinusTime();
       }
     }
+    // get the HLT matched object information
+    for (UInt_t i=0; i<fHltObjs->GetEntries(); i++) {
+      const TriggerObject *trigobj = fHltObjs->At(i);
+      if (trigobj->TriggerType()==TriggerObject::TriggerPhoton && MathUtils::DeltaR(photon->SCluster(),trigobj)<0.3)
+        fMitGPTree.phoIsTrigger_a3_ = true;
+    }
   }
   if(fPhotons->GetEntries() >= 4) {
     const Photon *photon = fPhotons->At(3);
@@ -430,6 +455,12 @@ void MonoPhotonTreeWriter::Process()
         fMitGPTree.phoMatchHeEn_a4_ = photon->MatchHeMinusEn();
         fMitGPTree.phoMatchHeTime_a4_ = photon->MatchHeMinusTime();
       }
+    }
+    // get the HLT matched object information
+    for (UInt_t i=0; i<fHltObjs->GetEntries(); i++) {
+      const TriggerObject *trigobj = fHltObjs->At(i);
+      if (trigobj->TriggerType()==TriggerObject::TriggerPhoton && MathUtils::DeltaR(photon->SCluster(),trigobj)<0.3)
+        fMitGPTree.phoIsTrigger_a4_ = true;
     }
   }
 
@@ -544,7 +575,7 @@ void MonoPhotonTreeWriter::SlaveBegin()
   ReqEventObject(fBeamspotName,       fBeamspot,      true);
   ReqEventObject(fAllElectronsName,   fAllElectrons,  true);
   ReqEventObject(fConversionsName,    fConversions,   true);
-  ReqEventObject(fPfCandidatesName,   fPfCandidates,   true);
+  ReqEventObject(fPfCandidatesName,   fPfCandidates,  true);
 
   ReqEventObject(fPileUpDenName,   fPileUpDen,    true);
   if (!fIsData) {

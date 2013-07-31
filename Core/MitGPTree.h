@@ -85,6 +85,7 @@ class MitGPTree {
   float phoMatchHePhi_a1_;
   float phoMatchHeEn_a1_;
   float phoMatchHeTime_a1_;
+  bool  phoIsTrigger_a1_;
   LorentzVector  pho2_;
   float phoCombIso1_a2_;
   float phoCombIso2_a2_;
@@ -108,6 +109,7 @@ class MitGPTree {
   float phoMatchHePhi_a2_;
   float phoMatchHeEn_a2_;
   float phoMatchHeTime_a2_;
+  bool  phoIsTrigger_a2_;
   LorentzVector  pho3_;
   float phoCombIso1_a3_;
   float phoCombIso2_a3_;
@@ -131,6 +133,7 @@ class MitGPTree {
   float phoMatchHePhi_a3_;
   float phoMatchHeEn_a3_;
   float phoMatchHeTime_a3_;
+  bool  phoIsTrigger_a3_;
   LorentzVector  pho4_;
   float phoCombIso1_a4_;
   float phoCombIso2_a4_;
@@ -154,6 +157,7 @@ class MitGPTree {
   float phoMatchHePhi_a4_;
   float phoMatchHeEn_a4_;
   float phoMatchHeTime_a4_;
+  bool  phoIsTrigger_a4_;
 
   unsigned int   njets_;
   LorentzVector  jet1_;
@@ -282,6 +286,7 @@ class MitGPTree {
     tree_->Branch("phoMatchHePhi_a1"          , &phoMatchHePhi_a1_          , "phoMatchHePhi_a1/F");
     tree_->Branch("phoMatchHeEn_a1"           , &phoMatchHeEn_a1_           , "phoMatchHeEn_a1/F");
     tree_->Branch("phoMatchHeTime_a1"         , &phoMatchHeTime_a1_         , "phoMatchHeTime_a1/F");
+    tree_->Branch("phoIsTrigger_a1"           , &phoIsTrigger_a1_           , "phoIsTrigger_a1_/B");
     tree_->Branch("pho2"                      , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &phoPtr2_);
     tree_->Branch("phoCombIso1_a2"            , &phoCombIso1_a2_            , "phoCombIso1_a2/F");
     tree_->Branch("phoCombIso2_a2"            , &phoCombIso2_a2_            , "phoCombIso2_a2/F");
@@ -305,6 +310,7 @@ class MitGPTree {
     tree_->Branch("phoMatchHePhi_a2"          , &phoMatchHePhi_a2_          , "phoMatchHePhi_a2/F");
     tree_->Branch("phoMatchHeEn_a2"           , &phoMatchHeEn_a2_           , "phoMatchHeEn_a2/F");
     tree_->Branch("phoMatchHeTime_a2"         , &phoMatchHeTime_a2_         , "phoMatchHeTime_a2/F");
+    tree_->Branch("phoIsTrigger_a2"           , &phoIsTrigger_a2_           , "phoIsTrigger_a2_/B");
     tree_->Branch("pho3"                      , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &phoPtr3_);
     tree_->Branch("phoCombIso1_a3"            , &phoCombIso1_a3_            , "phoCombIso1_a3/F");
     tree_->Branch("phoCombIso2_a3"            , &phoCombIso2_a3_            , "phoCombIso2_a3/F");
@@ -328,6 +334,7 @@ class MitGPTree {
     tree_->Branch("phoMatchHePhi_a3"          , &phoMatchHePhi_a3_          , "phoMatchHePhi_a3/F");
     tree_->Branch("phoMatchHeEn_a3"           , &phoMatchHeEn_a3_           , "phoMatchHeEn_a3/F");
     tree_->Branch("phoMatchHeTime_a3"         , &phoMatchHeTime_a3_         , "phoMatchHeTime_a3/F");
+    tree_->Branch("phoIsTrigger_a3"           , &phoIsTrigger_a3_           , "phoIsTrigger_a3_/B");
     tree_->Branch("pho4"                      , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &phoPtr4_);
     tree_->Branch("phoCombIso1_a4"            , &phoCombIso1_a4_            , "phoCombIso1_a4/F");
     tree_->Branch("phoCombIso2_a4"            , &phoCombIso2_a4_            , "phoCombIso2_a4/F");
@@ -351,6 +358,7 @@ class MitGPTree {
     tree_->Branch("phoMatchHePhi_a4"          , &phoMatchHePhi_a4_          , "phoMatchHePhi_a4/F");
     tree_->Branch("phoMatchHeEn_a4"           , &phoMatchHeEn_a4_           , "phoMatchHeEn_a4/F");
     tree_->Branch("phoMatchHeTime_a4"         , &phoMatchHeTime_a4_         , "phoMatchHeTime_a4/F");
+    tree_->Branch("phoIsTrigger_a4"           , &phoIsTrigger_a4_           , "phoIsTrigger_a4_/B");
 
     tree_->Branch("njets"        , &njets_        ,   "njets/i");
     tree_->Branch("jet1"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &jetPtr1_);
@@ -440,6 +448,7 @@ class MitGPTree {
     tree_->SetBranchAddress("phoMatchHePhi_a1"          , &phoMatchHePhi_a1_);
     tree_->SetBranchAddress("phoMatchHeEn_a1"           , &phoMatchHeEn_a1_);
     tree_->SetBranchAddress("phoMatchHeTime_a1"         , &phoMatchHeTime_a1_);
+    tree_->SetBranchAddress("phoIsTrigger_a1"           , &phoIsTrigger_a1_);
     tree_->SetBranchAddress("pho2"                      , &phoPtr2_);
     tree_->SetBranchAddress("phoCombIso1_a2"            , &phoCombIso1_a2_);
     tree_->SetBranchAddress("phoCombIso2_a2"            , &phoCombIso2_a2_);
@@ -463,6 +472,7 @@ class MitGPTree {
     tree_->SetBranchAddress("phoMatchHePhi_a2"          , &phoMatchHePhi_a2_);
     tree_->SetBranchAddress("phoMatchHeEn_a2"           , &phoMatchHeEn_a2_);
     tree_->SetBranchAddress("phoMatchHeTime_a2"         , &phoMatchHeTime_a2_);
+    tree_->SetBranchAddress("phoIsTrigger_a2"           , &phoIsTrigger_a2_);
     tree_->SetBranchAddress("pho3"                      , &phoPtr3_);
     tree_->SetBranchAddress("phoCombIso1_a3"            , &phoCombIso1_a3_);
     tree_->SetBranchAddress("phoCombIso2_a3"            , &phoCombIso2_a3_);
@@ -486,6 +496,7 @@ class MitGPTree {
     tree_->SetBranchAddress("phoMatchHePhi_a3"          , &phoMatchHePhi_a3_);
     tree_->SetBranchAddress("phoMatchHeEn_a3"           , &phoMatchHeEn_a3_);
     tree_->SetBranchAddress("phoMatchHeTime_a3"         , &phoMatchHeTime_a3_);
+    tree_->SetBranchAddress("phoIsTrigger_a3"           , &phoIsTrigger_a3_);
     tree_->SetBranchAddress("pho4"                      , &phoPtr4_);
     tree_->SetBranchAddress("phoCombIso1_a4"            , &phoCombIso1_a4_);
     tree_->SetBranchAddress("phoCombIso2_a4"            , &phoCombIso2_a4_);
@@ -509,6 +520,7 @@ class MitGPTree {
     tree_->SetBranchAddress("phoMatchHePhi_a4"          , &phoMatchHePhi_a4_);
     tree_->SetBranchAddress("phoMatchHeEn_a4"           , &phoMatchHeEn_a4_);
     tree_->SetBranchAddress("phoMatchHeTime_a4"         , &phoMatchHeTime_a4_);
+    tree_->SetBranchAddress("phoIsTrigger_a4"           , &phoIsTrigger_a4_);
 
     tree_->SetBranchAddress("njets",         &njets_);
     tree_->SetBranchAddress("jet1",          &jetPtr1_);
@@ -613,6 +625,7 @@ MitGPTree::InitVariables(){
   phoMatchHePhi_a1_ = -1.0;
   phoMatchHeEn_a1_ = -1.0;
   phoMatchHeTime_a1_ = -999.0;
+  phoIsTrigger_a1_ = false;
   pho2_       	 = LorentzVector();
   phoCombIso1_a2_ = -1.0;
   phoCombIso2_a2_ = -1.0;
@@ -636,6 +649,7 @@ MitGPTree::InitVariables(){
   phoMatchHePhi_a2_ = -1.0;
   phoMatchHeEn_a2_ = -1.0;
   phoMatchHeTime_a2_ = -999.0;
+  phoIsTrigger_a2_ = false;
   pho3_       	 = LorentzVector();
   phoCombIso1_a3_ = -1.0;
   phoCombIso2_a3_ = -1.0;
@@ -659,6 +673,7 @@ MitGPTree::InitVariables(){
   phoMatchHePhi_a3_ = -1.0;
   phoMatchHeEn_a3_ = -1.0;
   phoMatchHeTime_a3_ = -999.0;
+  phoIsTrigger_a3_ = false;
   pho4_       	 = LorentzVector();
   phoCombIso1_a4_ = -1.0;
   phoCombIso2_a4_ = -1.0;
@@ -682,6 +697,7 @@ MitGPTree::InitVariables(){
   phoMatchHePhi_a4_ = -1.0;
   phoMatchHeEn_a4_ = -1.0;
   phoMatchHeTime_a4_ = -999.0;
+  phoIsTrigger_a4_ = false;
 
   njets_ = 0;
   jet1_     = LorentzVector();

@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------------------------
-// $Id: MonoPhotonTreeWriter.h,v 1.10 2013/07/13 00:20:33 dimatteo Exp $
+// $Id: MonoPhotonTreeWriter.h,v 1.11 2013/07/14 02:13:58 dimatteo Exp $
 //
 // MonoPhotonTreeWriter
 //
@@ -29,6 +29,7 @@
 #include "MitAna/DataTree/interface/PFJetCol.h"
 #include "MitAna/DataTree/interface/GenJetCol.h"
 #include "MitAna/DataTree/interface/MCEventInfo.h"
+#include "MitAna/DataTree/interface/TriggerObjectCol.h"
 #include "MitPhysics/Utils/interface/PhotonFix.h"
 #include "MitPhysics/Utils/interface/PhotonTools.h"
 #include "MitPhysics/Utils/interface/MVAMet.h"
@@ -66,6 +67,7 @@ namespace mithep
     void                SetLeptonsName(const char *n)     { fLeptonsName = n;            }
     void                SetCosmicsName(const char *n)     { fCosmicsName = n;            }
     void                SetCosmicsFromBranch(bool b)      { fCosmicsFromBranch = b;      }
+    void                SetHltObjsName(const char *n)     { fHltObjsName= n;             }
 
     void                SetSuperClustersName(const char *n){ fSuperClustersName = n;     }
     void                SetTracksName(const char *n)      { fTracksName = n;             }
@@ -93,6 +95,7 @@ namespace mithep
     TString             fJetsName;
     TString             fLeptonsName;
     TString             fCosmicsName;
+    TString             fHltObjsName;
 
     TString             fSuperClustersName;
     TString             fTracksName;
@@ -133,7 +136,8 @@ namespace mithep
     const ElectronCol             *fAllElectrons;
     const DecayParticleCol        *fConversions;  
     const PFCandidateCol          *fPfCandidates;  
-    
+    const TriggerObjectCol        *fHltObjs;
+
     // --------------------------------
     Int_t                          fDecay;
     TFile                         *fOutputFile;
