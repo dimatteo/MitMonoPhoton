@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.29 2013/07/31 22:39:52 dimatteo Exp $
+// $Id: runMonoPhoton.C,v 1.30 2013/07/31 22:43:33 dimatteo Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -206,7 +206,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   eleIdMod->SetWhichVertex(-1);
   eleIdMod->SetNExpectedHitsInnerCut(0);
   eleIdMod->SetGoodElectronsName("GoodElectronsBS");
-
+  eleIdMod->SetRhoType(RhoUtilities::CMS_RHO_RHOKT6PFJETS);
+   
   MuonIDMod* muonIdMod = new MuonIDMod;
   // base kinematics
   muonIdMod -> SetPtMin(10.);
