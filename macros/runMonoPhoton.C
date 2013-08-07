@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.30 2013/07/31 22:43:33 dimatteo Exp $
+// $Id: runMonoPhoton.C,v 1.31 2013/07/31 22:45:21 dimatteo Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -18,6 +18,7 @@
 #include "MitPhysics/Mods/interface/MuonIDMod.h"
 #include "MitPhysics/Mods/interface/ElectronIDMod.h"
 #include "MitPhysics/Mods/interface/ElectronCleaningMod.h"
+#include "MitPhysics/Mods/interface/CosmicCleaningMod.h"
 #include "MitPhysics/Mods/interface/PhotonIDMod.h"
 #include "MitPhysics/Mods/interface/PhotonTreeWriter.h"
 #include "MitPhysics/Mods/interface/PhotonCleaningMod.h"
@@ -205,7 +206,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   eleIdMod->SetApplyDZCut(kTRUE);
   eleIdMod->SetWhichVertex(-1);
   eleIdMod->SetNExpectedHitsInnerCut(0);
-  eleIdMod->SetGoodElectronsName("GoodElectronsBS");
+  eleIdMod->SetGoodElectronsName("GoodElectrons");
   eleIdMod->SetRhoType(RhoUtilities::CMS_RHO_RHOKT6PFJETS);
    
   MuonIDMod* muonIdMod = new MuonIDMod;
@@ -228,6 +229,11 @@ void runMonoPhoton(const char *fileset    = "0000",
   electronCleaning->SetCleanMuonsName(muonIdMod->GetOutputName());
   electronCleaning->SetGoodElectronsName(eleIdMod->GetOutputName());
   electronCleaning->SetCleanElectronsName("CleanElectrons");
+
+  CosmicCleaningMod *cosmicCleaning = new CosmicCleaningMod;
+  cosmicCleaning->SetCleanMuonsName(muonIdMod->GetOutputName());
+  cosmicCleaning->SetCosmicsName("CosmicMuons");
+  cosmicCleaning->SetCleanCosmicsName("CleanCosmics");
 
   MergeLeptonsMod *merger = new MergeLeptonsMod;
   merger->SetMuonsName(muonIdMod->GetOutputName());
@@ -475,7 +481,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   // simple object id modules
   photreg          ->Add(SepPUMod); 
   SepPUMod         ->Add(muonIdMod);
-  muonIdMod        ->Add(eleIdMod);
+  muonIdMod        ->Add(cosmicCleaning);
+  cosmicCleaning   ->Add(eleIdMod);
   eleIdMod         ->Add(electronCleaning);
   electronCleaning ->Add(merger);
   merger           ->Add(photonIDMod);
