@@ -152,7 +152,7 @@ void MonoPhotonAnalysisMod::Process()
   //***********************************************************************************************
   // Discard events with no identified photons
   //***********************************************************************************************
-  if (fPhotons->GetEntries() >= fMinNumPhotons)  passCut[0] = true;
+  if (fPhotons->GetEntries() >= fMinNumPhotons || fMinNumPhotons <= 0)  passCut[0] = true;
 
   //***********************************************************************************************
   // Discard events with no hard photons
@@ -163,7 +163,7 @@ void MonoPhotonAnalysisMod::Process()
 	  if ( ph->Et() <= fMinPhotonEt ) continue; 
 	  nHardPh ++;
   }
-  if ( nHardPh > 0 ) passCut[1] = true;
+  if ( nHardPh > 0 || fMinNumPhotons <= 0) passCut[1] = true;
 
   //***********************************************************************************************
   // Discard events with no hard photons inside eta range
@@ -177,7 +177,7 @@ void MonoPhotonAnalysisMod::Process()
 	  nHardEtaPh ++;
     theGoodPhotons.push_back((int) i);
   }
-  if ( nHardEtaPh > 0 ) passCut[2] = true;
+  if ( nHardEtaPh > 0 || fMinNumPhotons <= 0) passCut[2] = true;
 
   //***********************************************************************************************
   // Discard events with soft/hard met
@@ -188,7 +188,9 @@ void MonoPhotonAnalysisMod::Process()
   //***********************************************************************************************
   // Discard events with too few leptons
   //***********************************************************************************************
-  if ((leptons->GetEntries() >= fMinNumLeptons) || (fElectrons->GetEntries() >= fMinNumLeptons) || (fMuons->GetEntries() >= fMinNumLeptons)) passCut[4] = true;
+  if ((leptons->GetEntries()    >= fMinNumLeptons) || 
+      (fElectrons->GetEntries() >= fMinNumLeptons) || 
+      (fMuons->GetEntries()     >= fMinNumLeptons)) passCut[4] = true;
 	  
   //*********************************************************************************************
   // Make Selection Histograms. Number of events passing each level of cut
