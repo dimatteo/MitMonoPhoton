@@ -15,12 +15,14 @@
   // Mono Photon things
   loadmylib("MitMonoPhoton",    "SelMods");
   loadmylib("MitMonoPhoton",    "Mods");
+  loadmylib("MitMonoPhoton",    "Utils");
 
   // Mono Photon macros to compile etc.
   gSystem->AddIncludePath("-I$CMSSW_BASE/src/");
   gSystem->AddIncludePath("-I$CMSSW_RELEASE_BASE/src/");
   gSystem->AddIncludePath("-I$CMSSW_BASE/src/MitMonoPhoton/SelMods/interface");
   gSystem->AddIncludePath("-I$CMSSW_BASE/src/MitMonoPhoton/Mods/interface");
+  gSystem->AddIncludePath("-I$CMSSW_BASE/src/MitMonoPhoton/Utils/interface");
   gSystem->AddIncludePath("-I$CMSSW_BASE/src/MitHtt/Mods/interface");
   gSystem->AddIncludePath("-I$CMSSW_BASE/src/MitAna/macros");
   gInterpreter->AddIncludePath(TString(gSystem->Getenv("CMSSW_BASE"))+"/src/");

@@ -1,0 +1,15 @@
+<use   name="MitCommon/MathTools"/>
+<use   name="MitAna/TreeMod"/>
+<use   name="MitPhysics/Init"/>
+<use   name="MitPhysics/Utils"/>
+<use   name="MitPhysics/ElectronLikelihood"/>
+<use   name="CondFormats/JetMETObjects"/>
+<use   name="FWCore/ParameterSet"/>
+<use   name="lhapdf"/>
+<use   name="root"/>
+<use   name="roottmva"/>
+<use   root=""/>
+<lib   name="EG"/>
+<export>
+  <lib   name="1"/>
+</export>
