@@ -48,7 +48,7 @@ void makeReducedTree()
   for (UInt_t iSample=0; iSample < *samples->NSamples(); iSample++) {
     const Sample *thisSample = samples->GetSample(iSample);    
     TreeReducer  *thisReducer = new TreeReducer(thisSample);
-    thisReducer -> SetPuTarget(putarget);
+    thisReducer -> SetPUTarget(putarget);
     thisReducer -> SetInputBaseDir(sampleBaseDir);
     thisReducer -> SetOutput(outfile);
     thisReducer -> SetLumi(19500.);

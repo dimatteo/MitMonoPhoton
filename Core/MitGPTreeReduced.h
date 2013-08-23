@@ -18,10 +18,12 @@ class MitGPTreeReduced {
   typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LorentzVector; 
 
   /// variables
+  bool           isData_;
+
   float          evt_weight_;
   float          hlt_weight_;
   float          pu_weight_;
-  float          nlo_weight_;
+  float          kf_weight_;
 
   unsigned int   nvtx_;
   float          met_;
@@ -71,10 +73,12 @@ class MitGPTreeReduced {
     f_ = 0;
     InitVariables();
     //book the branches
+    tree_->Branch("isData"            , &isData_            ,   "isData/B");
+
     tree_->Branch("evt_weight"        , &evt_weight_        ,   "evt_weight/F");
     tree_->Branch("hlt_weight"        , &hlt_weight_        ,   "hlt_weight/F");
     tree_->Branch("pu_weight"         , &pu_weight_         ,   "pu_weight/F");
-    tree_->Branch("nlo_weight"        , &nlo_weight_        ,   "nlo_weight/F");
+    tree_->Branch("kf_weight"         , &kf_weight_         ,   "kf_weight/F");
   
     tree_->Branch("nvtx"         , &nvtx_         ,   "nvtx/i");
     tree_->Branch("met"          , &met_          ,   "met/F");
@@ -102,10 +106,12 @@ class MitGPTreeReduced {
     Int_t currentState = gErrorIgnoreLevel;
     // gErrorIgnoreLevel = kError;
     gErrorIgnoreLevel = kBreak;
+    tree_->SetBranchAddress("isData"            , &isData_);
+
     tree_->SetBranchAddress("evt_weight"        , &evt_weight_ );
     tree_->SetBranchAddress("hlt_weight"        , &hlt_weight_ );
     tree_->SetBranchAddress("pu_weight"         , &pu_weight_  );
-    tree_->SetBranchAddress("nlo_weight"        , &nlo_weight_ );
+    tree_->SetBranchAddress("kf_weight"         , &kf_weight_ );
   
     tree_->SetBranchAddress("nvtx"         , &nvtx_      );
     tree_->SetBranchAddress("met"          , &met_       );
@@ -133,10 +139,12 @@ class MitGPTreeReduced {
 inline void 
 MitGPTreeReduced::InitVariables(){
   // inizialize variables
+  isData_ = false;
+  
   evt_weight_ = -1.;
   hlt_weight_ = -1.;
   pu_weight_  = -1.;
-  nlo_weight_ = -1.;
+  kf_weight_  = -1.;
 
   nvtx_  = 0;
   met_   = -1.;

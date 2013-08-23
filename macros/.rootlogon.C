@@ -18,6 +18,7 @@
   loadmylib("MitMonoPhoton",    "Utils");
 
   // Mono Photon macros to compile etc.
+  gSystem->AddIncludePath("-I/cvmfs/cms.cern.ch/slc5_amd64_gcc462/lcg/roofit/5.32.00/include");
   gSystem->AddIncludePath("-I$CMSSW_BASE/src/");
   gSystem->AddIncludePath("-I$CMSSW_RELEASE_BASE/src/");
   gSystem->AddIncludePath("-I$CMSSW_BASE/src/MitMonoPhoton/SelMods/interface");
@@ -25,6 +26,7 @@
   gSystem->AddIncludePath("-I$CMSSW_BASE/src/MitMonoPhoton/Utils/interface");
   gSystem->AddIncludePath("-I$CMSSW_BASE/src/MitHtt/Mods/interface");
   gSystem->AddIncludePath("-I$CMSSW_BASE/src/MitAna/macros");
+  gInterpreter->AddIncludePath("/cvmfs/cms.cern.ch/slc5_amd64_gcc462/lcg/roofit/5.32.00/include");
   gInterpreter->AddIncludePath(TString(gSystem->Getenv("CMSSW_BASE"))+"/src/");
   gInterpreter->AddIncludePath(TString(gSystem->Getenv("CMSSW_RELEASE_BASE"))+"/src/");
   gInterpreter->AddIncludePath(TString(gSystem->Getenv("CMSSW_BASE"))+
