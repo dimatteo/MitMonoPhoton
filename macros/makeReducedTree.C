@@ -32,6 +32,9 @@ void makeReducedTree()
   TaskSamples* samples = new TaskSamples(prdCfg.Data(),hstDir.Data());
   samples->SetNameTxt(anaCfg.Data());
   samples->ReadFile((mitHgg + TString("/config")).Data());
+  vector<const Sample*> listOfSamples;
+  for (UInt_t iSample=0; iSample < *samples->NDataSamples(); iSample++) listOfSamples.push_back(samples->GetDataSample(iSample));
+  for (UInt_t iSample=0; iSample < *samples->NSamples(); iSample++) listOfSamples.push_back(samples->GetSample(iSample));  
   
   // define outfile
   TFile* outfile = new TFile("out.root","RECREATE");
@@ -45,9 +48,9 @@ void makeReducedTree()
 
   // generate reduced trees
   // loop through the samples and produce the reduced trees
-  for (UInt_t iSample=0; iSample < *samples->NSamples(); iSample++) {
-    const Sample *thisSample = samples->GetSample(iSample);    
-    TreeReducer  *thisReducer = new TreeReducer(thisSample);
+  for (UInt_t iSample=0; iSample < listOfSamples.size(); iSample++) {
+    TreeReducer  *thisReducer = new TreeReducer(listOfSamples.at(iSample));
+    thisReducer -> SetVerbose(true);
     thisReducer -> SetPUTarget(putarget);
     thisReducer -> SetInputBaseDir(sampleBaseDir);
     thisReducer -> SetOutput(outfile);

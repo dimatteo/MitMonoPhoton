@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------------------------
-// $Id: TreeReducer.h,v 1.1 2013/08/22 22:09:43 dimatteo Exp $
+// $Id: TreeReducer.h,v 1.2 2013/08/23 22:47:34 dimatteo Exp $
 //
 // TreeReducer
 //
@@ -50,7 +50,7 @@ namespace mithep
     float                PUWeight(Float_t npu);  // PU reweighting function
     float                KFactorWeight(Float_t scale, Float_t phet);  // KFactor reweighting function
     bool                 EventIsSelected(MitGPTree &tree, int treeType);    // Selection function
-    bool                 PhotonIsSelected(float R9, float HoverE, float Iso1, float Iso2, float Iso3);    // Photon id function
+    bool                 PhotonIsSelected(float R9, float HoverE, float CovIetaIeta, float Iso1, float Iso2, float Iso3);    // Photon id function
     float                GetCorrDeltaPhi(float phi1, float phi2);    // Corr delta phi calculator
 
     ClassDef(TreeReducer, 0)  // TreeReducer with various options
