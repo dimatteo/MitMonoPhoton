@@ -20,6 +20,11 @@ using namespace std;
 using namespace mithep;
 
 TString getEnv(const char* name);
+void makeStack(TString myVar, TString myCut, TString myName, TString myAxisNameX, TString myAxisNameY, 
+               vector<const Sample*>& listOfSamples, vector<const Sample*> listOfDatasets, TString inFileName,
+               bool isBlind, bool isLog, 
+               int nBins, float xLow, float xHigh,
+               float* xlowVec = 0);
 
 //==================================================================================================
 void makePlots(bool isBlind=1)
@@ -47,10 +52,46 @@ void makePlots(bool isBlind=1)
   // define outfile
   TFile* outfile = new TFile("outplots.root","RECREATE");
   // define infolder
-  TString sampleBaseDir = here;
-  std::cout << "sampleBaseDir " << sampleBaseDir << std::endl;
-  // define infile
-  TFile* infile = new TFile(sampleBaseDir + "/monoph-2013-July9_reduced.root", "READ"); 
+  TString inFileName = here + "/monoph-2013-July9_reduced.root";
+  std::cout << "inFileName " << inFileName << std::endl;
+  
+  //Make the histos
+  
+  // MET: variable binning
+  float xlowMET[7] = {140,160,190,250,400,700,1000};        
+  makeStack("met", "*(1.)", "met", "MET [GeV]", "Events", 
+               listOfSamples, listOfDatasets, inFileName,
+               isBlind, true, 
+               6, -1, -1,
+               xlowMET);
+  // photon ET: variable binning
+  float xlowPhET[6] = {160,190,250,400,700,1000};        
+  makeStack("phoEt", "*(1.)", "phoEt", "#gamma_{ET} [GeV]", "Events", 
+               listOfSamples, listOfDatasets, inFileName,
+               isBlind, true, 
+               5, -1, -1,
+               xlowPhET);
+        
+  return;
+}
+
+TString getEnv(const char* name)
+{
+  if (! gSystem->Getenv(name)) {
+    printf(" Environment variable: %s  not defined. EXIT!\n",name);
+    return TString("");
+  } 
+  return TString(gSystem->Getenv(name));  
+}
+
+void makeStack(TString myVar, TString myCut, TString myName, TString myAxisNameX, TString myAxisNameY, 
+               vector<const Sample*>& listOfSamples, vector<const Sample*> listOfDatasets, TString inFileName,
+               bool isBlind, bool isLog, 
+               int nBins, float xLow, float xHigh,
+               float* xlowVec)
+{
+  // prepare the input file
+  TFile* infile = new TFile(inFileName, "READ"); 
   infile -> cd();
   
   // prepare the stack
@@ -60,15 +101,12 @@ void makePlots(bool isBlind=1)
   // prepare the tree pointers
   TTree*  tree[20];
   // prepare the legend
-  TLegend* leg = new TLegend(.7485,.7225,.9597,.9614);
+  TLegend* leg = new TLegend(.7485,.7225,.9597,.9604);
   leg->SetFillColor(0);
   // prepare the colors
   Int_t col[20] = {46,2,12,5,3,4,9,7,47,49,49,50,51,52,53,54,55,56,57,58};
-  // prepare the binning
-  float xlowMET[7] = {140,160,190,250,400,700,1000};        
   // prepare the cut
-  TString myCut = "*(1.)";        
-  if (isBlind) myCut = "*( phoMetDeltaPhi < 2.89)";        
+  if (isBlind) myCut += "*( phoMetDeltaPhi < 2.89)";        
        
   int theHistCounter = 0;
   // loop through the samples and produce the plots
@@ -80,33 +118,27 @@ void makePlots(bool isBlind=1)
     if (iSample == listOfSamples.size() - 1) isLastOfSerie = true;
     if (iSample < listOfSamples.size() - 1 && (*listOfSamples.at(iSample+1)->Legend()).CompareTo(" ") != 0) isLastOfSerie = true;
     
-    cout << " isFirstOfSerie " << isFirstOfSerie << endl;
-    cout << " isLastOfSerie " << isLastOfSerie << endl;
-
     //get the tree
     tree[iSample] = (TTree*) infile -> Get(listOfSamples.at(iSample)->Name()->Data());
     //if sample first of the list create a new histogram
     if (isFirstOfSerie) {
        TString thisHistName = "h_" + *(listOfSamples.at(iSample)->Name());
-       hist[theHistCounter] = new TH1F(thisHistName,thisHistName,6,xlowMET);
+       hist[theHistCounter] = new TH1F(thisHistName,thisHistName,nBins,xlowVec);
        hist[theHistCounter] -> SetFillColor(col[theHistCounter]);
        hist[theHistCounter] -> SetFillStyle(1001);
        leg -> AddEntry(hist[theHistCounter], *listOfSamples.at(iSample)->Legend(), "f");   
     }
 
     //fill the histogram
-    cout << hist[theHistCounter] -> GetName() << " " << tree[iSample] -> GetEntries() << endl;
-    //tree[iSample] -> Draw("met >> " + TString(hist[theHistCounter] -> GetName()),"evt_weight*kf_weight*pu_weight" + myCut);
-    if (isFirstOfSerie) tree[iSample] -> Draw("met >> " + TString(hist[theHistCounter] -> GetName()),"evt_weight*kf_weight*pu_weight" + myCut);
-    else tree[iSample] -> Draw("met >>+ " + TString(hist[theHistCounter] -> GetName()),"evt_weight*kf_weight*pu_weight" + myCut);
-    cout << hist[theHistCounter] -> GetName() << " " << hist[theHistCounter] -> Integral() << endl;
+    if (isFirstOfSerie) tree[iSample] -> Draw(myVar + " >> " + TString(hist[theHistCounter] -> GetName()),"evt_weight*kf_weight*pu_weight" + myCut);
+    else tree[iSample] -> Draw(myVar + " >>+ " + TString(hist[theHistCounter] -> GetName()),"evt_weight*kf_weight*pu_weight" + myCut);
     
     //add the histogram to the stack if the last of the series:
     //either last sample or ~ sample followed by non ~ sample
     if (isLastOfSerie) {
-       if (xlowMET != 0) {
-         for (unsigned int iBin = 1; iBin <= 5; iBin++) hist[theHistCounter]->SetBinError  (iBin,hist[theHistCounter]->GetBinError(iBin)/hist[theHistCounter]->GetBinWidth(iBin));
-         for (unsigned int iBin = 1; iBin <= 5; iBin++) hist[theHistCounter]->SetBinContent(iBin,hist[theHistCounter]->GetBinContent(iBin)/hist[theHistCounter]->GetBinWidth(iBin));
+       if (xlowVec != 0) {
+         for (unsigned int iBin = 1; iBin < nBins; iBin++) hist[theHistCounter]->SetBinError  (iBin,hist[theHistCounter]->GetBinError(iBin)/hist[theHistCounter]->GetBinWidth(iBin));
+         for (unsigned int iBin = 1; iBin < nBins; iBin++) hist[theHistCounter]->SetBinContent(iBin,hist[theHistCounter]->GetBinContent(iBin)/hist[theHistCounter]->GetBinWidth(iBin));
        }
        hs -> Add(hist[theHistCounter]);
        theHistCounter++;
@@ -115,53 +147,60 @@ void makePlots(bool isBlind=1)
   }//end loop on samples
 
   // loop through the datasets and produce the plots
-  TH1F* hdata = new TH1F("hdata","",6,xlowMET);
+  TH1F* hdata = new TH1F("hdata","",nBins,xlowVec);
   TTree*  treedata[20];
   for (UInt_t iDatas=0; iDatas < listOfDatasets.size(); iDatas++) {
     //get the tree
     treedata[iDatas] = (TTree*) infile -> Get(listOfDatasets.at(iDatas)->Name()->Data());
 
     //fill the histogram
-    if ( iDatas == 0 ) treedata[iDatas] -> Draw("met >> hdata","evt_weight*kf_weight*pu_weight" + myCut);
-    else treedata[iDatas] -> Draw("met >>+ hdata","evt_weight*kf_weight*pu_weight" + myCut);
+    if ( iDatas == 0 ) treedata[iDatas] -> Draw(myVar + " >> hdata","evt_weight*kf_weight*pu_weight" + myCut);
+    else treedata[iDatas] -> Draw(myVar + " >>+ hdata","evt_weight*kf_weight*pu_weight" + myCut);
     
     if ( iDatas == 0 ) leg -> AddEntry(hdata, "DATA", "pl");    
     
   }//end loop on datasets
   //cout << "data " << hdata -> Integral() << endl;
-  if (xlowMET != 0) {
-    for (unsigned int iBin = 1; iBin <= 5; iBin++) hdata->SetBinError  (iBin,hdata->GetBinError(iBin)/hdata->GetBinWidth(iBin));
-    for (unsigned int iBin = 1; iBin <= 5; iBin++) hdata->SetBinContent(iBin,hdata->GetBinContent(iBin)/hdata->GetBinWidth(iBin));
+  if (xlowVec != 0) {
+    for (unsigned int iBin = 1; iBin < nBins; iBin++) hdata->SetBinError  (iBin,hdata->GetBinError(iBin)/hdata->GetBinWidth(iBin));
+    for (unsigned int iBin = 1; iBin < nBins; iBin++) hdata->SetBinContent(iBin,hdata->GetBinContent(iBin)/hdata->GetBinWidth(iBin));
   }
+  
   //get the maximum to properly set the frame
-  //float theMax = hdata -> GetMaximum();
-  //if (hs->Draw("hist");
+  float theMax = hdata -> GetBinContent(hdata -> GetMaximumBin()) + hdata -> GetBinError(hdata -> GetMaximumBin());
+  TH1* theMCSum = (TH1*) hs->GetStack()->Last();
+  float theMaxMC = theMCSum->GetBinContent(theMCSum->GetMaximumBin()) + theMCSum->GetBinError(theMCSum->GetMaximumBin());
+  if (theMaxMC > theMax) theMax = theMaxMC;
+  
     
   TCanvas* can = new TCanvas();
-  //can -> SetLogy(1);
+  can -> SetLogy(isLog);
   hs->Draw("hist");
-  //hdata->Draw("same,pe");
+  hdata->Draw("same,pe");
   leg->Draw("same");
-  hs->GetXaxis()->SetTitle("MET [GeV]");
-  hs->GetYaxis()->SetTitle("Events");
+  hs->GetXaxis()->SetTitle(myAxisNameX);
+  hs->GetYaxis()->SetTitle(myAxisNameY);
   hs->GetXaxis()->SetLabelSize(0.04);
   hs->GetYaxis()->SetLabelSize(0.04);
   hs->GetXaxis()->SetLabelOffset(0.025);
   hs->GetYaxis()->SetLabelOffset(0.025);
   hs->GetXaxis()->SetTitleOffset(1.1);
   hs->GetYaxis()->SetTitleOffset(1.3);
+  hs->SetMaximum(theMax);
+  if (isLog) hs->SetMinimum(0.01);
   can->Modified();
-  outfile   -> cd();
-  can -> SaveAs("can.pdf","pdf");
-  can -> Write();
+  //outfile   -> cd();
+  can -> SaveAs(myName + ".pdf","pdf");
+  //can -> Write();
+  
+  //cleanup the memory allocation
+  delete theMCSum;
+  delete hs;
+  delete leg;
+  delete hdata;
+  delete can;
+  infile -> Close();
+  delete infile;
+  
   return;
-}
-
-TString getEnv(const char* name)
-{
-  if (! gSystem->Getenv(name)) {
-    printf(" Environment variable: %s  not defined. EXIT!\n",name);
-    return TString("");
-  } 
-  return TString(gSystem->Getenv(name));  
 }
