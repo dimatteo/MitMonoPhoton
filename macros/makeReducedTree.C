@@ -37,7 +37,8 @@ void makeReducedTree()
   for (UInt_t iSample=0; iSample < *samples->NSamples(); iSample++) listOfSamples.push_back(samples->GetSample(iSample));  
   
   // define outfile
-  TFile* outfile = new TFile("out.root","RECREATE");
+  TString outfileName = prdCfg + "_reduced.root";
+  TFile* outfile = new TFile(outfileName,"RECREATE");
   // define infolder
   TString sampleBaseDir = *samples->Dir();
   std::cout << "sampleBaseDir " << sampleBaseDir << std::endl;

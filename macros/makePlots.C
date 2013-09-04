@@ -49,8 +49,6 @@ void makePlots(bool isBlind=1)
   for (UInt_t iSample=0; iSample < *samples->NSamples(); iSample++) listOfSamples.push_back(samples->GetSample(iSample));  
   vector<const Sample*> listOfDatasets;
   for (UInt_t iSample=0; iSample < *samples->NDataSamples(); iSample++) listOfDatasets.push_back(samples->GetDataSample(iSample));
-  // define outfile
-  TFile* outfile = new TFile("outplots.root","RECREATE");
   // define infolder
   TString inFileName = here + "/monoph-2013-July9_reduced.root";
   std::cout << "inFileName " << inFileName << std::endl;
@@ -59,18 +57,42 @@ void makePlots(bool isBlind=1)
   
   // MET: variable binning
   float xlowMET[7] = {140,160,190,250,400,700,1000};        
-  makeStack("met", "*(1.)", "met", "MET [GeV]", "Events", 
+  makeStack("met", "*(1.)", "met", "MET [GeV]", "GeV", 
                listOfSamples, listOfDatasets, inFileName,
                isBlind, true, 
                6, -1, -1,
                xlowMET);
   // photon ET: variable binning
   float xlowPhET[6] = {160,190,250,400,700,1000};        
-  makeStack("phoEt", "*(1.)", "phoEt", "#gamma_{ET} [GeV]", "Events", 
+  makeStack("phoEt", "*(1.)", "phoEt", "#gamma_{ET} [GeV]", "GeV", 
                listOfSamples, listOfDatasets, inFileName,
                isBlind, true, 
                5, -1, -1,
                xlowPhET);
+  // MET/photonET: fixed binning
+  makeStack("met/phoEt", "*(1.)", "metOverPhET", "MET/#gamma_{ET}", "", 
+               listOfSamples, listOfDatasets, inFileName,
+               isBlind, false, 
+               30, 0, 2,
+               0);
+  // nVtx: fixed binning
+  makeStack("nvtx", "*(1.)", "nvtx", "N_{vtx}", "", 
+               listOfSamples, listOfDatasets, inFileName,
+               isBlind, false, 
+               20, 0, 40,
+               0);
+  // jetEt: fixed binning
+  makeStack("jetEt", "*(1.)", "jetEt", "Lead Jet_{ET}", "GeV", 
+               listOfSamples, listOfDatasets, inFileName,
+               isBlind, false, 
+               40, 0, 200,
+               0);
+  // jetEta: fixed binning
+  makeStack("jetEta", "*(1.)", "jetEta", "Lead Jet_{#eta}", "", 
+               listOfSamples, listOfDatasets, inFileName,
+               isBlind, false, 
+               40, -5, 5,
+               0);
         
   return;
 }
@@ -107,6 +129,14 @@ void makeStack(TString myVar, TString myCut, TString myName, TString myAxisNameX
   Int_t col[20] = {46,2,12,5,3,4,9,7,47,49,49,50,51,52,53,54,55,56,57,58};
   // prepare the cut
   if (isBlind) myCut += "*( phoMetDeltaPhi < 2.89)";        
+  // prepare the Y axis lable
+  if (xlowVec != 0) myAxisNameY = "Events/" + myAxisNameY;
+  else {
+    float binWidth = (xHigh-xLow)/nBins;
+    TString tempString;
+    tempString.Form("%.2f ",binWidth); 
+    myAxisNameY = "Events/" + tempString + myAxisNameY;
+  }
        
   int theHistCounter = 0;
   // loop through the samples and produce the plots
@@ -123,7 +153,10 @@ void makeStack(TString myVar, TString myCut, TString myName, TString myAxisNameX
     //if sample first of the list create a new histogram
     if (isFirstOfSerie) {
        TString thisHistName = "h_" + *(listOfSamples.at(iSample)->Name());
-       hist[theHistCounter] = new TH1F(thisHistName,thisHistName,nBins,xlowVec);
+       //variable bin histo
+       if (xlowVec != 0) hist[theHistCounter] = new TH1F(thisHistName,thisHistName,nBins,xlowVec);
+       //fixed bin histo
+       else hist[theHistCounter] = new TH1F(thisHistName,thisHistName,nBins,xLow,xHigh);
        hist[theHistCounter] -> SetFillColor(col[theHistCounter]);
        hist[theHistCounter] -> SetFillStyle(1001);
        leg -> AddEntry(hist[theHistCounter], *listOfSamples.at(iSample)->Legend(), "f");   
@@ -137,8 +170,8 @@ void makeStack(TString myVar, TString myCut, TString myName, TString myAxisNameX
     //either last sample or ~ sample followed by non ~ sample
     if (isLastOfSerie) {
        if (xlowVec != 0) {
-         for (unsigned int iBin = 1; iBin < nBins; iBin++) hist[theHistCounter]->SetBinError  (iBin,hist[theHistCounter]->GetBinError(iBin)/hist[theHistCounter]->GetBinWidth(iBin));
-         for (unsigned int iBin = 1; iBin < nBins; iBin++) hist[theHistCounter]->SetBinContent(iBin,hist[theHistCounter]->GetBinContent(iBin)/hist[theHistCounter]->GetBinWidth(iBin));
+         for (int iBin = 1; iBin < nBins; iBin++) hist[theHistCounter]->SetBinError  (iBin,hist[theHistCounter]->GetBinError(iBin)/hist[theHistCounter]->GetBinWidth(iBin));
+         for (int iBin = 1; iBin < nBins; iBin++) hist[theHistCounter]->SetBinContent(iBin,hist[theHistCounter]->GetBinContent(iBin)/hist[theHistCounter]->GetBinWidth(iBin));
        }
        hs -> Add(hist[theHistCounter]);
        theHistCounter++;
@@ -147,7 +180,12 @@ void makeStack(TString myVar, TString myCut, TString myName, TString myAxisNameX
   }//end loop on samples
 
   // loop through the datasets and produce the plots
-  TH1F* hdata = new TH1F("hdata","",nBins,xlowVec);
+  TH1F* hdata;
+  //variable bin histo
+  if (xlowVec != 0) hdata = new TH1F("hdata","",nBins,xlowVec);
+  //fixed bin histo
+  else hdata = new TH1F("hdata","",nBins,xLow,xHigh);
+
   TTree*  treedata[20];
   for (UInt_t iDatas=0; iDatas < listOfDatasets.size(); iDatas++) {
     //get the tree
@@ -162,8 +200,8 @@ void makeStack(TString myVar, TString myCut, TString myName, TString myAxisNameX
   }//end loop on datasets
   //cout << "data " << hdata -> Integral() << endl;
   if (xlowVec != 0) {
-    for (unsigned int iBin = 1; iBin < nBins; iBin++) hdata->SetBinError  (iBin,hdata->GetBinError(iBin)/hdata->GetBinWidth(iBin));
-    for (unsigned int iBin = 1; iBin < nBins; iBin++) hdata->SetBinContent(iBin,hdata->GetBinContent(iBin)/hdata->GetBinWidth(iBin));
+    for (int iBin = 1; iBin < nBins; iBin++) hdata->SetBinError  (iBin,hdata->GetBinError(iBin)/hdata->GetBinWidth(iBin));
+    for (int iBin = 1; iBin < nBins; iBin++) hdata->SetBinContent(iBin,hdata->GetBinContent(iBin)/hdata->GetBinWidth(iBin));
   }
   
   //get the maximum to properly set the frame
@@ -189,9 +227,7 @@ void makeStack(TString myVar, TString myCut, TString myName, TString myAxisNameX
   hs->SetMaximum(theMax);
   if (isLog) hs->SetMinimum(0.01);
   can->Modified();
-  //outfile   -> cd();
   can -> SaveAs(myName + ".pdf","pdf");
-  //can -> Write();
   
   //cleanup the memory allocation
   delete theMCSum;

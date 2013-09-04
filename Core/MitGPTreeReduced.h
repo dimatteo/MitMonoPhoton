@@ -37,9 +37,13 @@ class MitGPTreeReduced {
 
   float          phoMetDeltaPhi_;
 
-  float          jetEt_;
-  float          jetEta_;
-  float          jetPhi_;
+  unsigned int   njets_;
+  float          leadJetEt_;
+  float          leadJetEta_;
+  float          leadJetPhi_;
+  float          trailJetEt_;
+  float          trailJetEta_;
+  float          trailJetPhi_;
 
  public:
   /// this is the main element
@@ -92,9 +96,13 @@ class MitGPTreeReduced {
   
     tree_->Branch("phoMetDeltaPhi", &phoMetDeltaPhi_,   "phoMetDeltaPhi/F");
   
-    tree_->Branch("jetEt"         , &jetEt_         ,   "jetEt/F");
-    tree_->Branch("jetEta"        , &jetEta_        ,   "jetEta/F");
-    tree_->Branch("jetPhi"        , &jetPhi_        ,   "jetPhi/F");
+    tree_->Branch("njets"         , &njets_         ,   "njets/i");
+    tree_->Branch("leadJetEt"         , &leadJetEt_         ,   "leadJetEt/F");
+    tree_->Branch("leadJetEta"        , &leadJetEta_        ,   "leadJetEta/F");
+    tree_->Branch("leadJetPhi"        , &leadJetPhi_        ,   "leadJetPhi/F");
+    tree_->Branch("trailJetEt"        , &trailJetEt_        ,   "trailJetEt/F");
+    tree_->Branch("trailJetEta"       , &trailJetEta_       ,   "trailJetEta/F");
+    tree_->Branch("trailJetPhi"       , &trailJetPhi_       ,   "trailJetPhi/F");
 
   }
 
@@ -125,9 +133,13 @@ class MitGPTreeReduced {
   
     tree_->SetBranchAddress("phoMetDeltaPhi", &phoMetDeltaPhi_ );
   
-    tree_->SetBranchAddress("jetEt"         , &jetEt_    );
-    tree_->SetBranchAddress("jetEta"        , &jetEta_   );
-    tree_->SetBranchAddress("jetPhi"        , &jetPhi_   );
+    tree_->SetBranchAddress("njets"         , &njets_    );
+    tree_->SetBranchAddress("leadJetEt"         , &leadJetEt_    );
+    tree_->SetBranchAddress("leadJetEta"        , &leadJetEta_   );
+    tree_->SetBranchAddress("leadJetPhi"        , &leadJetPhi_   );
+    tree_->SetBranchAddress("trailJetEt"        , &trailJetEt_    );
+    tree_->SetBranchAddress("trailJetEta"       , &trailJetEta_   );
+    tree_->SetBranchAddress("trailJetPhi"       , &trailJetPhi_   );
 
     gErrorIgnoreLevel = currentState;
   }
@@ -158,9 +170,13 @@ MitGPTreeReduced::InitVariables(){
 
   phoMetDeltaPhi_ = -100.;
 
-  jetEt_ = -1.;
-  jetEta_= -100.;
-  jetPhi_= -100.;
+  njets_ = 0;
+  leadJetEt_ = -1.;
+  leadJetEta_= -100.;
+  leadJetPhi_= -100.;
+  trailJetEt_ = -1.;
+  trailJetEta_= -100.;
+  trailJetPhi_= -100.;
 }
 
 #endif
