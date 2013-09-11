@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------------------------
-// $Id: TreeReducer.h,v 1.2 2013/08/23 22:47:34 dimatteo Exp $
+// $Id: TreeReducer.h,v 1.3 2013/08/26 21:59:38 dimatteo Exp $
 //
 // TreeReducer
 //
@@ -30,6 +30,8 @@ namespace mithep
 
     // Various parameters
     void                 SetPUTarget(const TH1D *h) { fPUTarget = h; }
+    void                 SetPUTargetUp(const TH1D *h) { fPUTargetUp = h; }
+    void                 SetPUTargetDown(const TH1D *h) { fPUTargetDown = h; }
     void                 SetOutput(TFile *f)  { fOutFile = f; }
     void                 SetVerbose(bool b) { fVerbose = b; }
     void                 SetInputBaseDir(const TString s)  { fInputBaseDir = s; }
@@ -39,6 +41,8 @@ namespace mithep
     // Members
     const Sample * fSample;   // sample to be reduced
     const TH1D   * fPUTarget; // target PU histo
+    const TH1D   * fPUTargetUp; // target PU histo up
+    const TH1D   * fPUTargetDown; // target PU histo down
     TFile        * fOutFile;  // target out file
 
     bool           fVerbose;      // print out what the reducer is doing
@@ -47,9 +51,13 @@ namespace mithep
 
     // Auxiliary functions
     static const TH1D   *sPUWeights;
+    static const TH1D   *sPUWeightsUp;
+    static const TH1D   *sPUWeightsDown;
     float                PUWeight(Float_t npu);  // PU reweighting function
+    float                PUWeightUp(Float_t npu);  // PU reweighting function
+    float                PUWeightDown(Float_t npu);  // PU reweighting function
     float                KFactorWeight(Float_t scale, Float_t phet);  // KFactor reweighting function
-    bool                 EventIsSelected(MitGPTree &tree, int treeType);    // Selection function
+    bool                 EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPhoton);    // Selection function
     bool                 PhotonIsSelected(float R9, float HoverE, float CovIetaIeta, float Iso1, float Iso2, float Iso3);    // Photon id function
     float                GetCorrDeltaPhi(float phi1, float phi2);    // Corr delta phi calculator
 
