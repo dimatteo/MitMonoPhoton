@@ -46,6 +46,12 @@ void makeReducedTree()
   TFile* pufile   = new TFile("MyDataPileupHistogram.root","READ");
   TH1D*  putarget = (TH1D*) pufile -> Get("pileup");
   putarget -> Scale(1.0/putarget->GetSumOfWeights());
+  TFile* pufileup   = new TFile("MyDataPileupHistogramUp.root","READ");
+  TH1D*  putargetup = (TH1D*) pufileup -> Get("pileup");
+  putargetup -> Scale(1.0/putargetup->GetSumOfWeights());
+  TFile* pufiledown   = new TFile("MyDataPileupHistogramDown.root","READ");
+  TH1D*  putargetdown = (TH1D*) pufiledown -> Get("pileup");
+  putargetdown -> Scale(1.0/putargetdown->GetSumOfWeights());
 
   // generate reduced trees
   // loop through the samples and produce the reduced trees
@@ -53,9 +59,11 @@ void makeReducedTree()
     TreeReducer  *thisReducer = new TreeReducer(listOfSamples.at(iSample));
     thisReducer -> SetVerbose(true);
     thisReducer -> SetPUTarget(putarget);
+    thisReducer -> SetPUTargetUp(putargetup);
+    thisReducer -> SetPUTargetDown(putargetdown);
     thisReducer -> SetInputBaseDir(sampleBaseDir);
     thisReducer -> SetOutput(outfile);
-    thisReducer -> SetLumi(19500.);
+    thisReducer -> SetLumi(19789.);
     thisReducer -> MakeTree();
     delete thisReducer;
     
