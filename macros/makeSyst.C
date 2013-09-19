@@ -90,9 +90,6 @@ void makeSyst()
   TString hstDir = getEnv("MIT_ANA_HIST");
   TString anaCfg = getEnv("MIT_PLOT_CFG");
   TString prdCfg = getEnv("MIT_PROD_CFG");
-
-  //DEBUG
-  cout << JECErrors[0][0] << endl;
   
   // define samples
   TaskSamples* samples = new TaskSamples(prdCfg.Data(),hstDir.Data());
@@ -120,6 +117,8 @@ void makeSyst()
   v_systNames.push_back("LeptonRecoDown");
   v_systNames.push_back("JetRecoUp");
   v_systNames.push_back("JetRecoDown");
+  v_systNames.push_back("MCStatUp"); //contains sum of MC entries 
+  v_systNames.push_back("MCStatDown"); //contains sum of sqrt of MC entries (many for each group)
   const int nSyst = v_systNames.size();
 
   // prepare the systematic matrix to store all the yields
@@ -136,7 +135,20 @@ void makeSyst()
 
     //Say which sample we are processing
     cout << "Processing sample " << *(listOfSamples.at(iSample)->Name()) << endl;
-
+    
+    //determine if the sample contains GEN leptons: hack, to be fixed
+    float errNLeptons; //to be used to find syst related to lep veto, goes with sqrt(nLep)
+    if (listOfSamples.at(iSample)->Name()->Contains("zgll") ||
+      listOfSamples.at(iSample)->Name()->Contains("zll") )
+      errNLeptons = sqrt(2.);
+    else if (listOfSamples.at(iSample)->Name()->Contains("wjets") ||
+      listOfSamples.at(iSample)->Name()->Contains("wgptg") )
+      errNLeptons = 1.;
+    else if (listOfSamples.at(iSample)->Name()->Contains("ttj"))
+      errNLeptons = 0.34*1. + 0.04*sqrt(2.); 
+    else
+      errNLeptons = -1.;     
+      
     //determine if the sample is first of the series
     bool isFirstOfSerie = (*listOfSamples.at(iSample)->Legend()).CompareTo(" ");
     bool isLastOfSerie = false;
@@ -159,6 +171,8 @@ void makeSyst()
     thistree.InitTree();
 
     // Loop on the tree and make all the computations
+    float thisMCerror = 0;
+    float thisMCNSelected = 0;
     Int_t nEntries = thistree.tree_->GetEntries();
     for ( Int_t iEntry = 0; iEntry < nEntries; iEntry++ ) {
       thistree.tree_-> GetEntry(iEntry);
@@ -204,19 +218,25 @@ void makeSyst()
         v_thisYield[4] += thisScale*thistree.evt_weight_*thistree.kf_weight_*thistree.pu_weight_*photonEffSystDown;
       
       //Step4: propagate the lepton uncertainties
-      if (nominalLepPt < 10.) {
-        v_thisYield[5] = v_thisYield[0];
-        v_thisYield[6] = v_thisYield[0];
+      
+      //if sample does not contain leptons skip this uncertainty
+      if (errNLeptons < 0.) {
+        if ( nominalPhotonEt >= 160 && nominalLepPt < 10. && nominalJetPt < 100. && nominalMet >= 140 && thistree.ncosmics_ == 0 ) {
+          v_thisYield[5] += thisScale*thistree.evt_weight_*thistree.kf_weight_*thistree.pu_weight_;
+          v_thisYield[6] += thisScale*thistree.evt_weight_*thistree.kf_weight_*thistree.pu_weight_;
+        }
       }
       else {
         TVector2 dummy, leptonSystUpLeptonVec, leptonSystDownLeptonVec;
         TVector2 leptonSystUpMetVec,leptonSystDownMetVec;
+        leptonSystUpLeptonVec.SetMagPhi(thistree.lep1Pt_,thistree.lep1Phi_);
+        leptonSystDownLeptonVec.SetMagPhi(thistree.lep1Pt_,thistree.lep1Phi_);
         getMetSyst(nominalMetVec, leptonSystUpMetVec, leptonSystDownMetVec, "leptons", 
                    dummy, leptonSystUpLeptonVec, leptonSystDownLeptonVec,
                    thistree);
         //Compute the lepton eff systematics: multiplicative efficiencies error propagation
-        float leptonEffSystUp = (1 + 0.01*sqrt(thistree.nlep_));
-        float leptonEffSystDown = (1 - 0.01*sqrt(thistree.nlep_));
+        float leptonEffSystUp = (1 + 0.01*errNLeptons);
+        float leptonEffSystDown = (1 - 0.01*errNLeptons);
 
         if ( nominalPhotonEt >= 160 && leptonSystUpLeptonVec.Mod() < 10. && nominalJetPt < 100. && leptonSystUpMetVec.Mod() >= 140 && thistree.ncosmics_ == 0 )
           v_thisYield[5] += thisScale*thistree.evt_weight_*thistree.kf_weight_*thistree.pu_weight_*leptonEffSystUp;
@@ -232,19 +252,27 @@ void makeSyst()
       getMetSyst(nominalMetVec, jetSystUpMetVec, jetSystDownMetVec, "jets", 
                  dummy, jetSystUpJetVec, jetSystDownJetVec,
                  thistree);
-      //DEBUG
-      //cout << nominalJetPt << " " << jetSystUpJetVec.Mod() << " " << jetSystDownJetVec.Mod() << endl;
-      //cout << nominalMet << " " << jetSystUpMetVec.Mod() << " " << jetSystDownMetVec.Mod() << endl;
+
       if ( nominalPhotonEt >= 160 && nominalLepPt < 10. && jetSystUpJetVec.Mod() < 100. && jetSystUpMetVec.Mod() >= 140 && thistree.ncosmics_ == 0 )
         v_thisYield[7] += thisScale*thistree.evt_weight_*thistree.kf_weight_*thistree.pu_weight_;
       if ( nominalPhotonEt >= 160 && nominalLepPt < 10. && jetSystDownJetVec.Mod() < 100. && jetSystDownMetVec.Mod() >= 140 && thistree.ncosmics_ == 0 )
         v_thisYield[8] += thisScale*thistree.evt_weight_*thistree.kf_weight_*thistree.pu_weight_;
             
-      
+      //Step6: propagate the MC stat uncertainties
+      if ( nominalPhotonEt >= 160 && nominalLepPt < 10. && nominalJetPt < 100. && nominalMet >= 140 && thistree.ncosmics_ == 0 ) {
+        float thisWeight = thisScale*thistree.evt_weight_*thistree.kf_weight_*thistree.pu_weight_;
+        thisMCerror += thisWeight;
+        thisMCNSelected += 1.;
+      }
+      if (iEntry == nEntries - 1) {
+        if (thisMCNSelected > 0)
+          thisMCerror = thisMCerror*1./sqrt(thisMCNSelected);
+        else 
+          thisMCerror = 0;
+        v_thisYield[9] += thisMCerror;
+        v_thisYield[10] += thisMCerror;
+      }
     }
-    
-    //DEBUG
-    //cout << "this yield is " <<  v_thisYield[0] << " " << v_thisYield[1] << " " << v_thisYield[2] << endl;
     
     //add the yields to the syst matrix if this sample is last of the series:
     //either last sample or ~ sample followed by non ~ sample
@@ -260,8 +288,20 @@ void makeSyst()
 
   //test the matrix
   for (int iGroupSample = 0; iGroupSample < m_systYields.size(); iGroupSample++) {
+    //print the sammple name
     cout << v_groupSampleName.at(iGroupSample);
-    for (int iSyst = 0; iSyst < nSyst; iSyst++) cout << " " << m_systYields.at(iGroupSample)[iSyst];
+    cout << " " << m_systYields.at(iGroupSample)[0];
+    //print the systematic as are given to the datacard - skip the MC stat
+    for (int iSyst = 1; iSyst < nSyst-2; iSyst+=2) {
+      //compute the biggest shift (upper or lower)
+      float thisUnc = fabs(m_systYields.at(iGroupSample)[iSyst] - m_systYields.at(iGroupSample)[0])/m_systYields.at(iGroupSample)[0];
+      if (fabs(m_systYields.at(iGroupSample)[iSyst+1] - m_systYields.at(iGroupSample)[0])/m_systYields.at(iGroupSample)[0] > thisUnc)
+        thisUnc = fabs(m_systYields.at(iGroupSample)[iSyst+1] - m_systYields.at(iGroupSample)[0])/m_systYields.at(iGroupSample)[0];
+      //print the systematic uncertainty
+      cout << " " << 1. + thisUnc;
+    }
+    //print the MC stat syst
+    cout << " " << 1. + m_systYields.at(iGroupSample)[nSyst-1]/m_systYields.at(iGroupSample)[0];
     cout << endl;
   }
         
@@ -403,6 +443,8 @@ void  getMetSyst(TVector2& met, TVector2& metUp, TVector2& metDown, TString mode
   }
   //case 2: consider the uncertainties on leptons
   else if (mode == "leptons") {
+    metUp = met;
+    metDown = met;
     float eleScaleUnc = 0.006;
     float muScaleUnc = 0.002;
     for (int iLep = 0; iLep < myTree.nlep_; iLep++) {
@@ -410,18 +452,15 @@ void  getMetSyst(TVector2& met, TVector2& metUp, TVector2& metDown, TString mode
       //Assume by default electron
       float thisScaleUnc = eleScaleUnc;
       if (iLep == 0) {
-        //DEBUG phi set to zero
-        myLep.SetMagPhi(myTree.lep1Pt_, 0);
+        myLep.SetMagPhi(myTree.lep1Pt_, myTree.lep1Phi_);
         if (myTree.lep1Id_ > 12) thisScaleUnc = muScaleUnc;
       }
       else if (iLep == 1) {
-        //DEBUG
-        myLep.SetMagPhi(myTree.lep2Pt_, 0);
+        myLep.SetMagPhi(myTree.lep2Pt_, myTree.lep2Phi_);
         if (myTree.lep2Id_ > 12) thisScaleUnc = muScaleUnc;
       }
       else if (iLep == 2) {
-        //DEBUG
-        myLep.SetMagPhi(myTree.lep3Pt_, 0);
+        myLep.SetMagPhi(myTree.lep3Pt_, myTree.lep3Phi_);
         if (myTree.lep3Id_ > 12) thisScaleUnc = muScaleUnc;
       }
       else 
