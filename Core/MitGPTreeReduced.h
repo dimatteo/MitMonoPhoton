@@ -52,23 +52,30 @@ class MitGPTreeReduced {
   unsigned int   nalljets_;
   float  jet1Pt_;
   float  jet1Eta_;
+  float  jet1Phi_;
   float  jet2Pt_;
   float  jet2Eta_;
+  float  jet2Phi_;
   float  jet3Pt_;
   float  jet3Eta_;
+  float  jet3Phi_;
   float  jet4Pt_;
   float  jet4Eta_;
+  float  jet4Phi_;
 
   //for Lep syst
   unsigned int   nlep_;
   float  lep1Pt_;
   float  lep1Eta_;
+  float  lep1Phi_;
   int    lep1Id_;
   float  lep2Pt_;
   float  lep2Eta_;
+  float  lep2Phi_;
   int    lep2Id_;
   float  lep3Pt_;
   float  lep3Eta_;
+  float  lep3Phi_;
   int    lep3Id_;
 
   unsigned int   ncosmics_;
@@ -138,22 +145,29 @@ class MitGPTreeReduced {
     tree_->Branch("nalljets"          , &nalljets_          ,   "nalljets/i");
     tree_->Branch("jet1Pt"            , &jet1Pt_            ,   "jet1Pt/F");
     tree_->Branch("jet1Eta"           , &jet1Eta_           ,   "jet1Eta/F");
+    tree_->Branch("jet1Phi"           , &jet1Phi_           ,   "jet1Phi/F");
     tree_->Branch("jet2Pt"            , &jet2Pt_            ,   "jet2Pt/F");
     tree_->Branch("jet2Eta"           , &jet2Eta_           ,   "jet2Eta/F");
+    tree_->Branch("jet2Phi"           , &jet2Phi_           ,   "jet2Phi/F");
     tree_->Branch("jet3Pt"            , &jet3Pt_            ,   "jet3Pt/F");
     tree_->Branch("jet3Eta"           , &jet3Eta_           ,   "jet3Eta/F");
+    tree_->Branch("jet3Phi"           , &jet3Phi_           ,   "jet3Phi/F");
     tree_->Branch("jet4Pt"            , &jet4Pt_            ,   "jet4Pt/F");
     tree_->Branch("jet4Eta"           , &jet4Eta_           ,   "jet4Eta/F");
+    tree_->Branch("jet4Phi"           , &jet4Phi_           ,   "jet4Phi/F");
 
     tree_->Branch("nlep"              , &nlep_              ,   "nlep/i");
     tree_->Branch("lep1Pt"            , &lep1Pt_            ,   "lep1Pt/F");
     tree_->Branch("lep1Eta"           , &lep1Eta_           ,   "lep1Eta/F");
+    tree_->Branch("lep1Phi"           , &lep1Phi_           ,   "lep1Phi/F");
     tree_->Branch("lep1Id"            , &lep1Id_            ,   "lep1Id_/i");
     tree_->Branch("lep2Pt"            , &lep2Pt_            ,   "lep2Pt/F");
     tree_->Branch("lep2Eta"           , &lep2Eta_           ,   "lep2Eta/F");
+    tree_->Branch("lep2Phi"           , &lep2Phi_           ,   "lep2Phi/F");
     tree_->Branch("lep2Id"            , &lep2Id_            ,   "lep2Id_/i");
     tree_->Branch("lep3Pt"            , &lep3Pt_            ,   "lep3Pt/F");
     tree_->Branch("lep3Eta"           , &lep3Eta_           ,   "lep3Eta/F");
+    tree_->Branch("lep3Phi"           , &lep3Phi_           ,   "lep3Phi/F");
     tree_->Branch("lep3Id"            , &lep3Id_            ,   "lep3Id_/i");
 
     tree_->Branch("ncosmics"        , &ncosmics_        ,   "ncosmics/i");
@@ -201,22 +215,29 @@ class MitGPTreeReduced {
     tree_->SetBranchAddress("nalljets"          , &nalljets_          );
     tree_->SetBranchAddress("jet1Pt"            , &jet1Pt_            );
     tree_->SetBranchAddress("jet1Eta"           , &jet1Eta_           );
+    tree_->SetBranchAddress("jet1Phi"           , &jet1Phi_           );
     tree_->SetBranchAddress("jet2Pt"            , &jet2Pt_            );
     tree_->SetBranchAddress("jet2Eta"           , &jet2Eta_           );
+    tree_->SetBranchAddress("jet2Phi"           , &jet2Phi_           );
     tree_->SetBranchAddress("jet3Pt"            , &jet3Pt_            );
     tree_->SetBranchAddress("jet3Eta"           , &jet3Eta_           );
+    tree_->SetBranchAddress("jet3Phi"           , &jet3Phi_           );
     tree_->SetBranchAddress("jet4Pt"            , &jet4Pt_            );
     tree_->SetBranchAddress("jet4Eta"           , &jet4Eta_           );
+    tree_->SetBranchAddress("jet4Phi"           , &jet4Phi_           );
 
     tree_->SetBranchAddress("nlep"              , &nlep_            );
     tree_->SetBranchAddress("lep1Pt"            , &lep1Pt_          );
     tree_->SetBranchAddress("lep1Eta"           , &lep1Eta_         );
+    tree_->SetBranchAddress("lep1Phi"           , &lep1Phi_         );
     tree_->SetBranchAddress("lep1Id"            , &lep1Id_          );
     tree_->SetBranchAddress("lep2Pt"            , &lep2Pt_          );
     tree_->SetBranchAddress("lep2Eta"           , &lep2Eta_         );
+    tree_->SetBranchAddress("lep2Phi"           , &lep2Phi_         );
     tree_->SetBranchAddress("lep2Id"            , &lep2Id_          );
     tree_->SetBranchAddress("lep3Pt"            , &lep3Pt_          );
     tree_->SetBranchAddress("lep3Eta"           , &lep3Eta_         );
+    tree_->SetBranchAddress("lep3Phi"           , &lep3Phi_         );
     tree_->SetBranchAddress("lep3Id"            , &lep3Id_          );
 
     tree_->SetBranchAddress("ncosmics",       &ncosmics_);
@@ -264,22 +285,29 @@ MitGPTreeReduced::InitVariables(){
   njets_ = 0;
   jet1Pt_ = -1.;
   jet1Eta_ = -100.;
+  jet1Phi_ = -100.;
   jet2Pt_ = -1.;
   jet2Eta_ = -100.;
+  jet2Phi_ = -100.;
   jet3Pt_ = -1.;
   jet3Eta_ = -100.;
+  jet3Phi_ = -100.;
   jet4Pt_ = -1.;
   jet4Eta_ = -100.;
+  jet4Phi_ = -100.;
 
   nlep_ = 0;
   lep1Pt_ = -1.;
   lep1Eta_ = -100.;
+  lep1Phi_ = -100.;
   lep1Id_ = 0;
   lep2Pt_ = -1.;
   lep2Eta_ = -100.;
+  lep2Phi_ = -100.;
   lep2Id_ = 0;
   lep3Pt_ = -1.;
   lep3Eta_ = -100.;
+  lep3Phi_ = -100.;
   lep3Id_ = 0;
 
   ncosmics_ = 0;

@@ -193,6 +193,7 @@ void TreeReducer::MakeTree()
       if (ijet == 0) {
         outtree.jet1Pt_ = intree.jet1_.Pt();
         outtree.jet1Eta_ = intree.jet1_.Eta();
+        outtree.jet1Phi_ = intree.jet1_.Phi();
         if (fabs(intree.jet1_.Eta()) > 2.4) continue;
         jet_Pt.push_back(intree.jet1_.Pt());
         jet_Eta.push_back(intree.jet1_.Eta());
@@ -201,6 +202,7 @@ void TreeReducer::MakeTree()
       else if (ijet == 1) {
         outtree.jet2Pt_ = intree.jet2_.Pt();
         outtree.jet2Eta_ = intree.jet2_.Eta();
+        outtree.jet2Phi_ = intree.jet2_.Phi();
         if (fabs(intree.jet2_.Eta()) > 2.4) continue;
         jet_Pt.push_back(intree.jet2_.Pt());
         jet_Eta.push_back(intree.jet2_.Eta());
@@ -209,6 +211,7 @@ void TreeReducer::MakeTree()
       else if (ijet == 2) {
         outtree.jet3Pt_ = intree.jet3_.Pt();
         outtree.jet3Eta_ = intree.jet3_.Eta();
+        outtree.jet3Phi_ = intree.jet3_.Phi();
         if (fabs(intree.jet3_.Eta()) > 2.4) continue;
         jet_Pt.push_back(intree.jet3_.Pt());
         jet_Eta.push_back(intree.jet3_.Eta());
@@ -217,6 +220,7 @@ void TreeReducer::MakeTree()
       else if (ijet == 3) {
         outtree.jet4Pt_ = intree.jet4_.Pt();
         outtree.jet4Eta_ = intree.jet4_.Eta();
+        outtree.jet4Phi_ = intree.jet4_.Phi();
         if (fabs(intree.jet4_.Eta()) > 2.4) continue;
         jet_Pt.push_back(intree.jet4_.Pt());
         jet_Eta.push_back(intree.jet4_.Eta());
@@ -242,16 +246,19 @@ void TreeReducer::MakeTree()
       if (ilep == 0) {
         outtree.lep1Pt_ = intree.lep1_.Pt();
         outtree.lep1Eta_ = intree.lep1_.Eta();
+        outtree.lep1Phi_ = intree.lep1_.Phi();
         outtree.lep1Id_ = intree.lid1_;
       }
       else if (ilep == 1) {
         outtree.lep2Pt_ = intree.lep2_.Pt();
         outtree.lep2Eta_ = intree.lep2_.Eta();
+        outtree.lep2Phi_ = intree.lep2_.Phi();
         outtree.lep2Id_ = intree.lid2_;
       }
       else if (ilep == 3) {
         outtree.lep3Pt_ = intree.lep3_.Pt();
         outtree.lep3Eta_ = intree.lep3_.Eta();
+        outtree.lep3Phi_ = intree.lep3_.Phi();
         outtree.lep3Id_ = intree.lid3_;
       }
       else break;
