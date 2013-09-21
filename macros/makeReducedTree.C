@@ -37,19 +37,19 @@ void makeReducedTree()
   for (UInt_t iSample=0; iSample < *samples->NSamples(); iSample++) listOfSamples.push_back(samples->GetSample(iSample));  
   
   // define outfile
-  TString outfileName = prdCfg + "_reduced.root";
+  TString outfileName = prdCfg + "_reduced_new.root";
   TFile* outfile = new TFile(outfileName,"RECREATE");
   // define infolder
   TString sampleBaseDir = *samples->Dir();
   std::cout << "sampleBaseDir " << sampleBaseDir << std::endl;
   // define normalized target PU distribution
-  TFile* pufile   = new TFile("MyDataPileupHistogram.root","READ");
+  TFile* pufile   = new TFile("PileUpHistograms/MyDataPileupHistogram.root","READ");
   TH1D*  putarget = (TH1D*) pufile -> Get("pileup");
   putarget -> Scale(1.0/putarget->GetSumOfWeights());
-  TFile* pufileup   = new TFile("MyDataPileupHistogramUp.root","READ");
+  TFile* pufileup   = new TFile("PileUpHistograms/MyDataPileupHistogramUp.root","READ");
   TH1D*  putargetup = (TH1D*) pufileup -> Get("pileup");
   putargetup -> Scale(1.0/putargetup->GetSumOfWeights());
-  TFile* pufiledown   = new TFile("MyDataPileupHistogramDown.root","READ");
+  TFile* pufiledown   = new TFile("PileUpHistograms/MyDataPileupHistogramDown.root","READ");
   TH1D*  putargetdown = (TH1D*) pufiledown -> Get("pileup");
   putargetdown -> Scale(1.0/putargetdown->GetSumOfWeights());
 
