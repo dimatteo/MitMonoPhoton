@@ -52,14 +52,22 @@ class MitGPTree {
   float          sumEt_;
   float          metSig_;
   DataType       dstype_;
+  float          metCor_;
+  float          metCorPhi_;
 
   unsigned int   nlep_;
   LorentzVector  lep1_;
   int            lid1_;
+  float          etaOfSTA_l1_;
+  float          phiOfSTA_l1_;
   LorentzVector  lep2_;
   int            lid2_;
+  float          etaOfSTA_l2_;
+  float          phiOfSTA_l2_;
   LorentzVector  lep3_;
   int            lid3_;
+  float          etaOfSTA_l3_;
+  float          phiOfSTA_l3_;
 
   unsigned int   nphotons_;
   LorentzVector  pho1_;
@@ -176,8 +184,14 @@ class MitGPTree {
 
   unsigned int   ncosmics_;
   LorentzVector  cosmic1_;
+  float          etaOfSTA_c1_;
+  float          phiOfSTA_c1_;
   LorentzVector  cosmic2_;
+  float          etaOfSTA_c2_;
+  float          phiOfSTA_c2_;
   LorentzVector  cosmic3_;
+  float          etaOfSTA_c3_;
+  float          phiOfSTA_c3_;
 
   float          Q_;
   float          id1_;
@@ -253,14 +267,22 @@ class MitGPTree {
     tree_->Branch("sumEt"        , &sumEt_        ,   "sumEt/F");
     tree_->Branch("metSig"       , &metSig_       ,   "metSig/F");
     tree_->Branch("dstype"       , &dstype_       ,   "dstype/I");
+    tree_->Branch("metCor"          , &metCor_          ,   "metCor/F");
+    tree_->Branch("metCorPhi"       , &metCorPhi_       ,   "metCorPhi/F");
 
     tree_->Branch("nlep"         , &nlep_         ,   "nlep/i");
     tree_->Branch("lep1"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &lepPtr1_);
     tree_->Branch("lid1"         , &lid1_         ,   "lid1/I");
+    tree_->Branch("etaOfSTA_l1"  , &etaOfSTA_l1_  ,   "etaOfSTA_l1/F");
+    tree_->Branch("phiOfSTA_l1"  , &phiOfSTA_l1_  ,   "phiOfSTA_l1/F");
     tree_->Branch("lep2"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &lepPtr2_);
     tree_->Branch("lid2"         , &lid2_         ,   "lid2/I");
+    tree_->Branch("etaOfSTA_l2"  , &etaOfSTA_l2_  ,   "etaOfSTA_l2/F");
+    tree_->Branch("phiOfSTA_l2"  , &phiOfSTA_l2_  ,   "phiOfSTA_l2/F");
     tree_->Branch("lep3"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &lepPtr3_);
     tree_->Branch("lid3"         , &lid3_         ,   "lid3/I");
+    tree_->Branch("etaOfSTA_l3"  , &etaOfSTA_l3_  ,   "etaOfSTA_l3/F");
+    tree_->Branch("phiOfSTA_l3"  , &phiOfSTA_l3_  ,   "phiOfSTA_l3/F");
 
     tree_->Branch("nphotons"     , &nphotons_     ,   "nphotons/i");
     tree_->Branch("pho1"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &phoPtr1_);
@@ -377,8 +399,14 @@ class MitGPTree {
 
     tree_->Branch("ncosmics"        , &ncosmics_        ,   "ncosmics/i");
     tree_->Branch("cosmic1"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &cosmicPtr1_);
+    tree_->Branch("etaOfSTA_c1"     , &etaOfSTA_c1_     ,   "etaOfSTA_c1/F");
+    tree_->Branch("phiOfSTA_c1"     , &phiOfSTA_c1_     ,   "phiOfSTA_c1/F");
     tree_->Branch("cosmic2"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &cosmicPtr2_);
+    tree_->Branch("etaOfSTA_c2"     , &etaOfSTA_c2_     ,   "etaOfSTA_c2/F");
+    tree_->Branch("phiOfSTA_c2"     , &phiOfSTA_c2_     ,   "phiOfSTA_c2/F");
     tree_->Branch("cosmic3"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &cosmicPtr3_);
+    tree_->Branch("etaOfSTA_c3"     , &etaOfSTA_c3_     ,   "etaOfSTA_c3/F");
+    tree_->Branch("phiOfSTA_c3"     , &phiOfSTA_c3_     ,   "phiOfSTA_c3/F");
 
     tree_->Branch("Q",             &Q_	  ,     "Q/F");
     tree_->Branch("id1",           &id1_  ,     "id1/F");
@@ -415,14 +443,22 @@ class MitGPTree {
     tree_->SetBranchAddress("sumEt",         &sumEt_);
     tree_->SetBranchAddress("metSig",        &metSig_);
     tree_->SetBranchAddress("dstype",        &dstype_);
+    tree_->SetBranchAddress("metCor"          , &metCor_   );
+    tree_->SetBranchAddress("metCorPhi"       , &metCorPhi_);
 
     tree_->SetBranchAddress("nlep",          &nlep_);
     tree_->SetBranchAddress("lep1",          &lepPtr1_);
     tree_->SetBranchAddress("lid1",          &lid1_);
+    tree_->SetBranchAddress("etaOfSTA_l1",   &etaOfSTA_l1_);
+    tree_->SetBranchAddress("phiOfSTA_l1",   &phiOfSTA_l1_);
     tree_->SetBranchAddress("lep2",          &lepPtr2_);
     tree_->SetBranchAddress("lid2",          &lid2_);
+    tree_->SetBranchAddress("etaOfSTA_l2",   &etaOfSTA_l2_);
+    tree_->SetBranchAddress("phiOfSTA_l2",   &phiOfSTA_l2_);
     tree_->SetBranchAddress("lep3",          &lepPtr3_);
     tree_->SetBranchAddress("lid3",          &lid3_);
+    tree_->SetBranchAddress("etaOfSTA_l3",   &etaOfSTA_l3_);
+    tree_->SetBranchAddress("phiOfSTA_l3",   &phiOfSTA_l3_);
 
     tree_->SetBranchAddress("nphotons"                  , &nphotons_);
     tree_->SetBranchAddress("pho1"                      , &phoPtr1_);
@@ -539,8 +575,14 @@ class MitGPTree {
 
     tree_->SetBranchAddress("ncosmics",       &ncosmics_);
     tree_->SetBranchAddress("cosmic1",        &cosmicPtr1_);
+    tree_->SetBranchAddress("etaOfSTA_c1",    &etaOfSTA_c1_);
+    tree_->SetBranchAddress("phiOfSTA_c1",    &phiOfSTA_c1_);
     tree_->SetBranchAddress("cosmic2",        &cosmicPtr2_);
+    tree_->SetBranchAddress("etaOfSTA_c2",    &etaOfSTA_c2_);
+    tree_->SetBranchAddress("phiOfSTA_c2",    &phiOfSTA_c2_);
     tree_->SetBranchAddress("cosmic3",        &cosmicPtr3_);
+    tree_->SetBranchAddress("etaOfSTA_c3",    &etaOfSTA_c3_);
+    tree_->SetBranchAddress("phiOfSTA_c3",    &phiOfSTA_c3_);
 
     tree_->SetBranchAddress("Q",	          &Q_);
     tree_->SetBranchAddress("id1",	        &id1_);
@@ -592,14 +634,22 @@ MitGPTree::InitVariables(){
   sumEt_         = -999.;
   metSig_        = -999.;
   dstype_        = data;
+  metCor_        = 0;      
+  metCorPhi_     = -999.;   
 
   nlep_          = 0;
   lep1_       	 = LorentzVector();
   lid1_          = 0;
+  etaOfSTA_l1_   = -999.;
+  phiOfSTA_l1_   = -999.;
   lep2_       	 = LorentzVector();
   lid2_          = 0;
+  etaOfSTA_l2_   = -999.;
+  phiOfSTA_l2_   = -999.;
   lep3_       	 = LorentzVector();
   lid3_          = 0;
+  etaOfSTA_l3_   = -999.;
+  phiOfSTA_l3_   = -999.;
 
   nphotons_      = 0;
   pho1_       	 = LorentzVector();
@@ -716,8 +766,14 @@ MitGPTree::InitVariables(){
 
   ncosmics_ = 0;
   cosmic1_ = LorentzVector();
+  etaOfSTA_c1_   = -999.;
+  phiOfSTA_c1_   = -999.;
   cosmic2_ = LorentzVector();
+  etaOfSTA_c2_   = -999.;
+  phiOfSTA_c2_   = -999.;
   cosmic3_ = LorentzVector();
+  etaOfSTA_c3_   = -999.;
+  phiOfSTA_c3_   = -999.;
 
   Q_		 = -999.;
   id1_  	 = -999.;

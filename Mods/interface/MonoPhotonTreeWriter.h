@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------------------------
-// $Id: MonoPhotonTreeWriter.h,v 1.11 2013/07/14 02:13:58 dimatteo Exp $
+// $Id: MonoPhotonTreeWriter.h,v 1.12 2013/07/31 22:39:51 dimatteo Exp $
 //
 // MonoPhotonTreeWriter
 //
@@ -24,6 +24,7 @@
 #include "MitAna/DataTree/interface/MCParticleCol.h"
 #include "MitAna/DataTree/interface/MCEventInfo.h"
 #include "MitAna/DataTree/interface/SuperClusterCol.h"
+#include "MitAna/DataTree/interface/MetCol.h"
 #include "MitAna/DataTree/interface/PFMetCol.h"
 #include "MitAna/DataTree/interface/JetCol.h"
 #include "MitAna/DataTree/interface/PFJetCol.h"
@@ -56,6 +57,7 @@ namespace mithep
 
     // setting all the input Names
     void                SetMetName(const char *n)         { fMetName= n;                 }
+    void                SetMetCorName(const char *n)      { fMetCorName= n;              }
     void                SetPhotonsName(const char *n)     { fPhotonsName= n;             }
     void                SetPhotonsFromBranch(bool b)      { fPhotonsFromBranch = b;      }
     void                SetElectronsName(const char *n)   { fElectronsName = n;          }
@@ -89,6 +91,7 @@ namespace mithep
     // Private auxiliary methods...
     // Names of the input Collections
     TString             fMetName;
+    TString             fMetCorName;
     TString             fPhotonsName;
     TString             fElectronsName;
     TString             fMuonsName;
@@ -120,6 +123,7 @@ namespace mithep
     Bool_t              fPVFromBranch;
 
     const PFMetCol                *fMet;
+    const MetCol                  *fMetCor;
     const PhotonCol               *fPhotons;
     const ElectronCol             *fElectrons;
     const MuonCol                 *fMuons;

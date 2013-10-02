@@ -26,6 +26,7 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   BaseMod                 (name,title),
 
   fMetName                ("PFMet"),
+  fMetCorName             ("PFMetT0T1Shift"),
   fPhotonsName            (Names::gkPhotonBrn),
   fElectronsName          (Names::gkElectronBrn),
   fMuonsName              (Names::gkMuonBrn),
@@ -94,6 +95,7 @@ void MonoPhotonTreeWriter::Process()
   // ------------------------------------------------------------  
   // Process entries of the tree. 
   LoadEventObject(fMetName,           fMet,           true);
+  LoadEventObject(fMetCorName,        fMetCor,        false);
   LoadEventObject(fPhotonsName,       fPhotons,       fPhotonsFromBranch); 
   LoadEventObject(fElectronsName,     fElectrons,     fElectronsFromBranch);
   LoadEventObject(fMuonsName,         fMuons,         fMuonsFromBranch);
@@ -153,9 +155,13 @@ void MonoPhotonTreeWriter::Process()
   fMitGPTree.metPhi_ = fMet->At(0)->Phi();
   fMitGPTree.sumEt_  = fMet->At(0)->SumEt();
   fMitGPTree.metSig_ = fMet->At(0)->PFMetSig();
+  fMitGPTree.metCor_    = fMetCor->At(0)->Pt();
+  fMitGPTree.metCorPhi_ = fMetCor->At(0)->Phi();
 
   // LEPTONS
   fMitGPTree.nlep_ = leptons->GetEntries();
+  // auxiliary, just to dump muon info
+  MuonOArr *muons = GetObjThisEvt<MuonOArr>("HggLeptonTagMuons");
   if (leptons->GetEntries() >= 1) {
     const Particle *lep = leptons->At(0);
     fMitGPTree.lep1_ = lep->Mom();
@@ -163,6 +169,16 @@ void MonoPhotonTreeWriter::Process()
     else if(lep->ObjType() == kElectron) fMitGPTree.lid1_ = 11;
     else                                 assert(0);
     if(lep->Charge() < 0) fMitGPTree.lid1_ = -1 * fMitGPTree.lid1_;
+    //dump the position of the muon on the ECAL front face
+    if (lep->ObjType() == kMuon    ) {
+      for (int i = 0; i < (int) muons->GetEntries(); i++) {
+        if ( GetCorrDeltaPhi(lep->Phi(), muons->At(i)->Phi()) > 0.01 ) continue;
+        if ( fabs(lep->Eta() - muons->At(i)->Eta()) > 0.01 ) continue;
+        fMitGPTree.etaOfSTA_l1_ = muons->At(i)->TrackerTrk()->Eta();
+        fMitGPTree.phiOfSTA_l1_ = muons->At(i)->TrackerTrk()->Phi();
+        break;
+      }
+    }
   }
   if (leptons->GetEntries() >= 2) {
     Particle *lep = leptons->At(1);
@@ -171,6 +187,17 @@ void MonoPhotonTreeWriter::Process()
     else if(lep->ObjType() == kElectron) fMitGPTree.lid2_ = 11;
     else                                 assert(0);
     if(lep->Charge() < 0) fMitGPTree.lid2_ = -1 * fMitGPTree.lid2_;
+    //dump the position of the muon on the ECAL fron face
+    //dump the position of the muon on the ECAL front face
+    if (lep->ObjType() == kMuon    ) {
+      for (int i = 0; i < (int) muons->GetEntries(); i++) {
+        if ( GetCorrDeltaPhi(lep->Phi(), muons->At(i)->Phi()) > 0.01 ) continue;
+        if ( fabs(lep->Eta() - muons->At(i)->Eta()) > 0.01 ) continue;
+        fMitGPTree.etaOfSTA_l2_ = muons->At(i)->TrackerTrk()->Eta();
+        fMitGPTree.phiOfSTA_l2_ = muons->At(i)->TrackerTrk()->Phi();
+        break;
+      }
+    }
   }
   if (leptons->GetEntries() >= 3) {
     Particle *lep = leptons->At(2);
@@ -179,6 +206,17 @@ void MonoPhotonTreeWriter::Process()
     else if(lep->ObjType() == kElectron) fMitGPTree.lid3_ = 11;
     else                                 assert(0);
     if(lep->Charge() < 0) fMitGPTree.lid3_ = -1 * fMitGPTree.lid3_;
+    //dump the position of the muon on the ECAL fron face
+    //dump the position of the muon on the ECAL front face
+    if (lep->ObjType() == kMuon    ) {
+      for (int i = 0; i < (int) muons->GetEntries(); i++) {
+        if ( GetCorrDeltaPhi(lep->Phi(), muons->At(i)->Phi()) > 0.01 ) continue;
+        if ( fabs(lep->Eta() - muons->At(i)->Eta()) > 0.01 ) continue;
+        fMitGPTree.etaOfSTA_l3_ = muons->At(i)->TrackerTrk()->Eta();
+        fMitGPTree.phiOfSTA_l3_ = muons->At(i)->TrackerTrk()->Phi();
+        break;
+      }
+    }
   }
 
   //PHOTONS  
@@ -494,9 +532,21 @@ void MonoPhotonTreeWriter::Process()
     //save only cosmics with an associated valid standalone track
     if(!cMuon->HasStandaloneTrk() || !cMuon->IsStandaloneMuon()) continue;
 
-    if(fMitGPTree.ncosmics_ == 0) fMitGPTree.cosmic1_ = cMuon->Mom();
-    if(fMitGPTree.ncosmics_ == 1) fMitGPTree.cosmic2_ = cMuon->Mom();
-    if(fMitGPTree.ncosmics_ == 2) fMitGPTree.cosmic3_ = cMuon->Mom();
+    if(fMitGPTree.ncosmics_ == 0) {
+      fMitGPTree.cosmic1_ = cMuon->Mom();
+      fMitGPTree.etaOfSTA_c1_ = cMuon->StandaloneTrk()->Eta();
+      fMitGPTree.phiOfSTA_c1_ = cMuon->StandaloneTrk()->Phi();
+    }
+    if(fMitGPTree.ncosmics_ == 1) {
+      fMitGPTree.cosmic2_ = cMuon->Mom();
+      fMitGPTree.etaOfSTA_c2_ = cMuon->StandaloneTrk()->Eta();
+      fMitGPTree.phiOfSTA_c2_ = cMuon->StandaloneTrk()->Phi();
+    }
+    if(fMitGPTree.ncosmics_ == 2) {
+      fMitGPTree.cosmic3_ = cMuon->Mom();
+      fMitGPTree.etaOfSTA_c3_ = cMuon->StandaloneTrk()->Eta();
+      fMitGPTree.phiOfSTA_c3_ = cMuon->StandaloneTrk()->Phi();
+    }
     fMitGPTree.ncosmics_++;
   }
      
@@ -562,6 +612,7 @@ void MonoPhotonTreeWriter::SlaveBegin()
   // Run startup code on the computer (slave) doing the actual analysis. Here,
   // we just request the photon collection branch.
   ReqEventObject(fMetName,           fMet,            true);
+  ReqEventObject(fMetCorName,        fMetCor,         false);
   ReqEventObject(fPhotonsName,       fPhotons,        fPhotonsFromBranch); 
   ReqEventObject(fElectronsName,     fElectrons,      fElectronsFromBranch);
   ReqEventObject(fMuonsName,         fMuons,          fMuonsFromBranch);
