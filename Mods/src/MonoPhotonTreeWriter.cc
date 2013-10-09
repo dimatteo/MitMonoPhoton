@@ -101,7 +101,6 @@ void MonoPhotonTreeWriter::Process()
   LoadEventObject(fMuonsName,         fMuons,         fMuonsFromBranch);
   LoadEventObject(fJetsName,          fJets,          fJetsFromBranch);
   LoadEventObject(fCosmicsName,       fCosmics,       fCosmicsFromBranch);
-
   LoadEventObject(fPVName,            fPV,            fPVFromBranch);    
   LoadEventObject(fBeamspotName,      fBeamspot);
   
@@ -174,8 +173,8 @@ void MonoPhotonTreeWriter::Process()
       for (int i = 0; i < (int) muons->GetEntries(); i++) {
         if ( GetCorrDeltaPhi(lep->Phi(), muons->At(i)->Phi()) > 0.01 ) continue;
         if ( fabs(lep->Eta() - muons->At(i)->Eta()) > 0.01 ) continue;
-        fMitGPTree.etaOfSTA_l1_ = muons->At(i)->TrackerTrk()->Eta();
-        fMitGPTree.phiOfSTA_l1_ = muons->At(i)->TrackerTrk()->Phi();
+        fMitGPTree.etaOfSTA_l1_ = muons->At(i)->StandaloneTrk()->Eta();
+        fMitGPTree.phiOfSTA_l1_ = muons->At(i)->StandaloneTrk()->Phi();
         break;
       }
     }
@@ -193,8 +192,8 @@ void MonoPhotonTreeWriter::Process()
       for (int i = 0; i < (int) muons->GetEntries(); i++) {
         if ( GetCorrDeltaPhi(lep->Phi(), muons->At(i)->Phi()) > 0.01 ) continue;
         if ( fabs(lep->Eta() - muons->At(i)->Eta()) > 0.01 ) continue;
-        fMitGPTree.etaOfSTA_l2_ = muons->At(i)->TrackerTrk()->Eta();
-        fMitGPTree.phiOfSTA_l2_ = muons->At(i)->TrackerTrk()->Phi();
+        fMitGPTree.etaOfSTA_l2_ = muons->At(i)->StandaloneTrk()->Eta();
+        fMitGPTree.phiOfSTA_l2_ = muons->At(i)->StandaloneTrk()->Phi();
         break;
       }
     }
@@ -212,8 +211,8 @@ void MonoPhotonTreeWriter::Process()
       for (int i = 0; i < (int) muons->GetEntries(); i++) {
         if ( GetCorrDeltaPhi(lep->Phi(), muons->At(i)->Phi()) > 0.01 ) continue;
         if ( fabs(lep->Eta() - muons->At(i)->Eta()) > 0.01 ) continue;
-        fMitGPTree.etaOfSTA_l3_ = muons->At(i)->TrackerTrk()->Eta();
-        fMitGPTree.phiOfSTA_l3_ = muons->At(i)->TrackerTrk()->Phi();
+        fMitGPTree.etaOfSTA_l3_ = muons->At(i)->StandaloneTrk()->Eta();
+        fMitGPTree.phiOfSTA_l3_ = muons->At(i)->StandaloneTrk()->Phi();
         break;
       }
     }
@@ -524,11 +523,12 @@ void MonoPhotonTreeWriter::Process()
     fMitGPTree.jet4_     = jet->Mom();
     fMitGPTree.jet4Btag_ = jet->CombinedSecondaryVertexBJetTagsDisc();
   }
-   
+       
   //COSMIC MUONS
   fMitGPTree.ncosmics_ = 0;
   for(unsigned int i = 0; i < fCosmics->GetEntries(); i++) {
-    const mithep::Muon* cMuon = fCosmics->At(i);
+   
+    const mithep::Muon* cMuon = fCosmics->At(i);    
     //save only cosmics with an associated valid standalone track
     if(!cMuon->HasStandaloneTrk() || !cMuon->IsStandaloneMuon()) continue;
 

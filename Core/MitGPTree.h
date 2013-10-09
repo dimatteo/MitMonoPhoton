@@ -236,7 +236,7 @@ class MitGPTree {
     f_ = TFile::Open(file);
     assert(f_);
     if     (type == 0) tree_ = dynamic_cast<TTree*>(f_->FindObjectAny("MPhoTree"));
-    else if(type == 1) tree_ = dynamic_cast<TTree*>(f_->FindObjectAny("MPhoTreeDiLepton"));
+    else if(type == 1) tree_ = dynamic_cast<TTree*>(f_->FindObjectAny("MPhoTreeLepton"));
     else if(type == 2) tree_ = dynamic_cast<TTree*>(f_->FindObjectAny("MPhoTreePhFake"));
     else if(type == 3) tree_ = dynamic_cast<TTree*>(f_->FindObjectAny("MPhoTreeBeamHalo"));
     else               tree_ = dynamic_cast<TTree*>(f_->FindObjectAny("tree"));
@@ -250,7 +250,7 @@ class MitGPTree {
     // type == 0/1/2/3 if all variables was added
     // type = -1 (default) if a minimum set of variables was added with tree as name
     if     (type == 0) tree_ = new TTree("MPhoTree","Smurf ntuples");
-    else if(type == 1) tree_ = new TTree("MPhoTreeDiLepton","Smurf ntuples");
+    else if(type == 1) tree_ = new TTree("MPhoTreeLepton","Smurf ntuples");
     else if(type == 2) tree_ = new TTree("MPhoTreePhFake","Smurf ntuples");
     else if(type == 3) tree_ = new TTree("MPhoTreeBeamHalo","Smurf ntuples");
     else               tree_ = new TTree("tree","Smurf ntuples");

@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.32 2013/08/07 07:13:50 ceballos Exp $
+// $Id: runMonoPhoton.C,v 1.34 2013/10/02 22:59:47 dimatteo Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -203,7 +203,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   eleIdMod -> SetElectronMVAWeightsSubdet0Pt20ToInf(TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/ElectronMVAWeights/ElectronID_BDTG_EGamma2012NonTrigV0_Cat4.weights.xml")))); 
   eleIdMod -> SetElectronMVAWeightsSubdet1Pt20ToInf(TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/ElectronMVAWeights/ElectronID_BDTG_EGamma2012NonTrigV0_Cat5.weights.xml")))); 
   eleIdMod -> SetElectronMVAWeightsSubdet2Pt20ToInf(TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/ElectronMVAWeights/ElectronID_BDTG_EGamma2012NonTrigV0_Cat6.weights.xml")))); 
-  eleIdMod -> SetWhichVertex(-1);
+  eleIdMod -> SetWhichVertex(0);
   eleIdMod -> SetD0Cut(0.02);
   eleIdMod -> SetDZCut(0.2); //h  
   eleIdMod -> SetIsoType("PFIso_HggLeptonTag2012HCP"); //h
@@ -220,9 +220,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   muonIdMod -> SetPtMin(10.);
   muonIdMod -> SetEtaCut(2.4);
   // base ID
-  //muonIdMod -> SetIDType("Tight");
   muonIdMod -> SetIDType("muonPOG2012CutBasedIDTight");
-  muonIdMod -> SetWhichVertex(-1); // this is a 'hack'.. but hopefully good enough...
+  muonIdMod -> SetWhichVertex(0);
   muonIdMod -> SetD0Cut(0.2);
   muonIdMod -> SetDZCut(0.5);
   muonIdMod -> SetIsoType("PFIsoBetaPUCorrected"); //h
@@ -231,6 +230,18 @@ void runMonoPhoton(const char *fileset    = "0000",
   muonIdMod -> SetPFNoPileUpName("pfnopileupcands");
   muonIdMod -> SetPFPileUpName("pfpileupcands");
   muonIdMod -> SetPVName(Names::gkPVBeamSpotBrn); 
+
+  // Special ID for cosmic cleaning
+  MuonIDMod* muonIdModBS = new MuonIDMod;
+  muonIdModBS -> SetPtMin(5.);
+  muonIdModBS -> SetEtaCut(2.4);
+  muonIdModBS -> SetIDType("Tight");
+  muonIdModBS -> SetWhichVertex(-2);
+  muonIdModBS -> SetD0Cut(0.2);
+  muonIdModBS -> SetApplyD0Cut(kTRUE);
+  muonIdModBS -> SetApplyDZCut(kFALSE);
+  muonIdModBS -> SetOutputName("CleanMuonsBS");
+  muonIdModBS -> SetPVName(Names::gkPVBeamSpotBrn); 
   
   ElectronCleaningMod *electronCleaning = new ElectronCleaningMod;
   electronCleaning->SetCleanMuonsName(muonIdMod->GetOutputName());
@@ -238,9 +249,10 @@ void runMonoPhoton(const char *fileset    = "0000",
   electronCleaning->SetCleanElectronsName("CleanElectrons");
 
   CosmicCleaningMod *cosmicCleaning = new CosmicCleaningMod;
-  cosmicCleaning->SetCleanMuonsName(muonIdMod->GetOutputName());
+  cosmicCleaning->SetCleanMuonsName(muonIdModBS->GetOutputName());
   cosmicCleaning->SetCosmicsName("CosmicMuons");
   cosmicCleaning->SetCleanCosmicsName("CleanCosmics");
+  cosmicCleaning->SetMinDeltaR(0.3);
 
   MergeLeptonsMod *merger = new MergeLeptonsMod;
   merger->SetMuonsName(muonIdMod->GetOutputName());
@@ -334,7 +346,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   JetIDMod *theJetID = new JetIDMod;
   theJetID->SetInputName(jetCorr->GetOutputName());
   theJetID->SetPtCut(30.0);
-  theJetID->SetEtaMaxCut(4.7);
+  theJetID->SetEtaMaxCut(2.4);
   theJetID->SetJetEEMFractionMinCut(0.00);
   theJetID->SetOutputName("GoodJets");
   theJetID->SetApplyBetaCut(kFALSE);
@@ -363,6 +375,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   // select events with photon+MET
   //------------------------------------------------------------------------------------------------
   MonoPhotonAnalysisMod         *phplusmet = new MonoPhotonAnalysisMod("MonoPhotonSelector");
+  phplusmet->SetMetFromBranch(kFALSE); 
+  phplusmet->SetInputMetName(metCorrT0T1Shift->GetOutputName()); //corrected met
   phplusmet->SetInputPhotonsName(photonCleaningMod->GetOutputName()); //identified photons
   phplusmet->SetInputElectronsName(electronCleaning->GetOutputName()); //identified electrons
   phplusmet->SetInputMuonsName(muonIdMod->GetOutputName()); //muons
@@ -376,6 +390,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   phplusmet->SetMinMetEt(100);
   
   MonoPhotonAnalysisMod         *lepton = new MonoPhotonAnalysisMod("MonoPhotonSelector_lepton");
+  lepton->SetMetFromBranch(kFALSE); 
+  lepton->SetInputMetName(metCorrT0T1Shift->GetOutputName()); //corrected met
   lepton->SetInputPhotonsName(photonCleaningMod->GetOutputName()); //identified photons
   lepton->SetInputElectronsName(electronCleaning->GetOutputName()); //identified electrons
   lepton->SetInputMuonsName(muonIdMod->GetOutputName()); //muons
@@ -389,6 +405,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   lepton->SetMinMetEt(0);
 
   MonoPhotonAnalysisMod         *phfake = new MonoPhotonAnalysisMod("MonoPhotonSelector_phfake");
+  phfake->SetMetFromBranch(kFALSE); 
+  phfake->SetInputMetName(metCorrT0T1Shift->GetOutputName()); //corrected met
   phfake->SetInputPhotonsName(photreg->GetOutputName()); //all photons
   phfake->SetInputElectronsName(electronCleaning->GetOutputName()); //identified electrons
   phfake->SetInputMuonsName(muonIdMod->GetOutputName()); //muons
@@ -402,6 +420,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   phfake->SetMinMetEt(0);
 
   MonoPhotonAnalysisMod         *beamhalo = new MonoPhotonAnalysisMod("MonoPhotonSelector_beamhalo");
+  beamhalo->SetMetFromBranch(kFALSE); 
+  beamhalo->SetInputMetName(metCorrT0T1Shift->GetOutputName()); //corrected met
   beamhalo->SetInputPhotonsName(photreg->GetOutputName()); //all photons
   beamhalo->SetInputElectronsName(electronCleaning->GetOutputName()); //identified electrons
   beamhalo->SetInputMuonsName(muonIdMod->GetOutputName()); //muons
@@ -414,6 +434,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   beamhalo->SetMaxPhotonEta(2.4);
   beamhalo->SetMinMetEt(100);
 
+  std::cout << "\n\n\n +++ cosmicCleaning->GetOutputName() " << cosmicCleaning->GetOutputName() << std::endl;
   MonoPhotonTreeWriter *phplusmettree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter");
   phplusmettree->SetPhotonsFromBranch(kFALSE);
   phplusmettree->SetPhotonsName(photonCleaningMod->GetOutputName());
@@ -423,7 +444,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   phplusmettree->SetMuonsName(muonIdMod->GetOutputName());
   phplusmettree->SetJetsFromBranch(kFALSE);
   phplusmettree->SetJetsName(theJetCleaning->GetOutputName());
-  phplusmettree->SetCosmicsFromBranch(kTRUE);
+  phplusmettree->SetCosmicsFromBranch(kFALSE);
+  phplusmettree->SetCosmicsName(cosmicCleaning->GetOutputName());
   phplusmettree->SetPVFromBranch(kFALSE);
   phplusmettree->SetPVName(goodPVFilterMod->GetOutputName());
   phplusmettree->SetLeptonsName(merger->GetOutputName());
@@ -441,7 +463,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   leptontree->SetMuonsName(muonIdMod->GetOutputName());
   leptontree->SetJetsFromBranch(kFALSE);
   leptontree->SetJetsName(theJetCleaning->GetOutputName());
-  leptontree->SetCosmicsFromBranch(kTRUE);
+  leptontree->SetCosmicsFromBranch(kFALSE);
+  leptontree->SetCosmicsName(cosmicCleaning->GetOutputName());
   leptontree->SetPVFromBranch(kFALSE);
   leptontree->SetPVName(goodPVFilterMod->GetOutputName());
   leptontree->SetLeptonsName(merger->GetOutputName());
@@ -459,7 +482,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   phfaketree->SetMuonsName(muonIdMod->GetOutputName());
   phfaketree->SetJetsFromBranch(kFALSE);
   phfaketree->SetJetsName(theJetCleaning->GetOutputName());
-  phfaketree->SetCosmicsFromBranch(kTRUE);
+  phfaketree->SetCosmicsFromBranch(kFALSE);
+  phfaketree->SetCosmicsName(cosmicCleaning->GetOutputName());
   phfaketree->SetPVFromBranch(kFALSE);
   phfaketree->SetPVName(goodPVFilterMod->GetOutputName());
   phfaketree->SetLeptonsName(merger->GetOutputName());
@@ -477,7 +501,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   beamhalotree->SetMuonsName(muonIdMod->GetOutputName());
   beamhalotree->SetJetsFromBranch(kFALSE);
   beamhalotree->SetJetsName(theJetCleaning->GetOutputName());
-  beamhalotree->SetCosmicsFromBranch(kTRUE);
+  beamhalotree->SetCosmicsFromBranch(kFALSE);
+  beamhalotree->SetCosmicsName(cosmicCleaning->GetOutputName());
   beamhalotree->SetPVFromBranch(kFALSE);
   beamhalotree->SetPVName(goodPVFilterMod->GetOutputName());
   beamhalotree->SetLeptonsName(merger->GetOutputName());
@@ -500,7 +525,8 @@ void runMonoPhoton(const char *fileset    = "0000",
   // simple object id modules
   photreg          ->Add(SepPUMod); 
   SepPUMod         ->Add(muonIdMod);
-  muonIdMod        ->Add(cosmicCleaning);
+  muonIdMod        ->Add(muonIdModBS);
+  muonIdModBS      ->Add(cosmicCleaning);
   cosmicCleaning   ->Add(eleIdMod);
   eleIdMod         ->Add(electronCleaning);
   electronCleaning ->Add(merger);

@@ -42,20 +42,20 @@ namespace mithep
       ~MonoPhotonAnalysisMod() {}
 
       // setting all the input Names
-      void                SetInputPhotonsName(const char *n){ fPhotonsBranchName= n;        }
+      void                SetInputPhotonsName(const char *n)  { fPhotonsBranchName= n;      }
       void                SetInputElectronsName(const char *n){ fElectronsBranchName= n;    }
-      void                SetInputMuonsName(const char*n){ fMuonsBranchName= n;             }
-      void	          SetInputLeptonsName(const char*n){ fLeptonsName = n; }
-      void                SetInputMetName(const char *n){ fMetBranchName= n;        }
-      void                SetPhotonsFromBranch(Bool_t b)    { fPhotonsFromBranch = b; }
-      void                SetElectronsFromBranch(Bool_t b)   { fElectronsFromBranch = b; }
-      void                SetMuonsFromBranch(Bool_t b)    { fMuonsFromBranch = b; }
-      void                SetMetFromBranch(Bool_t b)    { fMetFromBranch = b; }
+      void                SetInputMuonsName(const char*n)     { fMuonsBranchName= n;        }
+      void	              SetInputLeptonsName(const char*n)   { fLeptonsName = n;           }
+      void                SetInputMetName(const char *n)      { fMetBranchName= n;          }
+      void                SetPhotonsFromBranch(Bool_t b)      { fPhotonsFromBranch = b;     }
+      void                SetElectronsFromBranch(Bool_t b)    { fElectronsFromBranch = b;   }
+      void                SetMuonsFromBranch(Bool_t b)        { fMuonsFromBranch = b;       }
+      void                SetMetFromBranch(Bool_t b)          { fMetFromBranch = b;         }
 
     protected:
       TString                  fPhotonsBranchName;	   //name of input photon branch
       TString                  fMetBranchName;           //name of input met branch
-      TString                  fElectronsBranchName;      //name of input electron branch
+      TString                  fElectronsBranchName;     //name of input electron branch
       TString                  fMuonsBranchName;         //name of input muon branch
       TString                  fLeptonsName;
 
@@ -70,7 +70,7 @@ namespace mithep
       TH1D                    *fMetEt;                   //histogram of met spectrum
 
       const PhotonCol         *fPhotons;
-      const PFMetCol          *fMet;
+      const MetCol            *fMet;
       const ElectronCol       *fElectrons;
       const MuonCol           *fMuons;
 
