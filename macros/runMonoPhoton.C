@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.34 2013/10/02 22:59:47 dimatteo Exp $
+// $Id: runMonoPhoton.C,v 1.35 2013/10/09 22:37:04 dimatteo Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -346,7 +346,7 @@ void runMonoPhoton(const char *fileset    = "0000",
   JetIDMod *theJetID = new JetIDMod;
   theJetID->SetInputName(jetCorr->GetOutputName());
   theJetID->SetPtCut(30.0);
-  theJetID->SetEtaMaxCut(2.4);
+  theJetID->SetEtaMaxCut(4.7);
   theJetID->SetJetEEMFractionMinCut(0.00);
   theJetID->SetOutputName("GoodJets");
   theJetID->SetApplyBetaCut(kFALSE);
