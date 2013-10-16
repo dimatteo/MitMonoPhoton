@@ -634,7 +634,7 @@ MitGPTree::InitVariables(){
   sumEt_         = -999.;
   metSig_        = -999.;
   dstype_        = data;
-  metCor_        = 0;      
+  metCor_        = -999.;      
   metCorPhi_     = -999.;   
 
   nlep_          = 0;
