@@ -10,6 +10,7 @@ t2mit/filefi/031   s12-wjets-ptw100-v7a          noskim         W->l#nu         
 t2mit/filefi/031   s12-wgptg130-v7a              noskim         W#gamma->l#nu#gamma             0.2571            1.0     -1.0     ~  
 t2mit/filefi/031   s12-zjets-ptz100-v7a          noskim         Zj#rightarrow#nu#nuj            64.32             1.0     -1.0     ~
 t2mit/filefi/031   s12-zgllgptg130-v7a           noskim         Z#gamma->ll#gamma               0.0478            1.0     -1.0     ~
+t2mit/filefi/031   s12-zllptz100-v7a             noskim         Zj#rightarrowllj                32.9              1.0     -1.0     ~
 t2mit/filefi/031   s12-ttj-v1-v7a                noskim         t#bar{t}~                       213.4             1.0     -1.0     ~
 t2mit/filefi/031   s12-sch-v7a                   noskim         sch-v7a                         2.82              1.0     -1.0     ~
 t2mit/filefi/031   s12-schb-v7a                  noskim         schb-v7a                        2.82              1.0     -1.0     ~
