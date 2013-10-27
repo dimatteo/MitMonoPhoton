@@ -14,6 +14,8 @@
 #include "MitMonoPhoton/Core/MitGPTree.h"
 #include "MitMonoPhoton/Core/MitGPTreeReduced.h"
 
+#include "TLorentzVector.h"
+
 ClassImp(mithep::TreeReducer)
 
 using namespace std;
@@ -67,6 +69,8 @@ void TreeReducer::MakeTree()
   // determine the sample type
   bool isMC = false, isData = false;
   int treeType = 0;
+  if (fInputSelection != "Signal")
+    treeType = 1;
   float thisXsec   = *fSample->Xsec();
   float thisScale  = *fSample->Scale();
   if (thisXsec > 0)         isMC = true;
@@ -126,7 +130,6 @@ void TreeReducer::MakeTree()
   for ( Int_t iEntry = 0; iEntry < nEntries; iEntry++ ) {
 
     outtree.InitVariables();
-    
     intree.tree_-> GetEntry(iEntry);
     //apply the selection
     //define the good photon 
@@ -154,9 +157,8 @@ void TreeReducer::MakeTree()
     outtree.kf_weight_  = thisKFactorWeight;
   
     outtree.nvtx_  = intree.nvtx_;
-    outtree.met_   = intree.met_;
-    outtree.metPhi_= intree.metPhi_;
-    outtree.sumEt_ = intree.sumEt_;
+    outtree.metCor_= intree.metCor_;
+    outtree.metCorPhi_= intree.metCorPhi_;
     outtree.metSig_= intree.metSig_;
   
     outtree.nphotons_ = intree.nphotons_;
@@ -164,80 +166,127 @@ void TreeReducer::MakeTree()
       outtree.phoEt_ = intree.pho1_.Et();
       outtree.phoEta_ = intree.pho1_.Eta();
       outtree.phoPhi_ = intree.pho1_.Phi();
+      outtree.phoCombIso1_ = intree.phoCombIso1_a1_;
+      outtree.phoCombIso2_ = intree.phoCombIso2_a1_;
+      outtree.phoCombIso3_ = intree.phoCombIso3_a1_;
     }
     else if ( theGoodPhoton == 1 ) {
       outtree.phoEt_ = intree.pho2_.Et();
       outtree.phoEta_ = intree.pho2_.Eta();
       outtree.phoPhi_ = intree.pho2_.Phi();
+      outtree.phoCombIso1_ = intree.phoCombIso1_a2_;
+      outtree.phoCombIso2_ = intree.phoCombIso2_a2_;
+      outtree.phoCombIso3_ = intree.phoCombIso3_a2_;
     }
     else if ( theGoodPhoton == 2 ) {
       outtree.phoEt_ = intree.pho3_.Et();
       outtree.phoEta_ = intree.pho3_.Eta();
       outtree.phoPhi_ = intree.pho3_.Phi();
-    }
-    else if ( theGoodPhoton == 3 ) {
-      outtree.phoEt_ = intree.pho4_.Et();
-      outtree.phoEta_ = intree.pho4_.Eta();
-      outtree.phoPhi_ = intree.pho4_.Phi();
+      outtree.phoCombIso1_ = intree.phoCombIso1_a3_;
+      outtree.phoCombIso2_ = intree.phoCombIso2_a3_;
+      outtree.phoCombIso3_ = intree.phoCombIso3_a3_;
     }
     else
       cout << "Error in the selection function! theGoodPhoton==" << theGoodPhoton  << endl; 
   
-    outtree.phoMetDeltaPhi_ = GetCorrDeltaPhi(outtree.phoPhi_, intree.metPhi_);
+    outtree.phoMetDeltaPhi_ = GetCorrDeltaPhi(outtree.phoPhi_, intree.metCorPhi_);
+    if (intree.njets_ > 0) outtree.jetMetDeltaPhi_ = GetCorrDeltaPhi(intree.jet1_.Phi(), intree.metCorPhi_);
+    if (intree.njets_ > 0) outtree.phoJetDeltaPhi_ = GetCorrDeltaPhi(outtree.phoPhi_, intree.jet1_.Phi());
     
-    std::vector<float> jet_Pt;
-    std::vector<float> jet_Eta;
-    std::vector<float> jet_Phi;
+    if (fInputSelection == "Lepton") {
+      TLorentzVector tempBos;
+      tempBos.SetPtEtaPhiE(intree.metCor_,0.,intree.metCorPhi_,intree.metCor_);
+      TLorentzVector tempLep;
+      tempLep.SetPtEtaPhiE(intree.lep1_.Pt(),0.,intree.lep1_.Phi(),intree.lep1_.Et());
+      tempBos += tempLep;
+      outtree.bosonPt_ = tempBos.Pt();
+      outtree.bosonEta_ = tempBos.Eta();
+      outtree.bosonPhi_ = tempBos.Phi();
+      //Return transverse mass for the W
+      float thisDphi = GetCorrDeltaPhi(outtree.metCorPhi_, intree.lep1_.Phi());
+      outtree.bosonMass_ = sqrt(2*intree.metCor_*intree.lep1_.Pt()*(1-TMath::Cos(thisDphi)));
+      //W case is easy metBosCor is W mom in transverse plane
+      outtree.metBosCor_ = tempBos.Pt();
+      outtree.metBosCorPhi_ = tempBos.Phi();
+    }
+    // Easy case muons
+    if (fInputSelection == "DiLepton" && intree.lep1_.M() > 0.05) {
+      TLorentzVector tempBos;
+      TLorentzVector tempLep1;
+      tempLep1.SetPtEtaPhiE(intree.lep1_.Pt(),intree.lep1_.Eta(),intree.lep1_.Phi(),intree.lep1_.E());
+      TLorentzVector tempLep2;
+      tempLep2.SetPtEtaPhiE(intree.lep2_.Pt(),intree.lep2_.Eta(),intree.lep2_.Phi(),intree.lep2_.E());
+      tempBos = tempLep1 + tempLep2;
+      outtree.bosonPt_ = tempBos.Pt();
+      outtree.bosonEta_ = tempBos.Eta();
+      outtree.bosonPhi_ = tempBos.Phi();
+      outtree.bosonMass_ = tempBos.M();
+      TLorentzVector tempPho;
+      tempPho.SetPtEtaPhiM(outtree.phoEt_, outtree.phoEta_, outtree.phoPhi_, 0.);
+      tempPho += tempBos;
+      outtree.bosonPhoMass_ = tempPho.M();
+      //Z case metBosCor is more tricky
+      TLorentzVector tempMet;
+      tempMet.SetPtEtaPhiE(intree.metCor_,0.,intree.metCorPhi_,intree.metCor_);
+      tempMet += tempBos;
+      outtree.metBosCor_ = tempBos.Pt();
+      outtree.metBosCorPhi_ = tempBos.Phi();
+    }
+    // Some fun with electrons!
+    if (fInputSelection == "DiLepton" && intree.lep1_.Pt() > 0. && intree.lep1_.M() < 0.05) {
+      TLorentzVector tempBos;
+      TLorentzVector tempLep1;
+      tempLep1.SetPtEtaPhiE(intree.lep1_.Pt(),intree.lep1_.Eta(),intree.lep1_.Phi(),intree.lep1_.E());
+      TLorentzVector tempLep2;
+      // Lep 2 might be in fact an electron reconstructed as photon, otherwise second lepton
+      if (intree.pho2_.Pt() > 0) {
+        tempLep2.SetPtEtaPhiE(intree.pho2_.Pt(),intree.pho2_.Eta(),intree.pho2_.Phi(),intree.pho2_.E());
+        if (intree.phoPassEleVeto_a2_ > 0.5) outtree.lepAsPho_ = 0;
+        else outtree.lepAsPho_ = 1;
+      }
+      else 
+        tempLep2.SetPtEtaPhiE(intree.lep2_.Pt(),intree.lep2_.Eta(),intree.lep2_.Phi(),intree.lep2_.E());
+        
+      tempBos = tempLep1 + tempLep2;
+      outtree.bosonPt_ = tempBos.Pt();
+      outtree.bosonEta_ = tempBos.Eta();
+      outtree.bosonPhi_ = tempBos.Phi();
+      outtree.bosonMass_ = tempBos.M();
+      TLorentzVector tempPho;
+      tempPho.SetPtEtaPhiM(outtree.phoEt_, outtree.phoEta_, outtree.phoPhi_, 0.);
+      tempPho += tempBos;
+      outtree.bosonPhoMass_ = tempPho.M();
+      //Z case metBosCor is more tricky
+      TLorentzVector tempMet;
+      tempMet.SetPtEtaPhiE(intree.metCor_,0.,intree.metCorPhi_,intree.metCor_);
+      tempMet += tempBos;
+      outtree.metBosCor_ = tempBos.Pt();
+      outtree.metBosCorPhi_ = tempBos.Phi();
+    }
+    
     outtree.nalljets_ = intree.njets_;
     for (unsigned int ijet = 0; ijet < intree.njets_; ijet++) {
       if (ijet == 0) {
         outtree.jet1Pt_ = intree.jet1_.Pt();
         outtree.jet1Eta_ = intree.jet1_.Eta();
         outtree.jet1Phi_ = intree.jet1_.Phi();
-        if (fabs(intree.jet1_.Eta()) > 2.4) continue;
-        jet_Pt.push_back(intree.jet1_.Pt());
-        jet_Eta.push_back(intree.jet1_.Eta());
-        jet_Phi.push_back(intree.jet1_.Phi());
       }
       else if (ijet == 1) {
         outtree.jet2Pt_ = intree.jet2_.Pt();
         outtree.jet2Eta_ = intree.jet2_.Eta();
         outtree.jet2Phi_ = intree.jet2_.Phi();
-        if (fabs(intree.jet2_.Eta()) > 2.4) continue;
-        jet_Pt.push_back(intree.jet2_.Pt());
-        jet_Eta.push_back(intree.jet2_.Eta());
-        jet_Phi.push_back(intree.jet2_.Phi());
       }
       else if (ijet == 2) {
         outtree.jet3Pt_ = intree.jet3_.Pt();
         outtree.jet3Eta_ = intree.jet3_.Eta();
         outtree.jet3Phi_ = intree.jet3_.Phi();
-        if (fabs(intree.jet3_.Eta()) > 2.4) continue;
-        jet_Pt.push_back(intree.jet3_.Pt());
-        jet_Eta.push_back(intree.jet3_.Eta());
-        jet_Phi.push_back(intree.jet3_.Phi());
       }
       else if (ijet == 3) {
         outtree.jet4Pt_ = intree.jet4_.Pt();
         outtree.jet4Eta_ = intree.jet4_.Eta();
         outtree.jet4Phi_ = intree.jet4_.Phi();
-        if (fabs(intree.jet4_.Eta()) > 2.4) continue;
-        jet_Pt.push_back(intree.jet4_.Pt());
-        jet_Eta.push_back(intree.jet4_.Eta());
-        jet_Phi.push_back(intree.jet4_.Phi());
       }
       else break;
-    }
-    outtree.njets_ = jet_Pt.size();
-    if (jet_Pt.size() > 0) {
-      outtree.leadJetPt_ = jet_Pt[0];
-      outtree.leadJetEta_= jet_Eta[0];
-      outtree.leadJetPhi_= jet_Phi[0];
-    }
-    if (jet_Pt.size() > 1) {
-      outtree.trailJetPt_ = jet_Pt[1];
-      outtree.trailJetEta_= jet_Eta[1];
-      outtree.trailJetPhi_= jet_Phi[1];
     }
   
     //leptons
@@ -247,32 +296,31 @@ void TreeReducer::MakeTree()
         outtree.lep1Pt_ = intree.lep1_.Pt();
         outtree.lep1Eta_ = intree.lep1_.Eta();
         outtree.lep1Phi_ = intree.lep1_.Phi();
-        outtree.lep1Id_ = intree.lid1_;
+        outtree.lep1Mass_ = intree.lep1_.M();
       }
       else if (ilep == 1) {
         outtree.lep2Pt_ = intree.lep2_.Pt();
         outtree.lep2Eta_ = intree.lep2_.Eta();
         outtree.lep2Phi_ = intree.lep2_.Phi();
-        outtree.lep2Id_ = intree.lid2_;
-      }
-      else if (ilep == 3) {
-        outtree.lep3Pt_ = intree.lep3_.Pt();
-        outtree.lep3Eta_ = intree.lep3_.Eta();
-        outtree.lep3Phi_ = intree.lep3_.Phi();
-        outtree.lep3Id_ = intree.lid3_;
+        outtree.lep2Mass_ = intree.lep2_.M();
       }
       else break;
     }
 
     //cosmics
     outtree.ncosmics_ = intree.ncosmics_;
+    if (intree.ncosmics_ > 0) {
+      outtree.cosmic1Pt_ = intree.cosmic1_.Pt();
+      outtree.cosmic1Eta_= intree.cosmic1_.Eta();
+      outtree.cosmic1Phi_= intree.cosmic1_.Phi();
+    }
 
     //fill the outtree content
     outtree.tree_->Fill();    
   }
     
   fOutFile   -> cd();
-  fOutFile   -> Write();  
+  outtree.tree_ -> Write();  
   return;
 }
 
@@ -336,36 +384,62 @@ bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPho
   //standard selection
   if (treeType == 0) {
     //met and photon number
-    if ( tree.met_ < 100 || tree.nphotons_ == 0 ) return false;
+    if ( tree.metCor_ < 100 || tree.nphotons_ == 0 ) return false;
     //Phase space & photons
     theGoodPhoton = -1;
     for ( unsigned int ipho = 0; ipho < tree.nphotons_; ipho++ ) {
       if ( ipho == 0 && abs(tree.pho1_.Eta()) < 1.479 && tree.pho1_.Et() > 140 && 
       tree.phoPassEleVeto_a1_ == 1 && tree.phoIsTrigger_a1_ == 1 && 
-      abs(tree.phoLeadTimeSpan_a1_) < 8. && tree.phoCoviEtaiEta_a1_ > 0.001 && tree.phoCoviPhiiPhi_a1_ > 0.001 && 
-      tree.phoMipIsHalo_a1_ == 0 && tree.phoSeedTime_a1_ > -1.5 && tree.phoSeedTime_a1_ < 3.0) { 
+      abs(tree.phoLeadTimeSpan_a1_) < 5. && tree.phoCoviEtaiEta_a1_ > 0.001 && tree.phoCoviPhiiPhi_a1_ > 0.001 && 
+      tree.phoMipIsHalo_a1_ == 0 && tree.phoSeedTime_a1_ > -1.5 && tree.phoSeedTime_a1_ < 1.5) { 
         theGoodPhoton = 0;
         break;
       }
       else if ( ipho == 1 && abs(tree.pho2_.Eta()) < 1.479 && tree.pho2_.Et() > 140 && 
       tree.phoPassEleVeto_a2_ == 1 && tree.phoIsTrigger_a2_ == 1 && 
-      abs(tree.phoLeadTimeSpan_a2_) < 8. && tree.phoCoviEtaiEta_a2_ > 0.001 && tree.phoCoviPhiiPhi_a2_ > 0.001 && 
-      tree.phoMipIsHalo_a2_ == 0 && tree.phoSeedTime_a2_ > -1.5 && tree.phoSeedTime_a2_ < 3.0) { 
+      abs(tree.phoLeadTimeSpan_a2_) < 5. && tree.phoCoviEtaiEta_a2_ > 0.001 && tree.phoCoviPhiiPhi_a2_ > 0.001 && 
+      tree.phoMipIsHalo_a2_ == 0 && tree.phoSeedTime_a2_ > -1.5 && tree.phoSeedTime_a2_ < 1.5) { 
         theGoodPhoton = 1;
         break;
       }
       else if ( ipho == 2 && abs(tree.pho3_.Eta()) < 1.479 && tree.pho3_.Et() > 140 && 
       tree.phoPassEleVeto_a3_ == 1 && tree.phoIsTrigger_a3_ == 1 && 
-      abs(tree.phoLeadTimeSpan_a3_) < 8. && tree.phoCoviEtaiEta_a3_ > 0.001 && tree.phoCoviPhiiPhi_a3_ > 0.001 && 
-      tree.phoMipIsHalo_a3_ == 0 && tree.phoSeedTime_a3_ > -1.5 && tree.phoSeedTime_a3_ < 3.0) { 
+      abs(tree.phoLeadTimeSpan_a3_) < 5. && tree.phoCoviEtaiEta_a3_ > 0.001 && tree.phoCoviPhiiPhi_a3_ > 0.001 && 
+      tree.phoMipIsHalo_a3_ == 0 && tree.phoSeedTime_a3_ > -1.5 && tree.phoSeedTime_a3_ < 1.5) { 
         theGoodPhoton = 2;
         break;
       }
-      else if ( ipho == 3 && abs(tree.pho4_.Eta()) < 1.479 && tree.pho4_.Et() > 140 && 
-      tree.phoPassEleVeto_a4_ == 1 && tree.phoIsTrigger_a4_ == 1 && 
-      abs(tree.phoLeadTimeSpan_a4_) < 8. && tree.phoCoviEtaiEta_a4_ > 0.001 && tree.phoCoviPhiiPhi_a4_ > 0.001 && 
-      tree.phoMipIsHalo_a4_ == 0 && tree.phoSeedTime_a4_ > -1.5 && tree.phoSeedTime_a4_ < 3.0) { 
-        theGoodPhoton = 3;
+      else break;
+    }
+    if ( theGoodPhoton < 0 ) return false;
+    return true;
+  }
+  //lepton selection
+  if (treeType == 1) {
+    //photon number and lepton number
+    if ( tree.nphotons_ == 0 || tree.nlep_ == 0 ) return false;
+    //Phase space & photons
+    theGoodPhoton = -1;
+    for ( unsigned int ipho = 0; ipho < tree.nphotons_; ipho++ ) {
+      if ( ipho == 0 && abs(tree.pho1_.Eta()) < 1.479 && tree.pho1_.Et() > 140 && 
+      tree.phoPassEleVeto_a1_ == 1 && tree.phoIsTrigger_a1_ == 1 && 
+      abs(tree.phoLeadTimeSpan_a1_) < 5. && tree.phoCoviEtaiEta_a1_ > 0.001 && tree.phoCoviPhiiPhi_a1_ > 0.001 && 
+      tree.phoMipIsHalo_a1_ == 0 && tree.phoSeedTime_a1_ > -1.5 && tree.phoSeedTime_a1_ < 1.5) { 
+        theGoodPhoton = 0;
+        break;
+      }
+      else if ( ipho == 1 && abs(tree.pho2_.Eta()) < 1.479 && tree.pho2_.Et() > 140 && 
+      tree.phoPassEleVeto_a2_ == 1 && tree.phoIsTrigger_a2_ == 1 && 
+      abs(tree.phoLeadTimeSpan_a2_) < 5. && tree.phoCoviEtaiEta_a2_ > 0.001 && tree.phoCoviPhiiPhi_a2_ > 0.001 && 
+      tree.phoMipIsHalo_a2_ == 0 && tree.phoSeedTime_a2_ > -1.5 && tree.phoSeedTime_a2_ < 1.5) { 
+        theGoodPhoton = 1;
+        break;
+      }
+      else if ( ipho == 2 && abs(tree.pho3_.Eta()) < 1.479 && tree.pho3_.Et() > 140 && 
+      tree.phoPassEleVeto_a3_ == 1 && tree.phoIsTrigger_a3_ == 1 && 
+      abs(tree.phoLeadTimeSpan_a3_) < 5. && tree.phoCoviEtaiEta_a3_ > 0.001 && tree.phoCoviPhiiPhi_a3_ > 0.001 && 
+      tree.phoMipIsHalo_a3_ == 0 && tree.phoSeedTime_a3_ > -1.5 && tree.phoSeedTime_a3_ < 1.5) { 
+        theGoodPhoton = 2;
         break;
       }
       else break;
@@ -376,40 +450,32 @@ bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPho
   //QCD selection
   else if (treeType == 2) {
     //met and photon number
-    if ( tree.met_ < 100 || tree.nphotons_ == 0 ) return false;
+    if ( tree.metCor_ < 100 || tree.nphotons_ == 0 ) return false;
     //Phase space & photons
     theGoodPhoton = -1;
     for ( unsigned int ipho = 0; ipho < tree.nphotons_; ipho++ ) {
       if ( ipho == 0 && abs(tree.pho1_.Eta()) < 1.479 && tree.pho1_.Et() > 140 && 
       tree.phoPassEleVeto_a1_ == 1 && tree.phoIsTrigger_a1_ == 1 && 
-      abs(tree.phoLeadTimeSpan_a1_) < 8. && tree.phoCoviEtaiEta_a1_ > 0.001 && tree.phoCoviPhiiPhi_a1_ > 0.001 && 
-      tree.phoMipIsHalo_a1_ == 0 && tree.phoSeedTime_a1_ > -1.5 && tree.phoSeedTime_a1_ < 3.0 &&
+      abs(tree.phoLeadTimeSpan_a1_) < 5. && tree.phoCoviEtaiEta_a1_ > 0.001 && tree.phoCoviPhiiPhi_a1_ > 0.001 && 
+      tree.phoMipIsHalo_a1_ == 0 && tree.phoSeedTime_a1_ > -1.5 && tree.phoSeedTime_a1_ < 1.5 &&
       PhotonIsSelected(tree.phoR9_a1_, tree.phoHadOverEm_a1_, tree.phoCoviEtaiEta_a1_, tree.phoCombIso1_a1_, tree.phoCombIso2_a1_, tree.phoCombIso3_a1_)) { 
         theGoodPhoton = 0;
         break;
       }
       else if ( ipho == 1 && abs(tree.pho2_.Eta()) < 1.479 && tree.pho2_.Et() > 140 && 
       tree.phoPassEleVeto_a2_ == 1 && tree.phoIsTrigger_a2_ == 1 && 
-      abs(tree.phoLeadTimeSpan_a2_) < 8. && tree.phoCoviEtaiEta_a2_ > 0.001 && tree.phoCoviPhiiPhi_a2_ > 0.001 && 
-      tree.phoMipIsHalo_a2_ == 0 && tree.phoSeedTime_a2_ > -1.5 && tree.phoSeedTime_a2_ < 3.0 &&
+      abs(tree.phoLeadTimeSpan_a2_) < 5. && tree.phoCoviEtaiEta_a2_ > 0.001 && tree.phoCoviPhiiPhi_a2_ > 0.001 && 
+      tree.phoMipIsHalo_a2_ == 0 && tree.phoSeedTime_a2_ > -1.5 && tree.phoSeedTime_a2_ < 1.5 &&
       PhotonIsSelected(tree.phoR9_a2_, tree.phoHadOverEm_a2_, tree.phoCoviEtaiEta_a2_, tree.phoCombIso1_a2_, tree.phoCombIso2_a2_, tree.phoCombIso3_a2_)) { 
         theGoodPhoton = 1;
         break;
       }
       else if ( ipho == 2 && abs(tree.pho3_.Eta()) < 1.479 && tree.pho3_.Et() > 140 && 
       tree.phoPassEleVeto_a3_ == 1 && tree.phoIsTrigger_a3_ == 1 && 
-      abs(tree.phoLeadTimeSpan_a3_) < 8. && tree.phoCoviEtaiEta_a3_ > 0.001 && tree.phoCoviPhiiPhi_a3_ > 0.001 && 
-      tree.phoMipIsHalo_a3_ == 0 && tree.phoSeedTime_a3_ > -1.5 && tree.phoSeedTime_a3_ < 3.0 &&
+      abs(tree.phoLeadTimeSpan_a3_) < 5. && tree.phoCoviEtaiEta_a3_ > 0.001 && tree.phoCoviPhiiPhi_a3_ > 0.001 && 
+      tree.phoMipIsHalo_a3_ == 0 && tree.phoSeedTime_a3_ > -1.5 && tree.phoSeedTime_a3_ < 1.5 &&
       PhotonIsSelected(tree.phoR9_a3_, tree.phoHadOverEm_a3_, tree.phoCoviEtaiEta_a3_, tree.phoCombIso1_a3_, tree.phoCombIso2_a3_, tree.phoCombIso3_a3_)) { 
         theGoodPhoton = 2;
-        break;
-      }
-      else if ( ipho == 3 && abs(tree.pho4_.Eta()) < 1.479 && tree.pho4_.Et() > 140 && 
-      tree.phoPassEleVeto_a4_ == 1 && tree.phoIsTrigger_a4_ == 1 && 
-      abs(tree.phoLeadTimeSpan_a4_) < 8. && tree.phoCoviEtaiEta_a4_ > 0.001 && tree.phoCoviPhiiPhi_a4_ > 0.001 && 
-      tree.phoMipIsHalo_a4_ == 0 && tree.phoSeedTime_a4_ > -1.5 && tree.phoSeedTime_a4_ < 3.0 &&
-      PhotonIsSelected(tree.phoR9_a4_, tree.phoHadOverEm_a4_, tree.phoCoviEtaiEta_a4_, tree.phoCombIso1_a4_, tree.phoCombIso2_a4_, tree.phoCombIso3_a4_)) { 
-        theGoodPhoton = 3;
         break;
       }
       else break;
@@ -420,40 +486,32 @@ bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPho
   //Beam halo selection
   else if (treeType == 3) {
     //met and photon number
-    if ( tree.met_ < 100 || tree.nphotons_ == 0 ) return false;
+    if ( tree.metCor_ < 100 || tree.nphotons_ == 0 ) return false;
     //Phase space & photons
     theGoodPhoton = -1;
     for ( unsigned int ipho = 0; ipho < tree.nphotons_; ipho++ ) {
       if ( ipho == 0 && abs(tree.pho1_.Eta()) < 1.479 && tree.pho1_.Et() > 140 && 
       tree.phoPassEleVeto_a1_ == 1 && tree.phoIsTrigger_a1_ == 1 && 
-      abs(tree.phoLeadTimeSpan_a1_) < 8. && tree.phoCoviEtaiEta_a1_ > 0.001 && tree.phoCoviPhiiPhi_a1_ > 0.001 && 
-      tree.phoMipIsHalo_a1_ == 0 && tree.phoSeedTime_a1_ > -1.5 && tree.phoSeedTime_a1_ < 3.0 &&
+      abs(tree.phoLeadTimeSpan_a1_) < 5. && tree.phoCoviEtaiEta_a1_ > 0.001 && tree.phoCoviPhiiPhi_a1_ > 0.001 && 
+      tree.phoMipIsHalo_a1_ == 0 && tree.phoSeedTime_a1_ > -1.5 && tree.phoSeedTime_a1_ < 1.5 &&
       PhotonIsSelected(tree.phoR9_a1_, tree.phoHadOverEm_a1_, -1., tree.phoCombIso1_a1_, tree.phoCombIso2_a1_, tree.phoCombIso3_a1_)) { 
         theGoodPhoton = 0;
         break;
       }
       else if ( ipho == 1 && abs(tree.pho2_.Eta()) < 1.479 && tree.pho2_.Et() > 140 && 
       tree.phoPassEleVeto_a2_ == 1 && tree.phoIsTrigger_a2_ == 1 && 
-      abs(tree.phoLeadTimeSpan_a2_) < 8. && tree.phoCoviEtaiEta_a2_ > 0.001 && tree.phoCoviPhiiPhi_a2_ > 0.001 && 
-      tree.phoMipIsHalo_a2_ == 0 && tree.phoSeedTime_a2_ > -1.5 && tree.phoSeedTime_a2_ < 3.0 &&
+      abs(tree.phoLeadTimeSpan_a2_) < 5. && tree.phoCoviEtaiEta_a2_ > 0.001 && tree.phoCoviPhiiPhi_a2_ > 0.001 && 
+      tree.phoMipIsHalo_a2_ == 0 && tree.phoSeedTime_a2_ > -1.5 && tree.phoSeedTime_a2_ < 1.5 &&
       PhotonIsSelected(tree.phoR9_a2_, tree.phoHadOverEm_a2_, -1., tree.phoCombIso1_a2_, tree.phoCombIso2_a2_, tree.phoCombIso3_a2_)) { 
         theGoodPhoton = 1;
         break;
       }
       else if ( ipho == 2 && abs(tree.pho3_.Eta()) < 1.479 && tree.pho3_.Et() > 140 && 
       tree.phoPassEleVeto_a3_ == 1 && tree.phoIsTrigger_a3_ == 1 && 
-      abs(tree.phoLeadTimeSpan_a3_) < 8. && tree.phoCoviEtaiEta_a3_ > 0.001 && tree.phoCoviPhiiPhi_a3_ > 0.001 && 
-      tree.phoMipIsHalo_a3_ == 0 && tree.phoSeedTime_a3_ > -1.5 && tree.phoSeedTime_a3_ < 3.0 &&
+      abs(tree.phoLeadTimeSpan_a3_) < 5. && tree.phoCoviEtaiEta_a3_ > 0.001 && tree.phoCoviPhiiPhi_a3_ > 0.001 && 
+      tree.phoMipIsHalo_a3_ == 0 && tree.phoSeedTime_a3_ > -1.5 && tree.phoSeedTime_a3_ < 1.5 &&
       PhotonIsSelected(tree.phoR9_a3_, tree.phoHadOverEm_a3_, -1., tree.phoCombIso1_a3_, tree.phoCombIso2_a3_, tree.phoCombIso3_a3_)) { 
         theGoodPhoton = 2;
-        break;
-      }
-      else if ( ipho == 3 && abs(tree.pho4_.Eta()) < 1.479 && tree.pho4_.Et() > 140 && 
-      tree.phoPassEleVeto_a4_ == 1 && tree.phoIsTrigger_a4_ == 1 && 
-      abs(tree.phoLeadTimeSpan_a4_) < 8. && tree.phoCoviEtaiEta_a4_ > 0.001 && tree.phoCoviPhiiPhi_a4_ > 0.001 && 
-      tree.phoMipIsHalo_a4_ == 0 && tree.phoSeedTime_a4_ > -1.5 && tree.phoSeedTime_a4_ < 3.0 &&
-      PhotonIsSelected(tree.phoR9_a4_, tree.phoHadOverEm_a4_, -1., tree.phoCombIso1_a4_, tree.phoCombIso2_a4_, tree.phoCombIso3_a4_)) { 
-        theGoodPhoton = 3;
         break;
       }
       else break;

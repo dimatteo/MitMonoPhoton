@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------------------------
-// $Id: TreeReducer.h,v 1.3 2013/08/26 21:59:38 dimatteo Exp $
+// $Id: TreeReducer.h,v 1.4 2013/09/11 15:54:34 dimatteo Exp $
 //
 // TreeReducer
 //
@@ -35,6 +35,7 @@ namespace mithep
     void                 SetOutput(TFile *f)  { fOutFile = f; }
     void                 SetVerbose(bool b) { fVerbose = b; }
     void                 SetInputBaseDir(const TString s)  { fInputBaseDir = s; }
+    void                 SetSelectionMode(const TString s)  { fInputSelection = s; }
     void                 SetLumi(float l)  { fLumi = l; }
             
   private:
@@ -45,9 +46,10 @@ namespace mithep
     const TH1D   * fPUTargetDown; // target PU histo down
     TFile        * fOutFile;  // target out file
 
-    bool           fVerbose;      // print out what the reducer is doing
-    TString        fInputBaseDir; // set the input samples base dir
-    float          fLumi;         // set the target lumi
+    bool           fVerbose;        // print out what the reducer is doing
+    TString        fInputBaseDir;   // set the input samples base dir
+    TString        fInputSelection; // set the selection mode
+    float          fLumi;           // set the target lumi
 
     // Auxiliary functions
     static const TH1D   *sPUWeights;
