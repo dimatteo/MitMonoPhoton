@@ -18,8 +18,12 @@ using namespace mithep;
 
 TString getEnv(const char* name);
 
+// Selection mode list
+// Signal = Z>nunu selection
+// Lepton = W>lnu selection
+// DiLepton = Z>ll selection
 //==================================================================================================
-void makeReducedTree()
+void makeReducedTree(TString selectionMode = "Signal")
 {
   // read all environment variables
   TString home   = getEnv("HOME");
@@ -37,7 +41,7 @@ void makeReducedTree()
   for (UInt_t iSample=0; iSample < *samples->NSamples(); iSample++) listOfSamples.push_back(samples->GetSample(iSample));  
   
   // define outfile
-  TString outfileName = prdCfg + "_reduced_new.root";
+  TString outfileName = prdCfg + "_reduced_" + selectionMode + ".root";
   TFile* outfile = new TFile(outfileName,"RECREATE");
   // define infolder
   TString sampleBaseDir = *samples->Dir();
@@ -63,6 +67,7 @@ void makeReducedTree()
     thisReducer -> SetPUTargetDown(putargetdown);
     thisReducer -> SetInputBaseDir(sampleBaseDir);
     thisReducer -> SetOutput(outfile);
+    thisReducer -> SetSelectionMode(selectionMode);
     thisReducer -> SetLumi(19789.);
     thisReducer -> MakeTree();
     delete thisReducer;
