@@ -30,7 +30,7 @@ MonoPhotonAnalysisMod::MonoPhotonAnalysisMod(const char *name, const char *title
   fPhotonsBranchName             (Names::gkPhotonBrn),
   fElectronsBranchName           (Names::gkElectronBrn),
   fMuonsBranchName               (Names::gkMuonBrn),
-  fLeptonsName             (ModNames::gkMergedLeptonsName),
+  fLeptonsName                   (ModNames::gkMergedLeptonsName),
   fMetFromBranch                 (kTRUE),
   fPhotonsFromBranch             (kTRUE),
   fElectronsFromBranch           (kTRUE),

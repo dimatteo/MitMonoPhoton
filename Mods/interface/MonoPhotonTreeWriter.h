@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------------------------
-// $Id: MonoPhotonTreeWriter.h,v 1.12 2013/07/31 22:39:51 dimatteo Exp $
+// $Id: MonoPhotonTreeWriter.h,v 1.13 2013/10/02 22:59:47 dimatteo Exp $
 //
 // MonoPhotonTreeWriter
 //
@@ -83,6 +83,7 @@ namespace mithep
     void                SetProcessID(Int_t n)             { fDecay = n;                  }
     void                SetTupleName(const char* c)       { fTupleName = c;              }
     void                SetFillNtupleType(Int_t d)        { fFillNtupleType= d;          }
+    void                SetIsCicPhotonId(Bool_t b)        { fIsCicPhotonId = b;          }
 
   protected:
     void                Process();
@@ -147,12 +148,14 @@ namespace mithep
     TFile                         *fOutputFile;
     TString	                       fTupleName;
     Int_t                          fFillNtupleType;
+    bool                           fIsCicPhotonId;
     MitGPTree                      fMitGPTree;
 
     Int_t                          fNEventsSelected;
 
     // auxiliary functions
     float GetCorrDeltaPhi(float phi1, float phi2);
+    float GetEA          (float photonAbsEta, int isoType);
 
     ClassDef(MonoPhotonTreeWriter, 1) // Photon identification module
       };

@@ -76,6 +76,7 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fOutputFile(0),
   fTupleName("hMonoPhotonTree"),
   fFillNtupleType(0),
+  fIsCicPhotonId(kTRUE),
 
   fNEventsSelected(0)
 
@@ -227,20 +228,37 @@ void MonoPhotonTreeWriter::Process()
   if(fPhotons->GetEntries() >= 1) {
     const Photon *photon = fPhotons->At(0);
     //Get the relevant quantities for this photon
+    float combIso1,combIso2,combIso3;
     unsigned int wVtxInd = 0;
-    float trackIsoSel03   = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.3, 0.0, fPfCandidates);
-    float trackIsoWorst04 = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.4, 0.00, fPfCandidates, &wVtxInd, fPV);
-    float ecalIso3        = IsolationTools::PFGammaIsolation(photon, 0.3, 0.0, fPfCandidates);
-    float ecalIso4        = IsolationTools::PFGammaIsolation(photon, 0.4, 0.0, fPfCandidates);
-    float combIso1 = (ecalIso3+trackIsoSel03   + 2.5 - 0.09*rho)*50./photon->Et();
-    float combIso2 = (ecalIso4+trackIsoWorst04 + 2.5 - 0.23*rho)*50./(photon->MomVtx(fPV->At(wVtxInd)->Position()).Pt());
-    float combIso3 = (trackIsoSel03)*50./photon->Et();
+    if (fIsCicPhotonId) {
+      wVtxInd = 0;
+      float trackIsoSel03   = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.3, 0.0, fPfCandidates);
+      float trackIsoWorst04 = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.4, 0.00, fPfCandidates, &wVtxInd, fPV);
+      float ecalIso3        = IsolationTools::PFGammaIsolation(photon, 0.3, 0.0, fPfCandidates);
+      float ecalIso4        = IsolationTools::PFGammaIsolation(photon, 0.4, 0.0, fPfCandidates);
+      combIso1 = (ecalIso3+trackIsoSel03   + 2.5 - 0.09*rho)*50./photon->Et();
+      combIso2 = (ecalIso4+trackIsoWorst04 + 2.5 - 0.23*rho)*50./(photon->MomVtx(fPV->At(wVtxInd)->Position()).Pt());
+      combIso3 = (trackIsoSel03)*50./photon->Et();
+    }
+    else {
+      wVtxInd = 0;
+      float CHIso03 = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.3, 0.0, fPfCandidates);
+      float NHIso03 = IsolationTools::PFNeutralHadronIsolation(photon, 0.3, 0.0, fPfCandidates);
+      float PHIso03 = IsolationTools::PFGammaIsolation(photon, 0.3, 0.0, fPfCandidates);
+    
+      combIso1 = TMath::Max(CHIso03 - rho*GetEA(photon->SCluster()->AbsEta(),0),(float) 0.);
+      combIso2 = TMath::Max(NHIso03 - rho*GetEA(photon->SCluster()->AbsEta(),1),(float) 0.);
+      combIso3 = TMath::Max(PHIso03 - rho*GetEA(photon->SCluster()->AbsEta(),2),(float) 0.);
+    }
+    wVtxInd = 0;
+    float phoWorstIso03 = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.3, 0.00, fPfCandidates, &wVtxInd, fPV);
     Bool_t PassEleVetoRaw = PhotonTools::PassElectronVetoConvRecovery(photon, fAllElectrons, fConversions, fBeamspot->At(0));  
     //Fill the photons branches
     fMitGPTree.pho1_			  = photon->Mom();
     fMitGPTree.phoCombIso1_a1_	  = combIso1;
     fMitGPTree.phoCombIso2_a1_	  = combIso2;
     fMitGPTree.phoCombIso3_a1_ = combIso3;
+    fMitGPTree.phoWorstIso_a1_ = phoWorstIso03;
     fMitGPTree.phoPassEleVeto_a1_	  = PassEleVetoRaw;
     fMitGPTree.phoHasPixelSeed_a1_ = photon->HasPixelSeed();
     fMitGPTree.phoCoviEtaiEta_a1_	  = photon->CoviEtaiEta();
@@ -296,20 +314,37 @@ void MonoPhotonTreeWriter::Process()
   if(fPhotons->GetEntries() >= 2) {
     const Photon *photon = fPhotons->At(1);
     //Get the relevant quantities for this photon
+    float combIso1,combIso2,combIso3;
     unsigned int wVtxInd = 0;
-    float trackIsoSel03   = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.3, 0.0, fPfCandidates);
-    float trackIsoWorst04 = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.4, 0.00, fPfCandidates, &wVtxInd, fPV);
-    float ecalIso3        = IsolationTools::PFGammaIsolation(photon, 0.3, 0.0, fPfCandidates);
-    float ecalIso4        = IsolationTools::PFGammaIsolation(photon, 0.4, 0.0, fPfCandidates);
-    float combIso1 = (ecalIso3+trackIsoSel03   + 2.5 - 0.09*rho)*50./photon->Et();
-    float combIso2 = (ecalIso4+trackIsoWorst04 + 2.5 - 0.23*rho)*50./(photon->MomVtx(fPV->At(wVtxInd)->Position()).Pt());
-    float combIso3 = (trackIsoSel03)*50./photon->Et();
+    if (fIsCicPhotonId) {
+      wVtxInd = 0;
+      float trackIsoSel03   = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.3, 0.0, fPfCandidates);
+      float trackIsoWorst04 = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.4, 0.00, fPfCandidates, &wVtxInd, fPV);
+      float ecalIso3        = IsolationTools::PFGammaIsolation(photon, 0.3, 0.0, fPfCandidates);
+      float ecalIso4        = IsolationTools::PFGammaIsolation(photon, 0.4, 0.0, fPfCandidates);
+      combIso1 = (ecalIso3+trackIsoSel03   + 2.5 - 0.09*rho)*50./photon->Et();
+      combIso2 = (ecalIso4+trackIsoWorst04 + 2.5 - 0.23*rho)*50./(photon->MomVtx(fPV->At(wVtxInd)->Position()).Pt());
+      combIso3 = (trackIsoSel03)*50./photon->Et();
+    }
+    else {
+      wVtxInd = 0;
+      float CHIso03 = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.3, 0.0, fPfCandidates);
+      float NHIso03 = IsolationTools::PFNeutralHadronIsolation(photon, 0.3, 0.0, fPfCandidates);
+      float PHIso03 = IsolationTools::PFGammaIsolation(photon, 0.3, 0.0, fPfCandidates);
+    
+      combIso1 = TMath::Max(CHIso03 - rho*GetEA(photon->SCluster()->AbsEta(),0),(float) 0.);
+      combIso2 = TMath::Max(NHIso03 - rho*GetEA(photon->SCluster()->AbsEta(),1),(float) 0.);
+      combIso3 = TMath::Max(PHIso03 - rho*GetEA(photon->SCluster()->AbsEta(),2),(float) 0.);
+    }
+    wVtxInd = 0;
+    float phoWorstIso03 = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.3, 0.00, fPfCandidates, &wVtxInd, fPV);
     Bool_t PassEleVetoRaw = PhotonTools::PassElectronVetoConvRecovery(photon, fAllElectrons, fConversions, fBeamspot->At(0));  
     //Fill the photons branches
     fMitGPTree.pho2_			  = photon->Mom();
     fMitGPTree.phoCombIso1_a2_	  = combIso1;
     fMitGPTree.phoCombIso2_a2_	  = combIso2;
     fMitGPTree.phoCombIso3_a2_ = combIso3;
+    fMitGPTree.phoWorstIso_a2_ = phoWorstIso03;
     fMitGPTree.phoPassEleVeto_a2_	  = PassEleVetoRaw;
     fMitGPTree.phoHasPixelSeed_a2_ = photon->HasPixelSeed();
     fMitGPTree.phoCoviEtaiEta_a2_	  = photon->CoviEtaiEta();
@@ -365,20 +400,37 @@ void MonoPhotonTreeWriter::Process()
   if(fPhotons->GetEntries() >= 3) {
     const Photon *photon = fPhotons->At(2);
     //Get the relevant quantities for this photon
+    float combIso1,combIso2,combIso3;
     unsigned int wVtxInd = 0;
-    float trackIsoSel03   = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.3, 0.0, fPfCandidates);
-    float trackIsoWorst04 = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.4, 0.00, fPfCandidates, &wVtxInd, fPV);
-    float ecalIso3        = IsolationTools::PFGammaIsolation(photon, 0.3, 0.0, fPfCandidates);
-    float ecalIso4        = IsolationTools::PFGammaIsolation(photon, 0.4, 0.0, fPfCandidates);
-    float combIso1 = (ecalIso3+trackIsoSel03   + 2.5 - 0.09*rho)*50./photon->Et();
-    float combIso2 = (ecalIso4+trackIsoWorst04 + 2.5 - 0.23*rho)*50./(photon->MomVtx(fPV->At(wVtxInd)->Position()).Pt());
-    float combIso3 = (trackIsoSel03)*50./photon->Et();
+    if (fIsCicPhotonId) {
+      wVtxInd = 0;
+      float trackIsoSel03   = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.3, 0.0, fPfCandidates);
+      float trackIsoWorst04 = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.4, 0.00, fPfCandidates, &wVtxInd, fPV);
+      float ecalIso3        = IsolationTools::PFGammaIsolation(photon, 0.3, 0.0, fPfCandidates);
+      float ecalIso4        = IsolationTools::PFGammaIsolation(photon, 0.4, 0.0, fPfCandidates);
+      combIso1 = (ecalIso3+trackIsoSel03   + 2.5 - 0.09*rho)*50./photon->Et();
+      combIso2 = (ecalIso4+trackIsoWorst04 + 2.5 - 0.23*rho)*50./(photon->MomVtx(fPV->At(wVtxInd)->Position()).Pt());
+      combIso3 = (trackIsoSel03)*50./photon->Et();
+    }
+    else {
+      wVtxInd = 0;
+      float CHIso03 = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.3, 0.0, fPfCandidates);
+      float NHIso03 = IsolationTools::PFNeutralHadronIsolation(photon, 0.3, 0.0, fPfCandidates);
+      float PHIso03 = IsolationTools::PFGammaIsolation(photon, 0.3, 0.0, fPfCandidates);
+    
+      combIso1 = TMath::Max(CHIso03 - rho*GetEA(photon->SCluster()->AbsEta(),0),(float) 0.);
+      combIso2 = TMath::Max(NHIso03 - rho*GetEA(photon->SCluster()->AbsEta(),1),(float) 0.);
+      combIso3 = TMath::Max(PHIso03 - rho*GetEA(photon->SCluster()->AbsEta(),2),(float) 0.);
+    }
+    wVtxInd = 0;
+    float phoWorstIso03 = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.3, 0.00, fPfCandidates, &wVtxInd, fPV);
     Bool_t PassEleVetoRaw = PhotonTools::PassElectronVetoConvRecovery(photon, fAllElectrons, fConversions, fBeamspot->At(0));  
     //Fill the photons branches
     fMitGPTree.pho3_              = photon->Mom();
     fMitGPTree.phoCombIso1_a3_	  = combIso1;
     fMitGPTree.phoCombIso2_a3_	  = combIso2;
     fMitGPTree.phoCombIso3_a3_ = combIso3;
+    fMitGPTree.phoWorstIso_a3_ = phoWorstIso03;
     fMitGPTree.phoPassEleVeto_a3_	  = PassEleVetoRaw;
     fMitGPTree.phoHasPixelSeed_a3_ = photon->HasPixelSeed();
     fMitGPTree.phoCoviEtaiEta_a3_	  = photon->CoviEtaiEta();
@@ -429,75 +481,6 @@ void MonoPhotonTreeWriter::Process()
       const TriggerObject *trigobj = fHltObjs->At(i);
       if (trigobj->TriggerType()==TriggerObject::TriggerPhoton && MathUtils::DeltaR(photon->SCluster(),trigobj)<0.3)
         fMitGPTree.phoIsTrigger_a3_ = true;
-    }
-  }
-  if(fPhotons->GetEntries() >= 4) {
-    const Photon *photon = fPhotons->At(3);
-    //Get the relevant quantities for this photon
-    unsigned int wVtxInd = 0;
-    float trackIsoSel03   = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.3, 0.0, fPfCandidates);
-    float trackIsoWorst04 = IsolationTools::PFChargedIsolation(photon, fPV->At(0), 0.4, 0.00, fPfCandidates, &wVtxInd, fPV);
-    float ecalIso3        = IsolationTools::PFGammaIsolation(photon, 0.3, 0.0, fPfCandidates);
-    float ecalIso4        = IsolationTools::PFGammaIsolation(photon, 0.4, 0.0, fPfCandidates);
-    float combIso1 = (ecalIso3+trackIsoSel03   + 2.5 - 0.09*rho)*50./photon->Et();
-    float combIso2 = (ecalIso4+trackIsoWorst04 + 2.5 - 0.23*rho)*50./(photon->MomVtx(fPV->At(wVtxInd)->Position()).Pt());
-    float combIso3 = (trackIsoSel03)*50./photon->Et();
-    Bool_t PassEleVetoRaw = PhotonTools::PassElectronVetoConvRecovery(photon, fAllElectrons, fConversions, fBeamspot->At(0));  
-    //Fill the photons branches
-    fMitGPTree.pho4_                      = photon->Mom();
-    fMitGPTree.phoCombIso1_a4_	  = combIso1;
-    fMitGPTree.phoCombIso2_a4_	  = combIso2;
-    fMitGPTree.phoCombIso3_a4_ = combIso3;
-    fMitGPTree.phoPassEleVeto_a4_	  = PassEleVetoRaw;
-    fMitGPTree.phoHasPixelSeed_a4_ = photon->HasPixelSeed();
-    fMitGPTree.phoCoviEtaiEta_a4_	  = photon->CoviEtaiEta();
-    fMitGPTree.phoCoviPhiiPhi_a4_	  = TMath::Sqrt(TMath::Abs(photon->SCluster()->Seed()->CoviPhiiPhi()));
-    fMitGPTree.phoR9_a4_		  = photon->SCluster()->R9();
-    fMitGPTree.phoSeedTime_a4_  	  = photon->SCluster()->SeedTime();
-    fMitGPTree.phoHadOverEm_a4_ 	  = photon->HadOverEm();
-    fMitGPTree.phoLeadTimeSpan_a4_  	  = photon->SCluster()->LeadTimeSpan();
-    fMitGPTree.phoSubLeadTimeSpan_a4_  	  = photon->SCluster()->SubLeadTimeSpan();
-    fMitGPTree.phoMipChi2_a4_ = photon->MipChi2();
-    fMitGPTree.phoMipTotEnergy_a4_ = photon->MipTotEnergy();
-    fMitGPTree.phoMipSlope_a4_ = photon->MipSlope();
-    fMitGPTree.phoMipIntercept_a4_ = photon->MipIntercept();
-    fMitGPTree.phoMipNhitCone_a4_ = photon->MipNhitCone();
-    fMitGPTree.phoMipIsHalo_a4_ = photon->MipIsHalo();
-    // get the best matched HBHE hit
-    if ( photon->MatchHePlusEn() > 0 && photon->MatchHeMinusEn() < 0 ) {
-      fMitGPTree.phoMatchHeEta_a4_ = photon->MatchHePlusPos().Eta();
-      fMitGPTree.phoMatchHePhi_a4_ = photon->MatchHePlusPos().Phi();
-      fMitGPTree.phoMatchHeEn_a4_ = photon->MatchHePlusEn();
-      fMitGPTree.phoMatchHeTime_a4_ = photon->MatchHePlusTime();
-    }
-    else if ( photon->MatchHePlusEn() < 0 && photon->MatchHeMinusEn() > 0 ) {
-      fMitGPTree.phoMatchHeEta_a4_ = photon->MatchHeMinusPos().Eta();
-      fMitGPTree.phoMatchHePhi_a4_ = photon->MatchHeMinusPos().Phi();
-      fMitGPTree.phoMatchHeEn_a4_ = photon->MatchHeMinusEn();
-      fMitGPTree.phoMatchHeTime_a4_ = photon->MatchHeMinusTime();
-    }
-    else if ( photon->MatchHePlusEn() > 0 && photon->MatchHeMinusEn() > 0 ) {
-      // in case you have a matched rh on both HE sides take the closest one in phi
-      float corrDeltaPhiPlus = GetCorrDeltaPhi(photon->Mom().phi(), photon->MatchHePlusPos().Phi());
-      float corrDeltaPhiMinus = GetCorrDeltaPhi(photon->Mom().phi(), photon->MatchHeMinusPos().Phi());
-      if (corrDeltaPhiPlus < corrDeltaPhiMinus) {
-        fMitGPTree.phoMatchHeEta_a4_ = photon->MatchHePlusPos().Eta();
-        fMitGPTree.phoMatchHePhi_a4_ = photon->MatchHePlusPos().Phi();
-        fMitGPTree.phoMatchHeEn_a4_ = photon->MatchHePlusEn();
-        fMitGPTree.phoMatchHeTime_a4_ = photon->MatchHePlusTime();
-      }
-      else {
-        fMitGPTree.phoMatchHeEta_a4_ = photon->MatchHeMinusPos().Eta();
-        fMitGPTree.phoMatchHePhi_a4_ = photon->MatchHeMinusPos().Phi();
-        fMitGPTree.phoMatchHeEn_a4_ = photon->MatchHeMinusEn();
-        fMitGPTree.phoMatchHeTime_a4_ = photon->MatchHeMinusTime();
-      }
-    }
-    // get the HLT matched object information
-    for (UInt_t i=0; i<fHltObjs->GetEntries(); i++) {
-      const TriggerObject *trigobj = fHltObjs->At(i);
-      if (trigobj->TriggerType()==TriggerObject::TriggerPhoton && MathUtils::DeltaR(photon->SCluster(),trigobj)<0.3)
-        fMitGPTree.phoIsTrigger_a4_ = true;
     }
   }
 
@@ -600,6 +583,7 @@ void MonoPhotonTreeWriter::Process()
   fMitGPTree.x2_        = x2;
   fMitGPTree.pdf2_      = pdf2;
   fMitGPTree.processId_ = processId;
+  fMitGPTree.rho_       = rho;
 
   fMitGPTree.tree_->Fill();
   
@@ -656,4 +640,28 @@ float MonoPhotonTreeWriter::GetCorrDeltaPhi(float phi1, float phi2)
   if (corrDeltaPhi > TMath::Pi())
     corrDeltaPhi = TMath::TwoPi() - corrDeltaPhi;     
   return corrDeltaPhi;
+}
+
+//--------------------------------------------------------------------------------------------------
+float MonoPhotonTreeWriter::GetEA(float absEta, int isoType)
+{
+  // prepare the values of the EA (cat 0/1/2 is CH/NH/Photons)
+  float effective_area[] = { 
+    0.012, 	0.030, 	0.148,    
+    0.010, 	0.057, 	0.130,    
+    0.014, 	0.039, 	0.112,      
+    0.012, 	0.015, 	0.216,      
+    0.016, 	0.024, 	0.262,  
+    0.020, 	0.039, 	0.260,
+    0.012, 	0.072, 	0.266};
+
+  int _etaCat = 0;    
+  if (absEta >= 1 && absEta < 1.479)  _etaCat = 1;
+  if (absEta >= 1.479 && absEta < 2.0)_etaCat = 2;
+  if (absEta >= 2.0 && absEta < 2.2)  _etaCat = 3;
+  if (absEta >= 2.2 && absEta < 2.3)  _etaCat = 4;
+  if (absEta >= 2.3 && absEta < 2.4)  _etaCat = 5;
+  if (absEta >= 2.4)                  _etaCat = 6;
+
+  return effective_area[isoType+_etaCat*3];
 }
