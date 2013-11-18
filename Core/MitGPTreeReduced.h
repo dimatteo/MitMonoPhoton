@@ -41,6 +41,8 @@ class MitGPTreeReduced {
   float          phoCombIso1_; 
   float          phoCombIso2_; 
   float          phoCombIso3_; 
+  float          phoR9_; 
+  bool           phoHasPixelSeed_; 
 
   float          phoMetDeltaPhi_;
   float          jetMetDeltaPhi_;
@@ -132,14 +134,16 @@ class MitGPTreeReduced {
     tree_->Branch("metBosCorPhi" , &metBosCorPhi_ ,   "metBosCorPhi/F");
     tree_->Branch("metSig"       , &metSig_       ,   "metSig/F");
   
-    tree_->Branch("nphotons"      , &nphotons_      ,   "nphotons/i");
-    tree_->Branch("phoEt"         , &phoEt_         ,   "phoEt/F");
-    tree_->Branch("phoEta"        , &phoEta_        ,   "phoEta/F");
-    tree_->Branch("phoPhi"        , &phoPhi_        ,   "phoPhi/F");
-    tree_->Branch("phoCombIso1"   , &phoCombIso1_   ,   "phoCombIso1/F"); 
-    tree_->Branch("phoCombIso2"   , &phoCombIso2_   ,   "phoCombIso2/F"); 
-    tree_->Branch("phoCombIso3"   , &phoCombIso3_   ,   "phoCombIso3/F"); 
-  
+    tree_->Branch("nphotons"        , &nphotons_        ,   "nphotons/i");
+    tree_->Branch("phoEt"           , &phoEt_           ,   "phoEt/F");
+    tree_->Branch("phoEta"          , &phoEta_          ,   "phoEta/F");
+    tree_->Branch("phoPhi"          , &phoPhi_          ,   "phoPhi/F");
+    tree_->Branch("phoCombIso1"     , &phoCombIso1_     ,   "phoCombIso1/F"); 
+    tree_->Branch("phoCombIso2"     , &phoCombIso2_     ,   "phoCombIso2/F"); 
+    tree_->Branch("phoCombIso3"     , &phoCombIso3_     ,   "phoCombIso3/F"); 
+    tree_->Branch("phoR9"           , &phoR9_           ,   "phoR9/F"); 
+    tree_->Branch("phoHasPixelSeed" , &phoHasPixelSeed_ ,   "phoHasPixelSeed/b"); 
+
     tree_->Branch("phoMetDeltaPhi", &phoMetDeltaPhi_,   "phoMetDeltaPhi/F");
     tree_->Branch("jetMetDeltaPhi", &jetMetDeltaPhi_,   "jetMetDeltaPhi/F");
     tree_->Branch("phoJetDeltaPhi", &phoJetDeltaPhi_,   "phoJetDeltaPhi/F");
@@ -206,13 +210,15 @@ class MitGPTreeReduced {
     tree_->SetBranchAddress("metBosCorPhi" , &metBosCorPhi_);
     tree_->SetBranchAddress("metSig"       , &metSig_    );
   
-    tree_->SetBranchAddress("nphotons"      , &nphotons_);
-    tree_->SetBranchAddress("phoEt"         , &phoEt_     );
-    tree_->SetBranchAddress("phoEta"        , &phoEta_    );
-    tree_->SetBranchAddress("phoPhi"        , &phoPhi_    );
-    tree_->SetBranchAddress("phoCombIso1"  , &phoCombIso1_); 
-    tree_->SetBranchAddress("phoCombIso2"  , &phoCombIso2_); 
-    tree_->SetBranchAddress("phoCombIso3"  , &phoCombIso3_); 
+    tree_->SetBranchAddress("nphotons"       , &nphotons_);
+    tree_->SetBranchAddress("phoEt"          , &phoEt_     );
+    tree_->SetBranchAddress("phoEta"         , &phoEta_    );
+    tree_->SetBranchAddress("phoPhi"         , &phoPhi_    );
+    tree_->SetBranchAddress("phoCombIso1"    , &phoCombIso1_); 
+    tree_->SetBranchAddress("phoCombIso2"    , &phoCombIso2_); 
+    tree_->SetBranchAddress("phoCombIso3"    , &phoCombIso3_); 
+    tree_->SetBranchAddress("phoR9"          , &phoR9_); 
+    tree_->SetBranchAddress("phoHasPixelSeed", &phoHasPixelSeed_); 
   
     tree_->SetBranchAddress("phoMetDeltaPhi", &phoMetDeltaPhi_ );
     tree_->SetBranchAddress("jetMetDeltaPhi", &jetMetDeltaPhi_ );
@@ -287,7 +293,9 @@ MitGPTreeReduced::InitVariables(){
   phoCombIso1_ = -1.;
   phoCombIso2_ = -1.; 
   phoCombIso3_ = -1.;
-
+  phoR9_ = -1.;
+  phoHasPixelSeed_ = false;
+  
   phoMetDeltaPhi_ = -100.;
   jetMetDeltaPhi_ = -100.;
   phoJetDeltaPhi_ = -100.;
