@@ -67,16 +67,23 @@ void TreeReducer::MakeTree()
   }
 
   // determine the sample type
-  bool isMC = false, isData = false;
+  bool isMC = false, isData = false, isSignal = true;
   int treeType = 0;
-  if (fInputSelection != "Signal")
+  if (fInputSelection != "Signal") {
     treeType = 1;
+    isSignal = false;
+  }
   float thisXsec   = *fSample->Xsec();
   float thisScale  = *fSample->Scale();
   if (thisXsec > 0)         isMC = true;
   else if (thisXsec == -1)  isData = true;
   else if (thisXsec == -2) {treeType = 2;} //QCD
   else                     {treeType = 3;} //BeamHalo
+
+  // determine if overlap needs to be removed (only for Zjets and Wjets)
+  bool isOverlapSample = false;
+  if (*fSample->Name() == "s12-wjets-ptw100-v7a"
+    ||*fSample->Name() == "s12-zjets-ptz100-v7a" ) isOverlapSample = true;
 
   // Get the event scaling and the PU weights: MC only
   float baseEvtWeight = 1.;
@@ -111,7 +118,6 @@ void TreeReducer::MakeTree()
 
   }
 
-
   // set up the output tree
   fOutFile   -> cd();
   MitGPTreeReduced outtree;
@@ -131,30 +137,29 @@ void TreeReducer::MakeTree()
 
     outtree.InitVariables();
     intree.tree_-> GetEntry(iEntry);
-    //apply the selection
-    //define the good photon 
+    
+    //cut on lepton if not signal region
+    if (!isSignal && intree.nlep_ == 0) continue;
+    
+    //apply the selection and define the good photon         
     int theGoodPhoton = -1;
     if ( !EventIsSelected(intree, treeType, theGoodPhoton) ) continue;
 
-    //get this event weights
+    //get this event weights, not photon Et dependant
     float thisPUWeight = 1.;
     float thisPUWeightUp = 1.;
     float thisPUWeightDown = 1.;
     if ( isMC ) thisPUWeight = PUWeight(intree.npu_);
     if ( isMC ) thisPUWeightUp = PUWeightUp(intree.npu_);
     if ( isMC ) thisPUWeightDown = PUWeightDown(intree.npu_);
-    float thisKFactorWeight = thisScale;
-    if (thisScale < 0) thisKFactorWeight = KFactorWeight(thisScale, intree.pho1_.Et());
     
     //get the relevant variables
     outtree.isData_ = isData;
     
     outtree.evt_weight_ = baseEvtWeight;
-    outtree.hlt_weight_ = 1.;
     outtree.pu_weight_  = thisPUWeight;
     outtree.pu_weightup_  = thisPUWeightUp;
     outtree.pu_weightdo_  = thisPUWeightDown;
-    outtree.kf_weight_  = thisKFactorWeight;
   
     outtree.nvtx_  = intree.nvtx_;
     outtree.metCor_= intree.metCor_;
@@ -162,6 +167,8 @@ void TreeReducer::MakeTree()
     outtree.metSig_= intree.metSig_;
   
     outtree.nphotons_ = intree.nphotons_;
+    outtree.phoR9_ = 0.;
+    int theGoodMatchType = -1;
     if ( theGoodPhoton == 0 ) {
       outtree.phoEt_ = intree.pho1_.Et();
       outtree.phoEta_ = intree.pho1_.Eta();
@@ -169,6 +176,9 @@ void TreeReducer::MakeTree()
       outtree.phoCombIso1_ = intree.phoCombIso1_a1_;
       outtree.phoCombIso2_ = intree.phoCombIso2_a1_;
       outtree.phoCombIso3_ = intree.phoCombIso3_a1_;
+      outtree.phoHasPixelSeed_ = intree.phoHasPixelSeed_a1_;
+      outtree.phoR9_ =  intree.phoR9_a1_;
+      if (isMC) theGoodMatchType =  intree.phoMatchType_a1_;
     }
     else if ( theGoodPhoton == 1 ) {
       outtree.phoEt_ = intree.pho2_.Et();
@@ -177,6 +187,9 @@ void TreeReducer::MakeTree()
       outtree.phoCombIso1_ = intree.phoCombIso1_a2_;
       outtree.phoCombIso2_ = intree.phoCombIso2_a2_;
       outtree.phoCombIso3_ = intree.phoCombIso3_a2_;
+      outtree.phoHasPixelSeed_ = intree.phoHasPixelSeed_a2_;
+      outtree.phoR9_ =  intree.phoR9_a2_;
+      if (isMC) theGoodMatchType =  intree.phoMatchType_a2_;
     }
     else if ( theGoodPhoton == 2 ) {
       outtree.phoEt_ = intree.pho3_.Et();
@@ -185,14 +198,30 @@ void TreeReducer::MakeTree()
       outtree.phoCombIso1_ = intree.phoCombIso1_a3_;
       outtree.phoCombIso2_ = intree.phoCombIso2_a3_;
       outtree.phoCombIso3_ = intree.phoCombIso3_a3_;
+      outtree.phoHasPixelSeed_ = intree.phoHasPixelSeed_a3_;
+      outtree.phoR9_ =  intree.phoR9_a3_;
+      if (isMC) theGoodMatchType =  intree.phoMatchType_a3_;
     }
     else
       cout << "Error in the selection function! theGoodPhoton==" << theGoodPhoton  << endl; 
-  
-    outtree.phoMetDeltaPhi_ = GetCorrDeltaPhi(outtree.phoPhi_, intree.metCorPhi_);
-    if (intree.njets_ > 0) outtree.jetMetDeltaPhi_ = GetCorrDeltaPhi(intree.jet1_.Phi(), intree.metCorPhi_);
-    if (intree.njets_ > 0) outtree.phoJetDeltaPhi_ = GetCorrDeltaPhi(outtree.phoPhi_, intree.jet1_.Phi());
     
+    //only for Wjets and Zjets discard events if photon ISR
+    if (isOverlapSample && theGoodMatchType == 0) continue;
+
+    //if photon does not come from electron/ISR discard it (use fake rate)
+    if (isMC && (theGoodMatchType == 1 || theGoodMatchType == 2 || theGoodMatchType == 4)) continue;
+
+    //now the scale factors which are pt dependent
+    float thisKFactorWeight = thisScale;
+    if (thisScale < 0) thisKFactorWeight = KFactorWeight(thisScale, outtree.phoEt_);
+    //for photo efficiencies
+    float thisScaleFactorWeight = 1.;
+    if (isMC) thisScaleFactorWeight = ScaleFactorWeight(outtree.phoR9_, outtree.phoEt_);
+    //if the photon comes from an electron use the fake rate scale factor
+    if (isMC && theGoodMatchType == 3) thisScaleFactorWeight *= 1.5;    
+    outtree.kf_weight_  = thisKFactorWeight;
+    outtree.hlt_weight_ = thisScaleFactorWeight;
+      
     if (fInputSelection == "Lepton") {
       TLorentzVector tempBos;
       tempBos.SetPtEtaPhiE(intree.metCor_,0.,intree.metCorPhi_,intree.metCor_);
@@ -265,29 +294,59 @@ void TreeReducer::MakeTree()
     }
     
     outtree.nalljets_ = intree.njets_;
+    //now we will loop on the jets and clean the collection wrt the sel photon: necessary for QCD tree
+    float dphi,deta;
     for (unsigned int ijet = 0; ijet < intree.njets_; ijet++) {
       if (ijet == 0) {
+        dphi = GetCorrDeltaPhi(outtree.phoPhi_, intree.jet1_.Phi());
+        deta = outtree.phoEta_ - intree.jet1_.Eta();
+        if (dphi*dphi+deta*deta < 0.3*0.3) {
+          outtree.nalljets_ --;
+          continue;
+        }
         outtree.jet1Pt_ = intree.jet1_.Pt();
         outtree.jet1Eta_ = intree.jet1_.Eta();
         outtree.jet1Phi_ = intree.jet1_.Phi();
       }
       else if (ijet == 1) {
+        dphi = GetCorrDeltaPhi(outtree.phoPhi_, intree.jet2_.Phi());
+        deta = outtree.phoEta_ - intree.jet2_.Eta();
+        if (dphi*dphi+deta*deta < 0.3*0.3) {
+          outtree.nalljets_ --;
+          continue;
+        }
         outtree.jet2Pt_ = intree.jet2_.Pt();
         outtree.jet2Eta_ = intree.jet2_.Eta();
         outtree.jet2Phi_ = intree.jet2_.Phi();
       }
       else if (ijet == 2) {
+        dphi = GetCorrDeltaPhi(outtree.phoPhi_, intree.jet3_.Phi());
+        deta = outtree.phoEta_ - intree.jet3_.Eta();
+        if (dphi*dphi+deta*deta < 0.3*0.3) {
+          outtree.nalljets_ --;
+          continue;
+        }
         outtree.jet3Pt_ = intree.jet3_.Pt();
         outtree.jet3Eta_ = intree.jet3_.Eta();
         outtree.jet3Phi_ = intree.jet3_.Phi();
       }
       else if (ijet == 3) {
+        dphi = GetCorrDeltaPhi(outtree.phoPhi_, intree.jet4_.Phi());
+        deta = outtree.phoEta_ - intree.jet4_.Eta();
+        if (dphi*dphi+deta*deta < 0.3*0.3) {
+          outtree.nalljets_ --;
+          continue;
+        }
         outtree.jet4Pt_ = intree.jet4_.Pt();
         outtree.jet4Eta_ = intree.jet4_.Eta();
         outtree.jet4Phi_ = intree.jet4_.Phi();
       }
       else break;
     }
+
+    outtree.phoMetDeltaPhi_ = GetCorrDeltaPhi(outtree.phoPhi_, intree.metCorPhi_);
+    if (outtree.nalljets_ > 0) outtree.jetMetDeltaPhi_ = GetCorrDeltaPhi(outtree.jet1Phi_, intree.metCorPhi_);
+    if (outtree.nalljets_ > 0) outtree.phoJetDeltaPhi_ = GetCorrDeltaPhi(outtree.phoPhi_, outtree.jet1Phi_);
   
     //leptons
     outtree.nlep_ = intree.nlep_;
@@ -369,14 +428,32 @@ float TreeReducer::KFactorWeight(Float_t scale, Float_t phet)
   }
   //QCD, taken from dedicated studies
   else if (scale == -2) {
-    if (phet < 145.)
-      return 1.0;
-    else 
-      return (0.0068 - 4.79e-06*phet);
+    //use linear interpolation of fake rate
+    return 
+      gPhoFakeRate -> Eval(phet);
   }
   else
     return 1.;
 }
+
+//--------------------------------------------------------------------------------------------------
+float TreeReducer::ScaleFactorWeight(Float_t R9, Float_t phet)
+{
+  //photon ID efficiencies, taken from AN-12-160
+  float preselEff = 1.;
+  float idEff = 1.;
+  //timing is taken from Zee studies
+  float timingEff = 0.9631;
+  
+  if (R9 < 0.9) preselEff = 0.996*0.992;
+  else preselEff = 0.998*0.999;
+  if (R9 < 0.94) idEff = 0.992;
+  else idEff = 1.002;
+  
+  float theEff = preselEff*idEff*timingEff;
+  return theEff;
+}
+
 
 //--------------------------------------------------------------------------------------------------
 bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPhoton)
@@ -447,18 +524,18 @@ bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPho
     if ( theGoodPhoton < 0 ) return false;
     return true;
   }
-  //QCD selection
+  //QCD selection:you want to use this also for the lepton selection, so relax met cut
   else if (treeType == 2) {
     //met and photon number
-    if ( tree.metCor_ < 100 || tree.nphotons_ == 0 ) return false;
-    //Phase space & photons
+    if ( tree.nphotons_ == 0 ) return false;
+    //Phase space & fake photons (no sigmaieta, sideband iso)
     theGoodPhoton = -1;
     for ( unsigned int ipho = 0; ipho < tree.nphotons_; ipho++ ) {
       if ( ipho == 0 && abs(tree.pho1_.Eta()) < 1.479 && tree.pho1_.Et() > 140 && 
       tree.phoPassEleVeto_a1_ == 1 && tree.phoIsTrigger_a1_ == 1 && 
       abs(tree.phoLeadTimeSpan_a1_) < 5. && tree.phoCoviEtaiEta_a1_ > 0.001 && tree.phoCoviPhiiPhi_a1_ > 0.001 && 
       tree.phoMipIsHalo_a1_ == 0 && tree.phoSeedTime_a1_ > -1.5 && tree.phoSeedTime_a1_ < 1.5 &&
-      PhotonIsSelected(tree.phoR9_a1_, tree.phoHadOverEm_a1_, tree.phoCoviEtaiEta_a1_, tree.phoCombIso1_a1_, tree.phoCombIso2_a1_, tree.phoCombIso3_a1_)) { 
+      PhotonIsFake(tree.phoR9_a1_, tree.phoHadOverEm_a1_, tree.phoCoviEtaiEta_a1_, tree.phoCombIso1_a1_, tree.phoCombIso2_a1_, tree.phoCombIso3_a1_)) { 
         theGoodPhoton = 0;
         break;
       }
@@ -466,7 +543,7 @@ bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPho
       tree.phoPassEleVeto_a2_ == 1 && tree.phoIsTrigger_a2_ == 1 && 
       abs(tree.phoLeadTimeSpan_a2_) < 5. && tree.phoCoviEtaiEta_a2_ > 0.001 && tree.phoCoviPhiiPhi_a2_ > 0.001 && 
       tree.phoMipIsHalo_a2_ == 0 && tree.phoSeedTime_a2_ > -1.5 && tree.phoSeedTime_a2_ < 1.5 &&
-      PhotonIsSelected(tree.phoR9_a2_, tree.phoHadOverEm_a2_, tree.phoCoviEtaiEta_a2_, tree.phoCombIso1_a2_, tree.phoCombIso2_a2_, tree.phoCombIso3_a2_)) { 
+      PhotonIsFake(tree.phoR9_a2_, tree.phoHadOverEm_a2_, tree.phoCoviEtaiEta_a2_, tree.phoCombIso1_a2_, tree.phoCombIso2_a2_, tree.phoCombIso3_a2_)) { 
         theGoodPhoton = 1;
         break;
       }
@@ -474,7 +551,7 @@ bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPho
       tree.phoPassEleVeto_a3_ == 1 && tree.phoIsTrigger_a3_ == 1 && 
       abs(tree.phoLeadTimeSpan_a3_) < 5. && tree.phoCoviEtaiEta_a3_ > 0.001 && tree.phoCoviPhiiPhi_a3_ > 0.001 && 
       tree.phoMipIsHalo_a3_ == 0 && tree.phoSeedTime_a3_ > -1.5 && tree.phoSeedTime_a3_ < 1.5 &&
-      PhotonIsSelected(tree.phoR9_a3_, tree.phoHadOverEm_a3_, tree.phoCoviEtaiEta_a3_, tree.phoCombIso1_a3_, tree.phoCombIso2_a3_, tree.phoCombIso3_a3_)) { 
+      PhotonIsFake(tree.phoR9_a3_, tree.phoHadOverEm_a3_, tree.phoCoviEtaiEta_a3_, tree.phoCombIso1_a3_, tree.phoCombIso2_a3_, tree.phoCombIso3_a3_)) { 
         theGoodPhoton = 2;
         break;
       }
@@ -483,7 +560,7 @@ bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPho
     if ( theGoodPhoton < 0 ) return false;
     return true;
   }
-  //Beam halo selection
+  //Beam halo selection: really do not care if you have leptons
   else if (treeType == 3) {
     //met and photon number
     if ( tree.metCor_ < 100 || tree.nphotons_ == 0 ) return false;
@@ -546,6 +623,39 @@ bool TreeReducer::PhotonIsSelected(float R9, float HoverE, float CoviEtaiEta, fl
     if (Iso2 > 6.5) return false ;
     if (Iso3 > 2.5) return false ;
     if (CoviEtaiEta > 0.0102) return false ;
+    if (HoverE > 0.092) return false ;
+    if (R9 < 0.28 ) return false ; 
+    return true;
+  }
+  else
+    return false;
+}
+
+//--------------------------------------------------------------------------------------------------
+bool TreeReducer::PhotonIsFake(float R9, float HoverE, float CoviEtaiEta, float Iso1, float Iso2, float Iso3)
+{
+  int Cat ;
+  Cat = 0;
+  if (R9 < 0.94 ) Cat = 1;
+
+  //Exclude sigma ieta far sideband
+  if (CoviEtaiEta > 0.014) 
+    return false;
+
+  //Isolation cuts: first exclude far sideband
+  if (Iso1 > 18.0 || Iso2 > 30.0 || Iso3 > 11.4)
+    return false;
+
+  if (Cat == 0) {
+    // exclude signal region
+    if (Iso1 <= 2.0 && Iso2 <= 3.0 && Iso3 <= 1.0) return false ;
+    if (HoverE > 0.124) return false ;
+    if (R9 < 0.94 ) return false ; 
+    return true;
+  }
+  else if (Cat == 1) {
+    // exclude signal region
+    if (Iso1 <= 2.0 && Iso2 <= 3.0 && Iso3 <= 1.0) return false ;
     if (HoverE > 0.092) return false ;
     if (R9 < 0.28 ) return false ; 
     return true;
