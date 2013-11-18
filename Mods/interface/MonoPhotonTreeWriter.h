@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------------------------
-// $Id: MonoPhotonTreeWriter.h,v 1.13 2013/10/02 22:59:47 dimatteo Exp $
+// $Id: MonoPhotonTreeWriter.h,v 1.14 2013/10/27 06:24:23 dimatteo Exp $
 //
 // MonoPhotonTreeWriter
 //
@@ -100,6 +100,12 @@ namespace mithep
     TString             fLeptonsName;
     TString             fCosmicsName;
     TString             fHltObjsName;
+    
+    TString             fGenISRPhotonsName;
+    TString             fGenRadPhotonsName;
+    TString             fGenPhotonsName;
+    TString             fGenAllLeptonsName;
+    TString             fGenJetsName;
 
     TString             fSuperClustersName;
     TString             fTracksName;
@@ -131,6 +137,12 @@ namespace mithep
     const JetCol                  *fJets;
     const MuonCol                 *fCosmics;
 
+    const MCParticleCol           *fGenISRPhotons;
+    const MCParticleCol           *fGenRadPhotons;
+    const MCParticleCol           *fGenPhotons;
+    const MCParticleCol           *fGenAllLeptons;
+    const GenJetCol               *fGenJets;
+
     const SuperClusterCol         *fSuperClusters;   
     const TrackCol                *fTracks;
     const VertexCol               *fPV;
@@ -156,6 +168,7 @@ namespace mithep
     // auxiliary functions
     float GetCorrDeltaPhi(float phi1, float phi2);
     float GetEA          (float photonAbsEta, int isoType);
+    void  GetPhoMCMatch  (float eta, float phi, float pt, int &matchType, float &matchPt);
 
     ClassDef(MonoPhotonTreeWriter, 1) // Photon identification module
       };
