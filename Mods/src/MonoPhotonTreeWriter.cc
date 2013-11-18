@@ -34,6 +34,12 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fCosmicsName            ("CosmicMuons"),
   fLeptonsName            (ModNames::gkMergedLeptonsName),
 
+  fGenISRPhotonsName      (ModNames::gkMCISRPhotonsName),
+  fGenRadPhotonsName      (ModNames::gkMCRadPhotonsName),
+  fGenPhotonsName         (ModNames::gkMCPhotonsName),
+  fGenAllLeptonsName      (ModNames::gkMCAllLeptonsName),
+  fGenJetsName            ("AKT5GenJets"),
+
   fSuperClustersName      ("PFSuperClusters"),
   fTracksName             (Names::gkTrackBrn),
   fPVName                 (Names::gkPVBeamSpotBrn),
@@ -114,6 +120,11 @@ void MonoPhotonTreeWriter::Process()
   LoadEventObject(fPileUpDenName,     fPileUpDen,     true);
   if (!fIsData) {
     ReqBranch(fPileUpName,            fPileUp);
+    LoadEventObject(fGenISRPhotonsName ,    fGenISRPhotons, false);
+    LoadEventObject(fGenRadPhotonsName ,    fGenRadPhotons, false);
+    LoadEventObject(fGenPhotonsName    ,    fGenPhotons, false);
+    LoadEventObject(fGenAllLeptonsName ,    fGenAllLeptons, false);
+    LoadEventObject(fGenJetsName       ,    fGenJets, true);
   }
   ParticleOArr *leptons = GetObjThisEvt<ParticleOArr>(ModNames::gkMergedLeptonsName);
   const TriggerObjectCol *fHltObjs = GetHLTObjects(fHltObjsName);
@@ -228,6 +239,9 @@ void MonoPhotonTreeWriter::Process()
   if(fPhotons->GetEntries() >= 1) {
     const Photon *photon = fPhotons->At(0);
     //Get the relevant quantities for this photon
+    int matchType = -1.;
+    float matchPt = -1.;
+    GetPhoMCMatch(photon->Eta(), photon->Phi(), photon->Pt(), matchType, matchPt);
     float combIso1,combIso2,combIso3;
     unsigned int wVtxInd = 0;
     if (fIsCicPhotonId) {
@@ -255,6 +269,8 @@ void MonoPhotonTreeWriter::Process()
     Bool_t PassEleVetoRaw = PhotonTools::PassElectronVetoConvRecovery(photon, fAllElectrons, fConversions, fBeamspot->At(0));  
     //Fill the photons branches
     fMitGPTree.pho1_			  = photon->Mom();
+    fMitGPTree.phoMatchType_a1_	  = matchType;
+    fMitGPTree.phoMatchPt_a1_	    = matchPt;
     fMitGPTree.phoCombIso1_a1_	  = combIso1;
     fMitGPTree.phoCombIso2_a1_	  = combIso2;
     fMitGPTree.phoCombIso3_a1_ = combIso3;
@@ -274,36 +290,6 @@ void MonoPhotonTreeWriter::Process()
     fMitGPTree.phoMipIntercept_a1_ = photon->MipIntercept();
     fMitGPTree.phoMipNhitCone_a1_ = photon->MipNhitCone();
     fMitGPTree.phoMipIsHalo_a1_ = photon->MipIsHalo();
-    // get the best matched HBHE hit
-    if ( photon->MatchHePlusEn() > 0 && photon->MatchHeMinusEn() < 0 ) {
-      fMitGPTree.phoMatchHeEta_a1_ = photon->MatchHePlusPos().Eta();
-      fMitGPTree.phoMatchHePhi_a1_ = photon->MatchHePlusPos().Phi();
-      fMitGPTree.phoMatchHeEn_a1_ = photon->MatchHePlusEn();
-      fMitGPTree.phoMatchHeTime_a1_ = photon->MatchHePlusTime();
-    }
-    else if ( photon->MatchHePlusEn() < 0 && photon->MatchHeMinusEn() > 0 ) {
-      fMitGPTree.phoMatchHeEta_a1_ = photon->MatchHeMinusPos().Eta();
-      fMitGPTree.phoMatchHePhi_a1_ = photon->MatchHeMinusPos().Phi();
-      fMitGPTree.phoMatchHeEn_a1_ = photon->MatchHeMinusEn();
-      fMitGPTree.phoMatchHeTime_a1_ = photon->MatchHeMinusTime();
-    }
-    else if ( photon->MatchHePlusEn() > 0 && photon->MatchHeMinusEn() > 0 ) {
-      // in case you have a matched rh on both HE sides take the closest one in phi
-      float corrDeltaPhiPlus = GetCorrDeltaPhi(photon->Mom().phi(), photon->MatchHePlusPos().Phi());
-      float corrDeltaPhiMinus = GetCorrDeltaPhi(photon->Mom().phi(), photon->MatchHeMinusPos().Phi());
-      if (corrDeltaPhiPlus < corrDeltaPhiMinus) {
-        fMitGPTree.phoMatchHeEta_a1_ = photon->MatchHePlusPos().Eta();
-        fMitGPTree.phoMatchHePhi_a1_ = photon->MatchHePlusPos().Phi();
-        fMitGPTree.phoMatchHeEn_a1_ = photon->MatchHePlusEn();
-        fMitGPTree.phoMatchHeTime_a1_ = photon->MatchHePlusTime();
-      }
-      else {
-        fMitGPTree.phoMatchHeEta_a1_ = photon->MatchHeMinusPos().Eta();
-        fMitGPTree.phoMatchHePhi_a1_ = photon->MatchHeMinusPos().Phi();
-        fMitGPTree.phoMatchHeEn_a1_ = photon->MatchHeMinusEn();
-        fMitGPTree.phoMatchHeTime_a1_ = photon->MatchHeMinusTime();
-      }
-    }
     // get the HLT matched object information
     for (UInt_t i=0; i<fHltObjs->GetEntries(); i++) {
       const TriggerObject *trigobj = fHltObjs->At(i);
@@ -314,6 +300,9 @@ void MonoPhotonTreeWriter::Process()
   if(fPhotons->GetEntries() >= 2) {
     const Photon *photon = fPhotons->At(1);
     //Get the relevant quantities for this photon
+    int matchType = -1.;
+    float matchPt = -1.;
+    GetPhoMCMatch(photon->Eta(), photon->Phi(), photon->Pt(), matchType, matchPt);
     float combIso1,combIso2,combIso3;
     unsigned int wVtxInd = 0;
     if (fIsCicPhotonId) {
@@ -341,6 +330,8 @@ void MonoPhotonTreeWriter::Process()
     Bool_t PassEleVetoRaw = PhotonTools::PassElectronVetoConvRecovery(photon, fAllElectrons, fConversions, fBeamspot->At(0));  
     //Fill the photons branches
     fMitGPTree.pho2_			  = photon->Mom();
+    fMitGPTree.phoMatchType_a2_	  = matchType;
+    fMitGPTree.phoMatchPt_a2_	    = matchPt;
     fMitGPTree.phoCombIso1_a2_	  = combIso1;
     fMitGPTree.phoCombIso2_a2_	  = combIso2;
     fMitGPTree.phoCombIso3_a2_ = combIso3;
@@ -360,36 +351,6 @@ void MonoPhotonTreeWriter::Process()
     fMitGPTree.phoMipIntercept_a2_ = photon->MipIntercept();
     fMitGPTree.phoMipNhitCone_a2_ = photon->MipNhitCone();
     fMitGPTree.phoMipIsHalo_a2_ = photon->MipIsHalo();
-    // get the best matched HBHE hit
-    if ( photon->MatchHePlusEn() > 0 && photon->MatchHeMinusEn() < 0 ) {
-      fMitGPTree.phoMatchHeEta_a2_ = photon->MatchHePlusPos().Eta();
-      fMitGPTree.phoMatchHePhi_a2_ = photon->MatchHePlusPos().Phi();
-      fMitGPTree.phoMatchHeEn_a2_ = photon->MatchHePlusEn();
-      fMitGPTree.phoMatchHeTime_a2_ = photon->MatchHePlusTime();
-    }
-    else if ( photon->MatchHePlusEn() < 0 && photon->MatchHeMinusEn() > 0 ) {
-      fMitGPTree.phoMatchHeEta_a2_ = photon->MatchHeMinusPos().Eta();
-      fMitGPTree.phoMatchHePhi_a2_ = photon->MatchHeMinusPos().Phi();
-      fMitGPTree.phoMatchHeEn_a2_ = photon->MatchHeMinusEn();
-      fMitGPTree.phoMatchHeTime_a2_ = photon->MatchHeMinusTime();
-    }
-    else if ( photon->MatchHePlusEn() > 0 && photon->MatchHeMinusEn() > 0 ) {
-      // in case you have a matched rh on both HE sides take the closest one in phi
-      float corrDeltaPhiPlus = GetCorrDeltaPhi(photon->Mom().phi(), photon->MatchHePlusPos().Phi());
-      float corrDeltaPhiMinus = GetCorrDeltaPhi(photon->Mom().phi(), photon->MatchHeMinusPos().Phi());
-      if (corrDeltaPhiPlus < corrDeltaPhiMinus) {
-        fMitGPTree.phoMatchHeEta_a2_ = photon->MatchHePlusPos().Eta();
-        fMitGPTree.phoMatchHePhi_a2_ = photon->MatchHePlusPos().Phi();
-        fMitGPTree.phoMatchHeEn_a2_ = photon->MatchHePlusEn();
-        fMitGPTree.phoMatchHeTime_a2_ = photon->MatchHePlusTime();
-      }
-      else {
-        fMitGPTree.phoMatchHeEta_a2_ = photon->MatchHeMinusPos().Eta();
-        fMitGPTree.phoMatchHePhi_a2_ = photon->MatchHeMinusPos().Phi();
-        fMitGPTree.phoMatchHeEn_a2_ = photon->MatchHeMinusEn();
-        fMitGPTree.phoMatchHeTime_a2_ = photon->MatchHeMinusTime();
-      }
-    }
     // get the HLT matched object information
     for (UInt_t i=0; i<fHltObjs->GetEntries(); i++) {
       const TriggerObject *trigobj = fHltObjs->At(i);
@@ -400,6 +361,9 @@ void MonoPhotonTreeWriter::Process()
   if(fPhotons->GetEntries() >= 3) {
     const Photon *photon = fPhotons->At(2);
     //Get the relevant quantities for this photon
+    int matchType = -1.;
+    float matchPt = -1.;
+    GetPhoMCMatch(photon->Eta(), photon->Phi(), photon->Pt(), matchType, matchPt);
     float combIso1,combIso2,combIso3;
     unsigned int wVtxInd = 0;
     if (fIsCicPhotonId) {
@@ -427,6 +391,8 @@ void MonoPhotonTreeWriter::Process()
     Bool_t PassEleVetoRaw = PhotonTools::PassElectronVetoConvRecovery(photon, fAllElectrons, fConversions, fBeamspot->At(0));  
     //Fill the photons branches
     fMitGPTree.pho3_              = photon->Mom();
+    fMitGPTree.phoMatchType_a3_	  = matchType;
+    fMitGPTree.phoMatchPt_a3_	    = matchPt;
     fMitGPTree.phoCombIso1_a3_	  = combIso1;
     fMitGPTree.phoCombIso2_a3_	  = combIso2;
     fMitGPTree.phoCombIso3_a3_ = combIso3;
@@ -446,36 +412,6 @@ void MonoPhotonTreeWriter::Process()
     fMitGPTree.phoMipIntercept_a3_ = photon->MipIntercept();
     fMitGPTree.phoMipNhitCone_a3_ = photon->MipNhitCone();
     fMitGPTree.phoMipIsHalo_a3_ = photon->MipIsHalo();
-    // get the best matched HBHE hit
-    if ( photon->MatchHePlusEn() > 0 && photon->MatchHeMinusEn() < 0 ) {
-      fMitGPTree.phoMatchHeEta_a3_ = photon->MatchHePlusPos().Eta();
-      fMitGPTree.phoMatchHePhi_a3_ = photon->MatchHePlusPos().Phi();
-      fMitGPTree.phoMatchHeEn_a3_ = photon->MatchHePlusEn();
-      fMitGPTree.phoMatchHeTime_a3_ = photon->MatchHePlusTime();
-    }
-    else if ( photon->MatchHePlusEn() < 0 && photon->MatchHeMinusEn() > 0 ) {
-      fMitGPTree.phoMatchHeEta_a3_ = photon->MatchHeMinusPos().Eta();
-      fMitGPTree.phoMatchHePhi_a3_ = photon->MatchHeMinusPos().Phi();
-      fMitGPTree.phoMatchHeEn_a3_ = photon->MatchHeMinusEn();
-      fMitGPTree.phoMatchHeTime_a3_ = photon->MatchHeMinusTime();
-    }
-    else if ( photon->MatchHePlusEn() > 0 && photon->MatchHeMinusEn() > 0 ) {
-      // in case you have a matched rh on both HE sides take the closest one in phi
-      float corrDeltaPhiPlus = GetCorrDeltaPhi(photon->Mom().phi(), photon->MatchHePlusPos().Phi());
-      float corrDeltaPhiMinus = GetCorrDeltaPhi(photon->Mom().phi(), photon->MatchHeMinusPos().Phi());
-      if (corrDeltaPhiPlus < corrDeltaPhiMinus) {
-        fMitGPTree.phoMatchHeEta_a3_ = photon->MatchHePlusPos().Eta();
-        fMitGPTree.phoMatchHePhi_a3_ = photon->MatchHePlusPos().Phi();
-        fMitGPTree.phoMatchHeEn_a3_ = photon->MatchHePlusEn();
-        fMitGPTree.phoMatchHeTime_a3_ = photon->MatchHePlusTime();
-      }
-      else {
-        fMitGPTree.phoMatchHeEta_a3_ = photon->MatchHeMinusPos().Eta();
-        fMitGPTree.phoMatchHePhi_a3_ = photon->MatchHeMinusPos().Phi();
-        fMitGPTree.phoMatchHeEn_a3_ = photon->MatchHeMinusEn();
-        fMitGPTree.phoMatchHeTime_a3_ = photon->MatchHeMinusTime();
-      }
-    }
     // get the HLT matched object information
     for (UInt_t i=0; i<fHltObjs->GetEntries(); i++) {
       const TriggerObject *trigobj = fHltObjs->At(i);
@@ -614,6 +550,11 @@ void MonoPhotonTreeWriter::SlaveBegin()
 
   ReqEventObject(fPileUpDenName,   fPileUpDen,    true);
   if (!fIsData) {
+    ReqEventObject(fGenISRPhotonsName,  fGenISRPhotons, false);
+    ReqEventObject(fGenRadPhotonsName,  fGenRadPhotons, false);
+    ReqEventObject(fGenPhotonsName   ,  fGenPhotons, false);
+    ReqEventObject(fGenAllLeptonsName,  fGenAllLeptons, false);
+    ReqEventObject(fGenJetsName      ,  fGenJets, true);
     ReqBranch(fPileUpName,         fPileUp);
     ReqBranch(fMCEvInfoName,       fMCEventInfo);
   }
@@ -664,4 +605,113 @@ float MonoPhotonTreeWriter::GetEA(float absEta, int isoType)
   if (absEta >= 2.4)                  _etaCat = 6;
 
   return effective_area[isoType+_etaCat*3];
+}
+
+//--------------------------------------------------------------------------------------------------
+void MonoPhotonTreeWriter::GetPhoMCMatch(float eta, float phi, float pt, int &matchType, float &matchPt)
+{
+  // matched particle type
+  matchType = -1; // default: unmatched
+
+  // the DR for matching, require also pt matching at 50% for e/g and 100% for jets
+  float theMinDRSq = 1000.;
+  float genPt = -1.;
+
+  // loop on ISR photons: first choice
+  if (fGenISRPhotons->GetEntries() >= 1)
+    for (UInt_t i=0; i < fGenISRPhotons->GetEntries(); ++i) {
+      if (fGenISRPhotons->At(i)->Pt() < 30.) continue;
+      float genEta = fGenISRPhotons->At(i)->Eta();
+      float genPhi = fGenISRPhotons->At(i)->Phi();
+      genPt        = fGenISRPhotons->At(i)->Pt();
+      float thisDRSq =  (eta-genEta)*(eta-genEta)
+                     +  GetCorrDeltaPhi(phi,genPhi)*GetCorrDeltaPhi(phi,genPhi);
+      if (thisDRSq < theMinDRSq && fabs((pt-genPt)/genPt) < 1.5) theMinDRSq = thisDRSq;
+    }
+  // return an ISR match if match cone small enough
+  if (theMinDRSq < 0.1*0.1) {
+    matchType = 0;
+    matchPt = genPt;
+    return;
+  }
+    
+  // loop on FSR photons: second choice
+  theMinDRSq = 1000.;
+  if (fGenRadPhotons->GetEntries() >= 1) 
+    for (UInt_t i=0; i < fGenRadPhotons->GetEntries(); ++i) {
+      if (fGenRadPhotons->At(i)->Pt() < 30.) continue;
+      float genEta = fGenRadPhotons->At(i)->Eta();
+      float genPhi = fGenRadPhotons->At(i)->Phi();
+      genPt        = fGenRadPhotons->At(i)->Pt();
+      float thisDRSq =  (eta-genEta)*(eta-genEta)
+                     +  GetCorrDeltaPhi(phi,genPhi)*GetCorrDeltaPhi(phi,genPhi);
+      if (thisDRSq < theMinDRSq && fabs((pt-genPt)/genPt) < 1.5) theMinDRSq = thisDRSq;
+    }
+  // return an FSR match if match cone small enough
+  if (theMinDRSq < 0.1*0.1) {
+    matchType = 1;
+    matchPt = genPt;
+    return;
+  }
+
+  // loop on photons: third choice
+  theMinDRSq = 1000.;
+  if (fGenPhotons->GetEntries() >= 1)
+    for (UInt_t i=0; i < fGenPhotons->GetEntries(); ++i) {
+      if (fGenPhotons->At(i)->Pt() < 30.) continue;
+      float genEta = fGenPhotons->At(i)->Eta();
+      float genPhi = fGenPhotons->At(i)->Phi();
+      genPt        = fGenPhotons->At(i)->Pt();
+      float thisDRSq =  (eta-genEta)*(eta-genEta)
+                     +  GetCorrDeltaPhi(phi,genPhi)*GetCorrDeltaPhi(phi,genPhi);
+      if (thisDRSq < theMinDRSq && fabs((pt-genPt)/genPt) < 1.5) theMinDRSq = thisDRSq;
+    }
+  // return an photon match if match cone small enough
+  if (theMinDRSq < 0.1*0.1) {
+    matchType = 2;
+    matchPt = genPt;
+    return;
+  }
+    
+  // loop on electrons: fourth choice
+  theMinDRSq = 1000.;
+  if (fGenAllLeptons->GetEntries() >= 1)  
+    for (UInt_t i=0; i < fGenAllLeptons->GetEntries(); ++i) {
+      if (fGenAllLeptons->At(i)->Pt() < 30.) continue;
+      if (fabs(fGenAllLeptons->At(i)->PdgId()) != 11) continue;
+      float genEta = fGenAllLeptons->At(i)->Eta();
+      float genPhi = fGenAllLeptons->At(i)->Phi();
+      genPt        = fGenAllLeptons->At(i)->Pt();
+      float thisDRSq =  (eta-genEta)*(eta-genEta)
+                     +  GetCorrDeltaPhi(phi,genPhi)*GetCorrDeltaPhi(phi,genPhi);
+      if (thisDRSq < theMinDRSq && fabs((pt-genPt)/genPt) < 1.5) theMinDRSq = thisDRSq;
+    }
+  // return an electron match if match cone small enough
+  if (theMinDRSq < 0.1*0.1) {
+    matchType = 3;
+    matchPt = genPt;
+    return;
+  }
+
+  // loop on genJets: fifth choice
+  theMinDRSq = 1000.;
+  if (fGenJets->GetEntries() >= 1)  
+    for (UInt_t i=0; i < fGenJets->GetEntries(); ++i) {
+      if (fGenJets->At(i)->Pt() < 30.) continue;
+      float genEta = fGenJets->At(i)->Eta();
+      float genPhi = fGenJets->At(i)->Phi();
+      genPt        = fGenJets->At(i)->Pt();
+      float thisDRSq =  (eta-genEta)*(eta-genEta)
+                     +  GetCorrDeltaPhi(phi,genPhi)*GetCorrDeltaPhi(phi,genPhi);
+      if (thisDRSq < theMinDRSq && fabs((pt-genPt)/genPt) < 2) theMinDRSq = thisDRSq;
+    }
+  // return a jet match if match cone small enough
+  if (theMinDRSq < 0.5*0.5) {
+    matchType = 4;
+    matchPt = genPt;
+    return;
+  }
+  
+  return;
+                  
 }
