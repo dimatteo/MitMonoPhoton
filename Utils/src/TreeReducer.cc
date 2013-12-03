@@ -67,18 +67,21 @@ void TreeReducer::MakeTree()
   }
 
   // determine the sample type
-  bool isMC = false, isData = false, isSignal = true;
+  bool isMC = false, isData = true, isSignal = true, isEleFake = false;
   int treeType = 0;
-  if (fInputSelection != "Signal") {
+  if (fInputSelection == "Lepton" || fInputSelection == "DiLepton" ) {
     treeType = 1;
     isSignal = false;
+  }
+  if (fInputSelection == "EleFake") {
+    isEleFake = true;
   }
   float thisXsec   = *fSample->Xsec();
   float thisScale  = *fSample->Scale();
   if (thisXsec > 0)         isMC = true;
-  else if (thisXsec == -1)  isData = true;
-  else if (thisXsec == -2) {treeType = 2;} //QCD
-  else                     {treeType = 3;} //BeamHalo
+  if (thisXsec == -2) {treeType = 2;} //QCD
+  if (thisXsec == -3) {isEleFake = true;} //EleFake
+  if (thisXsec == -4) {treeType = 3;} //BeamHalo
 
   // determine if overlap needs to be removed (only for Zjets and Wjets)
   bool isOverlapSample = false;
@@ -122,8 +125,7 @@ void TreeReducer::MakeTree()
   fOutFile   -> cd();
   MitGPTreeReduced outtree;
   TString outTreeName = (*fSample->Name());
-  if (treeType == 2) outTreeName = "QCD";
-  if (treeType == 3) outTreeName = "BeamHalo";
+  if (treeType == 2 || treeType == 3 || thisXsec == -3) outTreeName = (*fSample->Legend());
   outtree.CreateTree(outTreeName.Data());
 
   // set up the input tree
@@ -143,7 +145,7 @@ void TreeReducer::MakeTree()
     
     //apply the selection and define the good photon         
     int theGoodPhoton = -1;
-    if ( !EventIsSelected(intree, treeType, theGoodPhoton) ) continue;
+    if ( !EventIsSelected(intree, treeType, theGoodPhoton, isEleFake) ) continue;
 
     //get this event weights, not photon Et dependant
     float thisPUWeight = 1.;
@@ -165,10 +167,12 @@ void TreeReducer::MakeTree()
     outtree.metCor_= intree.metCor_;
     outtree.metCorPhi_= intree.metCorPhi_;
     outtree.metSig_= intree.metSig_;
+    outtree.metFilterWord_ = intree.metFilterWord_;
   
     outtree.nphotons_ = intree.nphotons_;
     outtree.phoR9_ = 0.;
     int theGoodMatchType = -1;
+    float theGoodMatchPt = -1.;
     if ( theGoodPhoton == 0 ) {
       outtree.phoEt_ = intree.pho1_.Et();
       outtree.phoEta_ = intree.pho1_.Eta();
@@ -179,6 +183,7 @@ void TreeReducer::MakeTree()
       outtree.phoHasPixelSeed_ = intree.phoHasPixelSeed_a1_;
       outtree.phoR9_ =  intree.phoR9_a1_;
       if (isMC) theGoodMatchType =  intree.phoMatchType_a1_;
+      if (isMC) theGoodMatchPt =  intree.phoMatchPt_a1_;
     }
     else if ( theGoodPhoton == 1 ) {
       outtree.phoEt_ = intree.pho2_.Et();
@@ -190,6 +195,7 @@ void TreeReducer::MakeTree()
       outtree.phoHasPixelSeed_ = intree.phoHasPixelSeed_a2_;
       outtree.phoR9_ =  intree.phoR9_a2_;
       if (isMC) theGoodMatchType =  intree.phoMatchType_a2_;
+      if (isMC) theGoodMatchPt =  intree.phoMatchPt_a2_;
     }
     else if ( theGoodPhoton == 2 ) {
       outtree.phoEt_ = intree.pho3_.Et();
@@ -201,6 +207,7 @@ void TreeReducer::MakeTree()
       outtree.phoHasPixelSeed_ = intree.phoHasPixelSeed_a3_;
       outtree.phoR9_ =  intree.phoR9_a3_;
       if (isMC) theGoodMatchType =  intree.phoMatchType_a3_;
+      if (isMC) theGoodMatchPt =  intree.phoMatchPt_a3_;
     }
     else
       cout << "Error in the selection function! theGoodPhoton==" << theGoodPhoton  << endl; 
@@ -209,16 +216,21 @@ void TreeReducer::MakeTree()
     if (isOverlapSample && theGoodMatchType == 0) continue;
 
     //if photon does not come from electron/ISR discard it (use fake rate)
-    if (isMC && (theGoodMatchType == 1 || theGoodMatchType == 2 || theGoodMatchType == 4)) continue;
+    //if (isMC && (theGoodMatchType == 1 || theGoodMatchType == 2 || theGoodMatchType == 4)) continue;
 
     //now the scale factors which are pt dependent
-    float thisKFactorWeight = thisScale;
-    if (thisScale < 0) thisKFactorWeight = KFactorWeight(thisScale, outtree.phoEt_);
+    float thisKFactorWeight = thisScale;    
+    if (thisScale < 0) { 
+      //if the photon is matched to the GEN object the GEN pt, otherwise use reco
+      float photonTruePt = outtree.phoEt_;
+      if (theGoodMatchType == 0) photonTruePt = theGoodMatchPt;      
+      thisKFactorWeight = KFactorWeight(thisScale, photonTruePt);
+    }
     //for photo efficiencies
     float thisScaleFactorWeight = 1.;
     if (isMC) thisScaleFactorWeight = ScaleFactorWeight(outtree.phoR9_, outtree.phoEt_);
     //if the photon comes from an electron use the fake rate scale factor
-    if (isMC && theGoodMatchType == 3) thisScaleFactorWeight *= 1.5;    
+    //if (isMC && theGoodMatchType == 3) thisScaleFactorWeight *= 1.5;    
     outtree.kf_weight_  = thisKFactorWeight;
     outtree.hlt_weight_ = thisScaleFactorWeight;
       
@@ -419,18 +431,34 @@ float TreeReducer::PUWeightDown(Float_t npu)
 //--------------------------------------------------------------------------------------------------
 float TreeReducer::KFactorWeight(Float_t scale, Float_t phet)
 {
-  //Z>nunu, taken from https://indico.cern.ch/getFile.py/access?contribId=0&resId=0&materialId=slides&confId=242281
+  //k-factors description here
+  //https://indico.cern.ch/getFile.py/access?contribId=0&resId=0&materialId=slides&confId=283118
+  //use linear interpolation
+  //Zgamma
   if (scale == -1) {
     if (phet < 145.)
       return 1.0;
     else 
-      return (1.71 - 15.86/(phet - 122.93));
+      return gZGammaKFactor -> Eval(phet);
+  }
+  //Wgamma
+  else if (scale == -2) {
+    if (phet < 145.)
+      return 1.0;
+    else 
+      return gWGammaKFactor -> Eval(phet);
   }
   //QCD, taken from dedicated studies
-  else if (scale == -2) {
+  else if (scale == -3) {
     //use linear interpolation of fake rate
     return 
-      gPhoFakeRate -> Eval(phet);
+      gJetFakeRate -> Eval(phet);
+  }
+  //Ele, taken from dedicated studies
+  else if (scale == -4) {
+    //use linear interpolation of fake rate
+    return 
+      gEleFakeRate -> Eval(phet);
   }
   else
     return 1.;
@@ -456,8 +484,10 @@ float TreeReducer::ScaleFactorWeight(Float_t R9, Float_t phet)
 
 
 //--------------------------------------------------------------------------------------------------
-bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPhoton)
+bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPhoton, bool isEleFake)
 {
+  //only for ele fake rate studies
+  int theEleVeto = !isEleFake;
   //standard selection
   if (treeType == 0) {
     //met and photon number
@@ -466,21 +496,21 @@ bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPho
     theGoodPhoton = -1;
     for ( unsigned int ipho = 0; ipho < tree.nphotons_; ipho++ ) {
       if ( ipho == 0 && abs(tree.pho1_.Eta()) < 1.479 && tree.pho1_.Et() > 140 && 
-      tree.phoPassEleVeto_a1_ == 1 && tree.phoIsTrigger_a1_ == 1 && 
+      tree.phoPassEleVeto_a1_ == theEleVeto && tree.phoIsTrigger_a1_ == 1 && 
       abs(tree.phoLeadTimeSpan_a1_) < 5. && tree.phoCoviEtaiEta_a1_ > 0.001 && tree.phoCoviPhiiPhi_a1_ > 0.001 && 
       tree.phoMipIsHalo_a1_ == 0 && tree.phoSeedTime_a1_ > -1.5 && tree.phoSeedTime_a1_ < 1.5) { 
         theGoodPhoton = 0;
         break;
       }
       else if ( ipho == 1 && abs(tree.pho2_.Eta()) < 1.479 && tree.pho2_.Et() > 140 && 
-      tree.phoPassEleVeto_a2_ == 1 && tree.phoIsTrigger_a2_ == 1 && 
+      tree.phoPassEleVeto_a2_ == theEleVeto && tree.phoIsTrigger_a2_ == 1 && 
       abs(tree.phoLeadTimeSpan_a2_) < 5. && tree.phoCoviEtaiEta_a2_ > 0.001 && tree.phoCoviPhiiPhi_a2_ > 0.001 && 
       tree.phoMipIsHalo_a2_ == 0 && tree.phoSeedTime_a2_ > -1.5 && tree.phoSeedTime_a2_ < 1.5) { 
         theGoodPhoton = 1;
         break;
       }
       else if ( ipho == 2 && abs(tree.pho3_.Eta()) < 1.479 && tree.pho3_.Et() > 140 && 
-      tree.phoPassEleVeto_a3_ == 1 && tree.phoIsTrigger_a3_ == 1 && 
+      tree.phoPassEleVeto_a3_ == theEleVeto && tree.phoIsTrigger_a3_ == 1 && 
       abs(tree.phoLeadTimeSpan_a3_) < 5. && tree.phoCoviEtaiEta_a3_ > 0.001 && tree.phoCoviPhiiPhi_a3_ > 0.001 && 
       tree.phoMipIsHalo_a3_ == 0 && tree.phoSeedTime_a3_ > -1.5 && tree.phoSeedTime_a3_ < 1.5) { 
         theGoodPhoton = 2;
@@ -499,21 +529,21 @@ bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPho
     theGoodPhoton = -1;
     for ( unsigned int ipho = 0; ipho < tree.nphotons_; ipho++ ) {
       if ( ipho == 0 && abs(tree.pho1_.Eta()) < 1.479 && tree.pho1_.Et() > 140 && 
-      tree.phoPassEleVeto_a1_ == 1 && tree.phoIsTrigger_a1_ == 1 && 
+      tree.phoPassEleVeto_a1_ == theEleVeto && tree.phoIsTrigger_a1_ == 1 && 
       abs(tree.phoLeadTimeSpan_a1_) < 5. && tree.phoCoviEtaiEta_a1_ > 0.001 && tree.phoCoviPhiiPhi_a1_ > 0.001 && 
       tree.phoMipIsHalo_a1_ == 0 && tree.phoSeedTime_a1_ > -1.5 && tree.phoSeedTime_a1_ < 1.5) { 
         theGoodPhoton = 0;
         break;
       }
       else if ( ipho == 1 && abs(tree.pho2_.Eta()) < 1.479 && tree.pho2_.Et() > 140 && 
-      tree.phoPassEleVeto_a2_ == 1 && tree.phoIsTrigger_a2_ == 1 && 
+      tree.phoPassEleVeto_a2_ == theEleVeto && tree.phoIsTrigger_a2_ == 1 && 
       abs(tree.phoLeadTimeSpan_a2_) < 5. && tree.phoCoviEtaiEta_a2_ > 0.001 && tree.phoCoviPhiiPhi_a2_ > 0.001 && 
       tree.phoMipIsHalo_a2_ == 0 && tree.phoSeedTime_a2_ > -1.5 && tree.phoSeedTime_a2_ < 1.5) { 
         theGoodPhoton = 1;
         break;
       }
       else if ( ipho == 2 && abs(tree.pho3_.Eta()) < 1.479 && tree.pho3_.Et() > 140 && 
-      tree.phoPassEleVeto_a3_ == 1 && tree.phoIsTrigger_a3_ == 1 && 
+      tree.phoPassEleVeto_a3_ == theEleVeto && tree.phoIsTrigger_a3_ == 1 && 
       abs(tree.phoLeadTimeSpan_a3_) < 5. && tree.phoCoviEtaiEta_a3_ > 0.001 && tree.phoCoviPhiiPhi_a3_ > 0.001 && 
       tree.phoMipIsHalo_a3_ == 0 && tree.phoSeedTime_a3_ > -1.5 && tree.phoSeedTime_a3_ < 1.5) { 
         theGoodPhoton = 2;
@@ -532,7 +562,7 @@ bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPho
     theGoodPhoton = -1;
     for ( unsigned int ipho = 0; ipho < tree.nphotons_; ipho++ ) {
       if ( ipho == 0 && abs(tree.pho1_.Eta()) < 1.479 && tree.pho1_.Et() > 140 && 
-      tree.phoPassEleVeto_a1_ == 1 && tree.phoIsTrigger_a1_ == 1 && 
+      tree.phoPassEleVeto_a1_ == theEleVeto && tree.phoIsTrigger_a1_ == 1 && 
       abs(tree.phoLeadTimeSpan_a1_) < 5. && tree.phoCoviEtaiEta_a1_ > 0.001 && tree.phoCoviPhiiPhi_a1_ > 0.001 && 
       tree.phoMipIsHalo_a1_ == 0 && tree.phoSeedTime_a1_ > -1.5 && tree.phoSeedTime_a1_ < 1.5 &&
       PhotonIsFake(tree.phoR9_a1_, tree.phoHadOverEm_a1_, tree.phoCoviEtaiEta_a1_, tree.phoCombIso1_a1_, tree.phoCombIso2_a1_, tree.phoCombIso3_a1_)) { 
@@ -540,7 +570,7 @@ bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPho
         break;
       }
       else if ( ipho == 1 && abs(tree.pho2_.Eta()) < 1.479 && tree.pho2_.Et() > 140 && 
-      tree.phoPassEleVeto_a2_ == 1 && tree.phoIsTrigger_a2_ == 1 && 
+      tree.phoPassEleVeto_a2_ == theEleVeto && tree.phoIsTrigger_a2_ == 1 && 
       abs(tree.phoLeadTimeSpan_a2_) < 5. && tree.phoCoviEtaiEta_a2_ > 0.001 && tree.phoCoviPhiiPhi_a2_ > 0.001 && 
       tree.phoMipIsHalo_a2_ == 0 && tree.phoSeedTime_a2_ > -1.5 && tree.phoSeedTime_a2_ < 1.5 &&
       PhotonIsFake(tree.phoR9_a2_, tree.phoHadOverEm_a2_, tree.phoCoviEtaiEta_a2_, tree.phoCombIso1_a2_, tree.phoCombIso2_a2_, tree.phoCombIso3_a2_)) { 
@@ -548,7 +578,7 @@ bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPho
         break;
       }
       else if ( ipho == 2 && abs(tree.pho3_.Eta()) < 1.479 && tree.pho3_.Et() > 140 && 
-      tree.phoPassEleVeto_a3_ == 1 && tree.phoIsTrigger_a3_ == 1 && 
+      tree.phoPassEleVeto_a3_ == theEleVeto && tree.phoIsTrigger_a3_ == 1 && 
       abs(tree.phoLeadTimeSpan_a3_) < 5. && tree.phoCoviEtaiEta_a3_ > 0.001 && tree.phoCoviPhiiPhi_a3_ > 0.001 && 
       tree.phoMipIsHalo_a3_ == 0 && tree.phoSeedTime_a3_ > -1.5 && tree.phoSeedTime_a3_ < 1.5 &&
       PhotonIsFake(tree.phoR9_a3_, tree.phoHadOverEm_a3_, tree.phoCoviEtaiEta_a3_, tree.phoCombIso1_a3_, tree.phoCombIso2_a3_, tree.phoCombIso3_a3_)) { 
@@ -568,7 +598,7 @@ bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPho
     theGoodPhoton = -1;
     for ( unsigned int ipho = 0; ipho < tree.nphotons_; ipho++ ) {
       if ( ipho == 0 && abs(tree.pho1_.Eta()) < 1.479 && tree.pho1_.Et() > 140 && 
-      tree.phoPassEleVeto_a1_ == 1 && tree.phoIsTrigger_a1_ == 1 && 
+      tree.phoPassEleVeto_a1_ == theEleVeto && tree.phoIsTrigger_a1_ == 1 && 
       abs(tree.phoLeadTimeSpan_a1_) < 5. && tree.phoCoviEtaiEta_a1_ > 0.001 && tree.phoCoviPhiiPhi_a1_ > 0.001 && 
       tree.phoMipIsHalo_a1_ == 0 && tree.phoSeedTime_a1_ > -1.5 && tree.phoSeedTime_a1_ < 1.5 &&
       PhotonIsSelected(tree.phoR9_a1_, tree.phoHadOverEm_a1_, -1., tree.phoCombIso1_a1_, tree.phoCombIso2_a1_, tree.phoCombIso3_a1_)) { 
@@ -576,7 +606,7 @@ bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPho
         break;
       }
       else if ( ipho == 1 && abs(tree.pho2_.Eta()) < 1.479 && tree.pho2_.Et() > 140 && 
-      tree.phoPassEleVeto_a2_ == 1 && tree.phoIsTrigger_a2_ == 1 && 
+      tree.phoPassEleVeto_a2_ == theEleVeto && tree.phoIsTrigger_a2_ == 1 && 
       abs(tree.phoLeadTimeSpan_a2_) < 5. && tree.phoCoviEtaiEta_a2_ > 0.001 && tree.phoCoviPhiiPhi_a2_ > 0.001 && 
       tree.phoMipIsHalo_a2_ == 0 && tree.phoSeedTime_a2_ > -1.5 && tree.phoSeedTime_a2_ < 1.5 &&
       PhotonIsSelected(tree.phoR9_a2_, tree.phoHadOverEm_a2_, -1., tree.phoCombIso1_a2_, tree.phoCombIso2_a2_, tree.phoCombIso3_a2_)) { 
@@ -584,7 +614,7 @@ bool TreeReducer::EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPho
         break;
       }
       else if ( ipho == 2 && abs(tree.pho3_.Eta()) < 1.479 && tree.pho3_.Et() > 140 && 
-      tree.phoPassEleVeto_a3_ == 1 && tree.phoIsTrigger_a3_ == 1 && 
+      tree.phoPassEleVeto_a3_ == theEleVeto && tree.phoIsTrigger_a3_ == 1 && 
       abs(tree.phoLeadTimeSpan_a3_) < 5. && tree.phoCoviEtaiEta_a3_ > 0.001 && tree.phoCoviPhiiPhi_a3_ > 0.001 && 
       tree.phoMipIsHalo_a3_ == 0 && tree.phoSeedTime_a3_ > -1.5 && tree.phoSeedTime_a3_ < 1.5 &&
       PhotonIsSelected(tree.phoR9_a3_, tree.phoHadOverEm_a3_, -1., tree.phoCombIso1_a3_, tree.phoCombIso2_a3_, tree.phoCombIso3_a3_)) { 

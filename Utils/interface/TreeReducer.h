@@ -33,7 +33,10 @@ namespace mithep
     void                 SetPUTarget(const TH1D *h) { fPUTarget = h; }
     void                 SetPUTargetUp(const TH1D *h) { fPUTargetUp = h; }
     void                 SetPUTargetDown(const TH1D *h) { fPUTargetDown = h; }
-    void                 SetPhoFakeRate(const TGraphErrors *g) { gPhoFakeRate = g; }
+    void                 SetZGammaKFactor(const TGraphErrors *g) { gZGammaKFactor = g; }
+    void                 SetWGammaKFactor(const TGraphErrors *g) { gWGammaKFactor = g; }
+    void                 SetJetFakeRate(const TGraphErrors *g) { gJetFakeRate = g; }
+    void                 SetEleFakeRate(const TGraphErrors *g) { gEleFakeRate = g; }
     void                 SetOutput(TFile *f)  { fOutFile = f; }
     void                 SetVerbose(bool b) { fVerbose = b; }
     void                 SetInputBaseDir(const TString s)  { fInputBaseDir = s; }
@@ -46,7 +49,10 @@ namespace mithep
     const TH1D         * fPUTarget; // target PU histo
     const TH1D         * fPUTargetUp; // target PU histo up
     const TH1D         * fPUTargetDown; // target PU histo down
-    const TGraphErrors * gPhoFakeRate; // photon fake rate function
+    const TGraphErrors * gZGammaKFactor; // Zgamma pt-dependent k-factor
+    const TGraphErrors * gWGammaKFactor; // Zgamma pt-dependent k-factor
+    const TGraphErrors * gJetFakeRate; // jet fake rate function
+    const TGraphErrors * gEleFakeRate; // jet fake rate function
     TFile              * fOutFile;  // target out file
 
     bool           fVerbose;        // print out what the reducer is doing
@@ -63,7 +69,7 @@ namespace mithep
     float                PUWeightDown(Float_t npu);  // PU reweighting function
     float                KFactorWeight(Float_t scale, Float_t phet);  // KFactor reweighting function
     float                ScaleFactorWeight(Float_t R9, Float_t phet);  // Scale reweighting function
-    bool                 EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPhoton);    // Selection function
+    bool                 EventIsSelected(MitGPTree &tree, int treeType, int& theGoodPhoton, bool isEleFake);    // Selection function
     bool                 PhotonIsSelected(float R9, float HoverE, float CovIetaIeta, float Iso1, float Iso2, float Iso3);    // Photon id function
     bool                 PhotonIsFake(float R9, float HoverE, float CovIetaIeta, float Iso1, float Iso2, float Iso3);    // Photon fake id function
     float                GetCorrDeltaPhi(float phi1, float phi2);    // Corr delta phi calculator
