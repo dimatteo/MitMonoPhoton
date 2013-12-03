@@ -1,5 +1,5 @@
-#ifndef MitGPTreeReduced_H
-#define MitGPTreeReduced_H
+#ifndef MitGPTreeReducedFake_H
+#define MitGPTreeReducedFake_H
 
 #include <set>
 #include <vector>
@@ -12,7 +12,7 @@
 #include "Math/VectorUtil.h"
 #include "Math/LorentzVector.h"
 
-class MitGPTreeReduced {
+class MitGPTreeReducedFake {
  public:
   /// float doesn't have dictionary by default, so use double
   typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LorentzVector; 
@@ -30,10 +30,7 @@ class MitGPTreeReduced {
   unsigned int   nvtx_;
   float          metCor_;
   float          metCorPhi_;
-  float          metBosCor_;
-  float          metBosCorPhi_;
   float          metSig_;
-  int            metFilterWord_;
 
   int            nphotons_;
   float          phoEt_;
@@ -42,18 +39,13 @@ class MitGPTreeReduced {
   float          phoCombIso1_; 
   float          phoCombIso2_; 
   float          phoCombIso3_; 
+  float          phoCoviEtaiEta_; 
   float          phoR9_; 
-  bool           phoHasPixelSeed_; 
+  int            phoIsFake_; 
 
   float          phoMetDeltaPhi_;
   float          jetMetDeltaPhi_;
   float          phoJetDeltaPhi_;
-
-  float          bosonPt_;
-  float          bosonEta_;
-  float          bosonPhi_;
-  float          bosonMass_;
-  float          bosonPhoMass_;
   
   //for MET syst
   unsigned int   nalljets_;
@@ -72,20 +64,6 @@ class MitGPTreeReduced {
 
   //for Lep syst
   unsigned int   nlep_;
-  float  lep1Pt_;
-  float  lep1Eta_;
-  float  lep1Phi_;
-  float  lep1Mass_;
-  float  lep2Pt_;
-  float  lep2Eta_;
-  float  lep2Phi_;
-  float  lep2Mass_;
-  int    lepAsPho_; // -1 = False, 0/1 = PassEleVeto
-
-  unsigned int   ncosmics_;
-  float  cosmic1Pt_;
-  float  cosmic1Eta_;
-  float  cosmic1Phi_;
 
  public:
   /// this is the main element
@@ -96,16 +74,16 @@ class MitGPTreeReduced {
   std::vector<std::string> variables_;
 
   /// default constructor  
-  MitGPTreeReduced(){}
+  MitGPTreeReducedFake(){}
   /// default destructor
-  ~MitGPTreeReduced(){
+  ~MitGPTreeReducedFake(){
     if (f_) f_->Close();  
   };
 
   /// initialize varibles and fill list of available variables
   void InitVariables();
 
-  /// load a MitGPTreeReduced
+  /// load a MitGPTreeReducedFake
   void LoadTree(const char* file, const char* tree_name){
     f_ = TFile::Open(file);
     assert(f_);
@@ -113,7 +91,7 @@ class MitGPTreeReduced {
     assert(tree_);
   }
 
-  /// create a MitGPTreeReduced
+  /// create a MitGPTreeReducedFake
   void CreateTree(const char* tree_name){
     tree_ = new TTree(tree_name,"Ana ntuple");
     f_ = 0;
@@ -131,10 +109,7 @@ class MitGPTreeReduced {
     tree_->Branch("nvtx"         , &nvtx_         ,   "nvtx/i");
     tree_->Branch("metCor"       , &metCor_       ,   "metCor/F");
     tree_->Branch("metCorPhi"    , &metCorPhi_    ,   "metCorPhi/F");
-    tree_->Branch("metBosCor"    , &metBosCor_    ,   "metBosCor/F");
-    tree_->Branch("metBosCorPhi" , &metBosCorPhi_ ,   "metBosCorPhi/F");
     tree_->Branch("metSig"       , &metSig_       ,   "metSig/F");
-    tree_->Branch("metFilterWord", &metFilterWord_,   "metFilterWord/I");
   
     tree_->Branch("nphotons"        , &nphotons_        ,   "nphotons/i");
     tree_->Branch("phoEt"           , &phoEt_           ,   "phoEt/F");
@@ -143,18 +118,13 @@ class MitGPTreeReduced {
     tree_->Branch("phoCombIso1"     , &phoCombIso1_     ,   "phoCombIso1/F"); 
     tree_->Branch("phoCombIso2"     , &phoCombIso2_     ,   "phoCombIso2/F"); 
     tree_->Branch("phoCombIso3"     , &phoCombIso3_     ,   "phoCombIso3/F"); 
+    tree_->Branch("phoCoviEtaiEta"  , &phoCoviEtaiEta_  ,   "phoCoviEtaiEta/F"); 
     tree_->Branch("phoR9"           , &phoR9_           ,   "phoR9/F"); 
-    tree_->Branch("phoHasPixelSeed" , &phoHasPixelSeed_ ,   "phoHasPixelSeed/b"); 
+    tree_->Branch("phoIsFake"       , &phoIsFake_       ,   "phoIsFake/i"); 
 
     tree_->Branch("phoMetDeltaPhi", &phoMetDeltaPhi_,   "phoMetDeltaPhi/F");
     tree_->Branch("jetMetDeltaPhi", &jetMetDeltaPhi_,   "jetMetDeltaPhi/F");
     tree_->Branch("phoJetDeltaPhi", &phoJetDeltaPhi_,   "phoJetDeltaPhi/F");
-
-    tree_->Branch("bosonPt",        &bosonPt_,          "bosonPt/F");
-    tree_->Branch("bosonEta",       &bosonEta_,         "bosonEta/F");
-    tree_->Branch("bosonPhi",       &bosonPhi_,         "bosonPhi/F");
-    tree_->Branch("bosonMass",      &bosonMass_,        "bosonMass/F");
-    tree_->Branch("bosonPhoMass",   &bosonPhoMass_,     "bosonPhoMass/F");
   
     tree_->Branch("nalljets"          , &nalljets_          ,   "nalljets/i");
     tree_->Branch("jet1Pt"            , &jet1Pt_            ,   "jet1Pt/F");
@@ -171,24 +141,10 @@ class MitGPTreeReduced {
     tree_->Branch("jet4Phi"           , &jet4Phi_           ,   "jet4Phi/F");
 
     tree_->Branch("nlep"              , &nlep_              ,   "nlep/i");
-    tree_->Branch("lep1Pt"            , &lep1Pt_            ,   "lep1Pt/F");
-    tree_->Branch("lep1Eta"           , &lep1Eta_           ,   "lep1Eta/F");
-    tree_->Branch("lep1Phi"           , &lep1Phi_           ,   "lep1Phi/F");
-    tree_->Branch("lep1Mass"          , &lep1Mass_          ,   "lep1Mass/F");
-    tree_->Branch("lep2Pt"            , &lep2Pt_            ,   "lep2Pt/F");
-    tree_->Branch("lep2Eta"           , &lep2Eta_           ,   "lep2Eta/F");
-    tree_->Branch("lep2Phi"           , &lep2Phi_           ,   "lep2Phi/F");
-    tree_->Branch("lep2Mass"          , &lep2Mass_          ,   "lep2Mass/F");
-    tree_->Branch("lepAsPho"         , &lepAsPho_         ,   "lepAsPho/i");
-
-    tree_->Branch("ncosmics"        , &ncosmics_        ,   "ncosmics/i");
-    tree_->Branch("cosmic1Pt"       , &cosmic1Pt_       ,   "cosmic1Pt/F");
-    tree_->Branch("cosmic1Eta"      , &cosmic1Eta_      ,   "cosmic1Eta/F");
-    tree_->Branch("cosmic1Phi"      , &cosmic1Phi_      ,   "cosmic1Phi/F");
 
   }
 
-  // initialze a MitGPTreeReduced
+  // initialze a MitGPTreeReducedFake
   void InitTree(){
     assert(tree_);
     InitVariables();
@@ -208,10 +164,7 @@ class MitGPTreeReduced {
     tree_->SetBranchAddress("nvtx"         , &nvtx_      );
     tree_->SetBranchAddress("metCor"       , &metCor_    );
     tree_->SetBranchAddress("metCorPhi"    , &metCorPhi_ );
-    tree_->SetBranchAddress("metBosCor"    , &metBosCor_   );
-    tree_->SetBranchAddress("metBosCorPhi" , &metBosCorPhi_);
     tree_->SetBranchAddress("metSig"       , &metSig_    );
-    tree_->SetBranchAddress("metFilterWord", &metFilterWord_);
   
     tree_->SetBranchAddress("nphotons"       , &nphotons_);
     tree_->SetBranchAddress("phoEt"          , &phoEt_     );
@@ -220,19 +173,14 @@ class MitGPTreeReduced {
     tree_->SetBranchAddress("phoCombIso1"    , &phoCombIso1_); 
     tree_->SetBranchAddress("phoCombIso2"    , &phoCombIso2_); 
     tree_->SetBranchAddress("phoCombIso3"    , &phoCombIso3_); 
-    tree_->SetBranchAddress("phoR9"          , &phoR9_); 
-    tree_->SetBranchAddress("phoHasPixelSeed", &phoHasPixelSeed_); 
+    tree_->SetBranchAddress("phoCoviEtaiEta" , &phoCoviEtaiEta_); 
+    tree_->SetBranchAddress("phoR9"          , &phoR9_          ); 
+    tree_->SetBranchAddress("phoIsFake"      , &phoIsFake_      ); 
   
     tree_->SetBranchAddress("phoMetDeltaPhi", &phoMetDeltaPhi_ );
     tree_->SetBranchAddress("jetMetDeltaPhi", &jetMetDeltaPhi_ );
     tree_->SetBranchAddress("phoJetDeltaPhi", &phoJetDeltaPhi_ );
   
-    tree_->SetBranchAddress("bosonPt",        &bosonPt_ );
-    tree_->SetBranchAddress("bosonEta",       &bosonEta_);
-    tree_->SetBranchAddress("bosonPhi",       &bosonPhi_);
-    tree_->SetBranchAddress("bosonMass",      &bosonMass_);
-    tree_->SetBranchAddress("bosonPhoMass",   &bosonPhoMass_);
-
     tree_->SetBranchAddress("nalljets"          , &nalljets_          );
     tree_->SetBranchAddress("jet1Pt"            , &jet1Pt_            );
     tree_->SetBranchAddress("jet1Eta"           , &jet1Eta_           );
@@ -248,20 +196,6 @@ class MitGPTreeReduced {
     tree_->SetBranchAddress("jet4Phi"           , &jet4Phi_           );
 
     tree_->SetBranchAddress("nlep"              , &nlep_            );
-    tree_->SetBranchAddress("lep1Pt"            , &lep1Pt_          );
-    tree_->SetBranchAddress("lep1Eta"           , &lep1Eta_         );
-    tree_->SetBranchAddress("lep1Phi"           , &lep1Phi_         );
-    tree_->SetBranchAddress("lep1Mass"          , &lep1Mass_        );
-    tree_->SetBranchAddress("lep2Pt"            , &lep2Pt_          );
-    tree_->SetBranchAddress("lep2Eta"           , &lep2Eta_         );
-    tree_->SetBranchAddress("lep2Phi"           , &lep2Phi_         );
-    tree_->SetBranchAddress("lep2Mass"          , &lep2Mass_        );
-    tree_->SetBranchAddress("lepAsPho"         , &lepAsPho_       );
-
-    tree_->SetBranchAddress("ncosmics",       &ncosmics_);
-    tree_->SetBranchAddress("cosmic1Pt"     , &cosmic1Pt_); 
-    tree_->SetBranchAddress("cosmic1Eta"    , &cosmic1Eta_);
-    tree_->SetBranchAddress("cosmic1Phi"    , &cosmic1Phi_);
 
     gErrorIgnoreLevel = currentState;
   }
@@ -271,7 +205,7 @@ class MitGPTreeReduced {
 }; 
 
 inline void 
-MitGPTreeReduced::InitVariables(){
+MitGPTreeReducedFake::InitVariables(){
   // inizialize variables
   isData_ = false;
   
@@ -285,10 +219,7 @@ MitGPTreeReduced::InitVariables(){
   nvtx_  = 0;
   metCor_   = -1.;
   metCorPhi_= -100.;
-  metBosCor_   = -100.;
-  metBosCorPhi_= -100.;
   metSig_= -1.;
-  metFilterWord_ = -1;
 
   nphotons_ = 0;
   phoEt_ = -1.;
@@ -297,19 +228,14 @@ MitGPTreeReduced::InitVariables(){
   phoCombIso1_ = -1.;
   phoCombIso2_ = -1.; 
   phoCombIso3_ = -1.;
-  phoR9_ = -1.;
-  phoHasPixelSeed_ = false;
-  
+  phoCoviEtaiEta_ = -1.;
+  phoR9_          = -1.;
+  phoIsFake_      = -1.; 
+
   phoMetDeltaPhi_ = -100.;
   jetMetDeltaPhi_ = -100.;
   phoJetDeltaPhi_ = -100.;
   
-  bosonPt_  = -100.;
-  bosonEta_ = -100.;
-  bosonPhi_ = -100.;
-  bosonMass_ = -100.;
-  bosonPhoMass_ = -100.;
-
   nalljets_ = 0;
   jet1Pt_ = -1.;
   jet1Eta_ = -100.;
@@ -325,20 +251,6 @@ MitGPTreeReduced::InitVariables(){
   jet4Phi_ = -100.;
 
   nlep_ = 0;
-  lep1Pt_ = -1.;
-  lep1Eta_ = -100.;
-  lep1Phi_ = -100.;
-  lep1Mass_ = 0;
-  lep2Pt_ = -1.;
-  lep2Eta_ = -100.;
-  lep2Phi_ = -100.;
-  lep2Mass_ = 0;
-  lepAsPho_ = -1;
-
-  ncosmics_ = 0;
-  cosmic1Pt_ = -100.; 
-  cosmic1Eta_ = -100.; 
-  cosmic1Phi_ = -100.; 
 
 }
 

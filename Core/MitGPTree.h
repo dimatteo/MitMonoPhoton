@@ -54,20 +54,15 @@ class MitGPTree {
   DataType       dstype_;
   float          metCor_;
   float          metCorPhi_;
+  int            metFilterWord_;
 
   unsigned int   nlep_;
   LorentzVector  lep1_;
   int            lid1_;
-  float          etaOfSTA_l1_;
-  float          phiOfSTA_l1_;
   LorentzVector  lep2_;
   int            lid2_;
-  float          etaOfSTA_l2_;
-  float          phiOfSTA_l2_;
   LorentzVector  lep3_;
   int            lid3_;
-  float          etaOfSTA_l3_;
-  float          phiOfSTA_l3_;
 
   unsigned int   nphotons_;
   LorentzVector  pho1_;
@@ -83,7 +78,8 @@ class MitGPTree {
   float phoSeedTime_a1_;
   float phoHadOverEm_a1_;
   float phoLeadTimeSpan_a1_;
-  float phoSubLeadTimeSpan_a1_;
+  float phoRoundness_a1_;
+  float phoAngle_a1_;
   float phoMipChi2_a1_;
   float phoMipTotEnergy_a1_;
   float phoMipSlope_a1_;
@@ -106,7 +102,8 @@ class MitGPTree {
   float phoSeedTime_a2_;
   float phoHadOverEm_a2_;
   float phoLeadTimeSpan_a2_;
-  float phoSubLeadTimeSpan_a2_;
+  float phoRoundness_a2_;
+  float phoAngle_a2_;
   float phoMipChi2_a2_;
   float phoMipTotEnergy_a2_;
   float phoMipSlope_a2_;
@@ -129,7 +126,8 @@ class MitGPTree {
   float phoSeedTime_a3_;
   float phoHadOverEm_a3_;
   float phoLeadTimeSpan_a3_;
-  float phoSubLeadTimeSpan_a3_;
+  float phoRoundness_a3_;
+  float phoAngle_a3_;
   float phoMipChi2_a3_;
   float phoMipTotEnergy_a3_;
   float phoMipSlope_a3_;
@@ -157,14 +155,8 @@ class MitGPTree {
 
   unsigned int   ncosmics_;
   LorentzVector  cosmic1_;
-  float          etaOfSTA_c1_;
-  float          phiOfSTA_c1_;
   LorentzVector  cosmic2_;
-  float          etaOfSTA_c2_;
-  float          phiOfSTA_c2_;
   LorentzVector  cosmic3_;
-  float          etaOfSTA_c3_;
-  float          phiOfSTA_c3_;
 
   float          Q_;
   float          id1_;
@@ -241,22 +233,17 @@ class MitGPTree {
     tree_->Branch("sumEt"        , &sumEt_        ,   "sumEt/F");
     tree_->Branch("metSig"       , &metSig_       ,   "metSig/F");
     tree_->Branch("dstype"       , &dstype_       ,   "dstype/I");
-    tree_->Branch("metCor"          , &metCor_          ,   "metCor/F");
-    tree_->Branch("metCorPhi"       , &metCorPhi_       ,   "metCorPhi/F");
+    tree_->Branch("metCor"       , &metCor_       ,   "metCor/F");
+    tree_->Branch("metCorPhi"    , &metCorPhi_    ,   "metCorPhi/F");
+    tree_->Branch("metFilterWord", &metFilterWord_,   "metFilterWord/I");
 
     tree_->Branch("nlep"         , &nlep_         ,   "nlep/i");
     tree_->Branch("lep1"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &lepPtr1_);
     tree_->Branch("lid1"         , &lid1_         ,   "lid1/I");
-    tree_->Branch("etaOfSTA_l1"  , &etaOfSTA_l1_  ,   "etaOfSTA_l1/F");
-    tree_->Branch("phiOfSTA_l1"  , &phiOfSTA_l1_  ,   "phiOfSTA_l1/F");
     tree_->Branch("lep2"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &lepPtr2_);
     tree_->Branch("lid2"         , &lid2_         ,   "lid2/I");
-    tree_->Branch("etaOfSTA_l2"  , &etaOfSTA_l2_  ,   "etaOfSTA_l2/F");
-    tree_->Branch("phiOfSTA_l2"  , &phiOfSTA_l2_  ,   "phiOfSTA_l2/F");
     tree_->Branch("lep3"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &lepPtr3_);
     tree_->Branch("lid3"         , &lid3_         ,   "lid3/I");
-    tree_->Branch("etaOfSTA_l3"  , &etaOfSTA_l3_  ,   "etaOfSTA_l3/F");
-    tree_->Branch("phiOfSTA_l3"  , &phiOfSTA_l3_  ,   "phiOfSTA_l3/F");
 
     tree_->Branch("nphotons"     , &nphotons_     ,   "nphotons/i");
     tree_->Branch("pho1"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &phoPtr1_);
@@ -272,7 +259,8 @@ class MitGPTree {
     tree_->Branch("phoSeedTime_a1"            , &phoSeedTime_a1_            , "phoSeedTime_a1/F");
     tree_->Branch("phoHadOverEm_a1"           , &phoHadOverEm_a1_           , "phoHadOverEm_a1/F");
     tree_->Branch("phoLeadTimeSpan_a1"        , &phoLeadTimeSpan_a1_        , "phoLeadTimeSpan_a1/F");
-    tree_->Branch("phoSubLeadTimeSpan_a1"     , &phoSubLeadTimeSpan_a1_     , "phoSubLeadTimeSpan_a1/F");
+    tree_->Branch("phoRoundness_a1"           , &phoRoundness_a1_           , "phoRoundness_a1/F");
+    tree_->Branch("phoAngle_a1"               , &phoAngle_a1_               , "phoAngle_a1/F");
     tree_->Branch("phoMipChi2_a1"             , &phoMipChi2_a1_             , "phoMipChi2_a1/F");
     tree_->Branch("phoMipTotEnergy_a1"        , &phoMipTotEnergy_a1_        , "phoMipTotEnergy_a1/F");
     tree_->Branch("phoMipSlope_a1"            , &phoMipSlope_a1_            , "phoMipSlope_a1/F");
@@ -295,7 +283,8 @@ class MitGPTree {
     tree_->Branch("phoSeedTime_a2"            , &phoSeedTime_a2_            , "phoSeedTime_a2/F");
     tree_->Branch("phoHadOverEm_a2"           , &phoHadOverEm_a2_           , "phoHadOverEm_a2/F");
     tree_->Branch("phoLeadTimeSpan_a2"        , &phoLeadTimeSpan_a2_        , "phoLeadTimeSpan_a2/F");
-    tree_->Branch("phoSubLeadTimeSpan_a2"     , &phoSubLeadTimeSpan_a2_     , "phoSubLeadTimeSpan_a2/F");
+    tree_->Branch("phoRoundness_a2"           , &phoRoundness_a2_           , "phoRoundness_a2/F");
+    tree_->Branch("phoAngle_a2"               , &phoAngle_a2_               , "phoAngle_a2/F");
     tree_->Branch("phoMipChi2_a2"             , &phoMipChi2_a2_             , "phoMipChi2_a2/F");
     tree_->Branch("phoMipTotEnergy_a2"        , &phoMipTotEnergy_a2_        , "phoMipTotEnergy_a2/F");
     tree_->Branch("phoMipSlope_a2"            , &phoMipSlope_a2_            , "phoMipSlope_a2/F");
@@ -318,7 +307,8 @@ class MitGPTree {
     tree_->Branch("phoSeedTime_a3"            , &phoSeedTime_a3_            , "phoSeedTime_a3/F");
     tree_->Branch("phoHadOverEm_a3"           , &phoHadOverEm_a3_           , "phoHadOverEm_a3/F");
     tree_->Branch("phoLeadTimeSpan_a3"        , &phoLeadTimeSpan_a3_        , "phoLeadTimeSpan_a3/F");
-    tree_->Branch("phoSubLeadTimeSpan_a3"     , &phoSubLeadTimeSpan_a3_     , "phoSubLeadTimeSpan_a3/F");
+    tree_->Branch("phoRoundness_a3"           , &phoRoundness_a3_           , "phoRoundness_a3/F");
+    tree_->Branch("phoAngle_a3"               , &phoAngle_a3_               , "phoAngle_a3/F");
     tree_->Branch("phoMipChi2_a3"             , &phoMipChi2_a3_             , "phoMipChi2_a3/F");
     tree_->Branch("phoMipTotEnergy_a3"        , &phoMipTotEnergy_a3_        , "phoMipTotEnergy_a3/F");
     tree_->Branch("phoMipSlope_a3"            , &phoMipSlope_a3_            , "phoMipSlope_a3/F");
@@ -346,14 +336,8 @@ class MitGPTree {
 
     tree_->Branch("ncosmics"        , &ncosmics_        ,   "ncosmics/i");
     tree_->Branch("cosmic1"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &cosmicPtr1_);
-    tree_->Branch("etaOfSTA_c1"     , &etaOfSTA_c1_     ,   "etaOfSTA_c1/F");
-    tree_->Branch("phiOfSTA_c1"     , &phiOfSTA_c1_     ,   "phiOfSTA_c1/F");
     tree_->Branch("cosmic2"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &cosmicPtr2_);
-    tree_->Branch("etaOfSTA_c2"     , &etaOfSTA_c2_     ,   "etaOfSTA_c2/F");
-    tree_->Branch("phiOfSTA_c2"     , &phiOfSTA_c2_     ,   "phiOfSTA_c2/F");
     tree_->Branch("cosmic3"         , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >", &cosmicPtr3_);
-    tree_->Branch("etaOfSTA_c3"     , &etaOfSTA_c3_     ,   "etaOfSTA_c3/F");
-    tree_->Branch("phiOfSTA_c3"     , &phiOfSTA_c3_     ,   "phiOfSTA_c3/F");
 
     tree_->Branch("Q",             &Q_	  ,     "Q/F");
     tree_->Branch("id1",           &id1_  ,     "id1/F");
@@ -391,22 +375,17 @@ class MitGPTree {
     tree_->SetBranchAddress("sumEt",         &sumEt_);
     tree_->SetBranchAddress("metSig",        &metSig_);
     tree_->SetBranchAddress("dstype",        &dstype_);
-    tree_->SetBranchAddress("metCor"          , &metCor_   );
-    tree_->SetBranchAddress("metCorPhi"       , &metCorPhi_);
+    tree_->SetBranchAddress("metCor"       , &metCor_   );
+    tree_->SetBranchAddress("metCorPhi"    , &metCorPhi_);
+    tree_->SetBranchAddress("metFilterWord", &metFilterWord_);
 
     tree_->SetBranchAddress("nlep",          &nlep_);
     tree_->SetBranchAddress("lep1",          &lepPtr1_);
     tree_->SetBranchAddress("lid1",          &lid1_);
-    tree_->SetBranchAddress("etaOfSTA_l1",   &etaOfSTA_l1_);
-    tree_->SetBranchAddress("phiOfSTA_l1",   &phiOfSTA_l1_);
     tree_->SetBranchAddress("lep2",          &lepPtr2_);
     tree_->SetBranchAddress("lid2",          &lid2_);
-    tree_->SetBranchAddress("etaOfSTA_l2",   &etaOfSTA_l2_);
-    tree_->SetBranchAddress("phiOfSTA_l2",   &phiOfSTA_l2_);
     tree_->SetBranchAddress("lep3",          &lepPtr3_);
     tree_->SetBranchAddress("lid3",          &lid3_);
-    tree_->SetBranchAddress("etaOfSTA_l3",   &etaOfSTA_l3_);
-    tree_->SetBranchAddress("phiOfSTA_l3",   &phiOfSTA_l3_);
 
     tree_->SetBranchAddress("nphotons"                  , &nphotons_);
     tree_->SetBranchAddress("pho1"                      , &phoPtr1_);
@@ -422,7 +401,8 @@ class MitGPTree {
     tree_->SetBranchAddress("phoSeedTime_a1"            , &phoSeedTime_a1_);
     tree_->SetBranchAddress("phoHadOverEm_a1"           , &phoHadOverEm_a1_);
     tree_->SetBranchAddress("phoLeadTimeSpan_a1"        , &phoLeadTimeSpan_a1_);
-    tree_->SetBranchAddress("phoSubLeadTimeSpan_a1"     , &phoSubLeadTimeSpan_a1_);
+    tree_->SetBranchAddress("phoRoundness_a1"           , &phoRoundness_a1_);
+    tree_->SetBranchAddress("phoAngle_a1"               , &phoAngle_a1_);
     tree_->SetBranchAddress("phoMipChi2_a1"             , &phoMipChi2_a1_);
     tree_->SetBranchAddress("phoMipTotEnergy_a1"        , &phoMipTotEnergy_a1_);
     tree_->SetBranchAddress("phoMipSlope_a1"            , &phoMipSlope_a1_);
@@ -445,7 +425,8 @@ class MitGPTree {
     tree_->SetBranchAddress("phoSeedTime_a2"            , &phoSeedTime_a2_);
     tree_->SetBranchAddress("phoHadOverEm_a2"           , &phoHadOverEm_a2_);
     tree_->SetBranchAddress("phoLeadTimeSpan_a2"        , &phoLeadTimeSpan_a2_);
-    tree_->SetBranchAddress("phoSubLeadTimeSpan_a2"     , &phoSubLeadTimeSpan_a2_);
+    tree_->SetBranchAddress("phoRoundness_a2"           , &phoRoundness_a2_);
+    tree_->SetBranchAddress("phoAngle_a2"               , &phoAngle_a2_);
     tree_->SetBranchAddress("phoMipChi2_a2"             , &phoMipChi2_a2_);
     tree_->SetBranchAddress("phoMipTotEnergy_a2"        , &phoMipTotEnergy_a2_);
     tree_->SetBranchAddress("phoMipSlope_a2"            , &phoMipSlope_a2_);
@@ -468,7 +449,8 @@ class MitGPTree {
     tree_->SetBranchAddress("phoSeedTime_a3"            , &phoSeedTime_a3_);
     tree_->SetBranchAddress("phoHadOverEm_a3"           , &phoHadOverEm_a3_);
     tree_->SetBranchAddress("phoLeadTimeSpan_a3"        , &phoLeadTimeSpan_a3_);
-    tree_->SetBranchAddress("phoSubLeadTimeSpan_a3"     , &phoSubLeadTimeSpan_a3_);
+    tree_->SetBranchAddress("phoRoundness_a3"           , &phoRoundness_a3_);
+    tree_->SetBranchAddress("phoAngle_a3"               , &phoAngle_a3_);
     tree_->SetBranchAddress("phoMipChi2_a3"             , &phoMipChi2_a3_);
     tree_->SetBranchAddress("phoMipTotEnergy_a3"        , &phoMipTotEnergy_a3_);
     tree_->SetBranchAddress("phoMipSlope_a3"            , &phoMipSlope_a3_);
@@ -496,14 +478,8 @@ class MitGPTree {
 
     tree_->SetBranchAddress("ncosmics",       &ncosmics_);
     tree_->SetBranchAddress("cosmic1",        &cosmicPtr1_);
-    tree_->SetBranchAddress("etaOfSTA_c1",    &etaOfSTA_c1_);
-    tree_->SetBranchAddress("phiOfSTA_c1",    &phiOfSTA_c1_);
     tree_->SetBranchAddress("cosmic2",        &cosmicPtr2_);
-    tree_->SetBranchAddress("etaOfSTA_c2",    &etaOfSTA_c2_);
-    tree_->SetBranchAddress("phiOfSTA_c2",    &phiOfSTA_c2_);
     tree_->SetBranchAddress("cosmic3",        &cosmicPtr3_);
-    tree_->SetBranchAddress("etaOfSTA_c3",    &etaOfSTA_c3_);
-    tree_->SetBranchAddress("phiOfSTA_c3",    &phiOfSTA_c3_);
 
     tree_->SetBranchAddress("Q",	          &Q_);
     tree_->SetBranchAddress("id1",	        &id1_);
@@ -557,20 +533,15 @@ MitGPTree::InitVariables(){
   dstype_        = data;
   metCor_        = -999.;      
   metCorPhi_     = -999.;   
+  metFilterWord_ = -1;
 
   nlep_          = 0;
   lep1_       	 = LorentzVector();
   lid1_          = 0;
-  etaOfSTA_l1_   = -999.;
-  phiOfSTA_l1_   = -999.;
   lep2_       	 = LorentzVector();
   lid2_          = 0;
-  etaOfSTA_l2_   = -999.;
-  phiOfSTA_l2_   = -999.;
   lep3_       	 = LorentzVector();
   lid3_          = 0;
-  etaOfSTA_l3_   = -999.;
-  phiOfSTA_l3_   = -999.;
 
   nphotons_      = 0;
   pho1_       	 = LorentzVector();
@@ -586,7 +557,8 @@ MitGPTree::InitVariables(){
   phoSeedTime_a1_ = -999.0;
   phoHadOverEm_a1_ = -1.0;  
   phoLeadTimeSpan_a1_ = -999.0;
-  phoSubLeadTimeSpan_a1_ = -999.0;
+  phoRoundness_a1_ = -999.0;
+  phoAngle_a1_ = -999.0;
   phoMipChi2_a1_ = -1.0;
   phoMipTotEnergy_a1_ = -1.0;
   phoMipSlope_a1_ = -999.0;
@@ -609,7 +581,8 @@ MitGPTree::InitVariables(){
   phoSeedTime_a2_ = -999.0;
   phoHadOverEm_a2_ = -1.0;  
   phoLeadTimeSpan_a2_ = -999.0;
-  phoSubLeadTimeSpan_a2_ = -999.0;
+  phoRoundness_a2_ = -999.0;
+  phoAngle_a2_ = -999.0;
   phoMipChi2_a2_ = -1.0;
   phoMipTotEnergy_a2_ = -1.0;
   phoMipSlope_a2_ = -999.0;
@@ -632,7 +605,8 @@ MitGPTree::InitVariables(){
   phoSeedTime_a3_ = -999.0;
   phoHadOverEm_a3_ = -1.0;  
   phoLeadTimeSpan_a3_ = -999.0;
-  phoSubLeadTimeSpan_a3_ = -999.0;
+  phoRoundness_a3_ = -999.0;
+  phoAngle_a3_ = -999.0;
   phoMipChi2_a3_ = -1.0;
   phoMipTotEnergy_a3_ = -1.0;
   phoMipSlope_a3_ = -999.0;
@@ -660,14 +634,8 @@ MitGPTree::InitVariables(){
 
   ncosmics_ = 0;
   cosmic1_ = LorentzVector();
-  etaOfSTA_c1_   = -999.;
-  phiOfSTA_c1_   = -999.;
   cosmic2_ = LorentzVector();
-  etaOfSTA_c2_   = -999.;
-  phiOfSTA_c2_   = -999.;
   cosmic3_ = LorentzVector();
-  etaOfSTA_c3_   = -999.;
-  phiOfSTA_c3_   = -999.;
 
   Q_		 = -999.;
   id1_  	 = -999.;
