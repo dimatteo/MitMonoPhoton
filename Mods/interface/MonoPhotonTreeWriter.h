@@ -18,6 +18,7 @@
 #include "MitAna/DataTree/interface/PileupEnergyDensityCol.h"
 #include "MitAna/DataTree/interface/DecayParticleCol.h"
 #include "MitAna/DataTree/interface/ElectronCol.h"
+#include "MitAna/DataTree/interface/EvtSelData.h"
 #include "MitAna/DataTree/interface/MuonCol.h"
 #include "MitAna/DataTree/interface/DecayParticleCol.h"
 #include "MitAna/DataTree/interface/PileupInfoCol.h"
@@ -100,6 +101,7 @@ namespace mithep
     TString             fLeptonsName;
     TString             fCosmicsName;
     TString             fHltObjsName;
+    TString             fEvtSelDataName;
     
     TString             fGenISRPhotonsName;
     TString             fGenRadPhotonsName;
@@ -154,6 +156,7 @@ namespace mithep
     const DecayParticleCol        *fConversions;  
     const PFCandidateCol          *fPfCandidates;  
     const TriggerObjectCol        *fHltObjs;
+    const EvtSelData              *fEvtSelData;
 
     // --------------------------------
     Int_t                          fDecay;

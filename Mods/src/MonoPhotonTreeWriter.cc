@@ -51,6 +51,7 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fConversionsName        ("MergedConversions"),
   fPfCandidatesName       ("PFCandidates"),
   fHltObjsName            (Names::gkHltObjBrn),
+  fEvtSelDataName         ("EvtSelData"),
 
   fIsData                 (false),
   fPhotonsFromBranch      (kTRUE),  
@@ -77,6 +78,7 @@ MonoPhotonTreeWriter::MonoPhotonTreeWriter(const char *name, const char *title) 
   fConversions            (0),
   fPfCandidates           (0),
   fHltObjs                (0),
+  fEvtSelData             (0),
 
   fDecay(0),
   fOutputFile(0),
@@ -118,6 +120,7 @@ void MonoPhotonTreeWriter::Process()
   LoadEventObject(fPfCandidatesName,  fPfCandidates);
 
   LoadEventObject(fPileUpDenName,     fPileUpDen,     true);
+  LoadEventObject(fEvtSelDataName,    fEvtSelData,    true);
   if (!fIsData) {
     ReqBranch(fPileUpName,            fPileUp);
     LoadEventObject(fGenISRPhotonsName ,    fGenISRPhotons, false);
@@ -169,6 +172,8 @@ void MonoPhotonTreeWriter::Process()
   fMitGPTree.metCor_    = fMetCor->At(0)->Pt();
   fMitGPTree.metCorPhi_ = fMetCor->At(0)->Phi();
 
+  fMitGPTree.metFilterWord_ = fEvtSelData->metFiltersWord();
+
   // LEPTONS
   fMitGPTree.nlep_ = leptons->GetEntries();
   // auxiliary, just to dump muon info
@@ -180,16 +185,6 @@ void MonoPhotonTreeWriter::Process()
     else if(lep->ObjType() == kElectron) fMitGPTree.lid1_ = 11;
     else                                 assert(0);
     if(lep->Charge() < 0) fMitGPTree.lid1_ = -1 * fMitGPTree.lid1_;
-    //dump the position of the muon on the ECAL front face
-    if (lep->ObjType() == kMuon    ) {
-      for (int i = 0; i < (int) muons->GetEntries(); i++) {
-        if ( GetCorrDeltaPhi(lep->Phi(), muons->At(i)->Phi()) > 0.01 ) continue;
-        if ( fabs(lep->Eta() - muons->At(i)->Eta()) > 0.01 ) continue;
-        fMitGPTree.etaOfSTA_l1_ = muons->At(i)->StandaloneTrk()->Eta();
-        fMitGPTree.phiOfSTA_l1_ = muons->At(i)->StandaloneTrk()->Phi();
-        break;
-      }
-    }
   }
   if (leptons->GetEntries() >= 2) {
     Particle *lep = leptons->At(1);
@@ -198,17 +193,6 @@ void MonoPhotonTreeWriter::Process()
     else if(lep->ObjType() == kElectron) fMitGPTree.lid2_ = 11;
     else                                 assert(0);
     if(lep->Charge() < 0) fMitGPTree.lid2_ = -1 * fMitGPTree.lid2_;
-    //dump the position of the muon on the ECAL fron face
-    //dump the position of the muon on the ECAL front face
-    if (lep->ObjType() == kMuon    ) {
-      for (int i = 0; i < (int) muons->GetEntries(); i++) {
-        if ( GetCorrDeltaPhi(lep->Phi(), muons->At(i)->Phi()) > 0.01 ) continue;
-        if ( fabs(lep->Eta() - muons->At(i)->Eta()) > 0.01 ) continue;
-        fMitGPTree.etaOfSTA_l2_ = muons->At(i)->StandaloneTrk()->Eta();
-        fMitGPTree.phiOfSTA_l2_ = muons->At(i)->StandaloneTrk()->Phi();
-        break;
-      }
-    }
   }
   if (leptons->GetEntries() >= 3) {
     Particle *lep = leptons->At(2);
@@ -217,17 +201,6 @@ void MonoPhotonTreeWriter::Process()
     else if(lep->ObjType() == kElectron) fMitGPTree.lid3_ = 11;
     else                                 assert(0);
     if(lep->Charge() < 0) fMitGPTree.lid3_ = -1 * fMitGPTree.lid3_;
-    //dump the position of the muon on the ECAL fron face
-    //dump the position of the muon on the ECAL front face
-    if (lep->ObjType() == kMuon    ) {
-      for (int i = 0; i < (int) muons->GetEntries(); i++) {
-        if ( GetCorrDeltaPhi(lep->Phi(), muons->At(i)->Phi()) > 0.01 ) continue;
-        if ( fabs(lep->Eta() - muons->At(i)->Eta()) > 0.01 ) continue;
-        fMitGPTree.etaOfSTA_l3_ = muons->At(i)->StandaloneTrk()->Eta();
-        fMitGPTree.phiOfSTA_l3_ = muons->At(i)->StandaloneTrk()->Phi();
-        break;
-      }
-    }
   }
 
   //PHOTONS  
@@ -241,7 +214,8 @@ void MonoPhotonTreeWriter::Process()
     //Get the relevant quantities for this photon
     int matchType = -1.;
     float matchPt = -1.;
-    GetPhoMCMatch(photon->Eta(), photon->Phi(), photon->Pt(), matchType, matchPt);
+    if (!fIsData)
+      GetPhoMCMatch(photon->Eta(), photon->Phi(), photon->Pt(), matchType, matchPt);
     float combIso1,combIso2,combIso3;
     unsigned int wVtxInd = 0;
     if (fIsCicPhotonId) {
@@ -283,7 +257,8 @@ void MonoPhotonTreeWriter::Process()
     fMitGPTree.phoSeedTime_a1_  	  = photon->SCluster()->SeedTime();
     fMitGPTree.phoHadOverEm_a1_ 	  = photon->HadOverEm();
     fMitGPTree.phoLeadTimeSpan_a1_  	  = photon->SCluster()->LeadTimeSpan();
-    fMitGPTree.phoSubLeadTimeSpan_a1_  	  = photon->SCluster()->SubLeadTimeSpan();
+    fMitGPTree.phoRoundness_a1_  	  = photon->SCluster()->Roundness();
+    fMitGPTree.phoAngle_a1_  	  = photon->SCluster()->Angle();
     fMitGPTree.phoMipChi2_a1_ = photon->MipChi2();
     fMitGPTree.phoMipTotEnergy_a1_ = photon->MipTotEnergy();
     fMitGPTree.phoMipSlope_a1_ = photon->MipSlope();
@@ -302,7 +277,8 @@ void MonoPhotonTreeWriter::Process()
     //Get the relevant quantities for this photon
     int matchType = -1.;
     float matchPt = -1.;
-    GetPhoMCMatch(photon->Eta(), photon->Phi(), photon->Pt(), matchType, matchPt);
+    if (!fIsData)
+      GetPhoMCMatch(photon->Eta(), photon->Phi(), photon->Pt(), matchType, matchPt);
     float combIso1,combIso2,combIso3;
     unsigned int wVtxInd = 0;
     if (fIsCicPhotonId) {
@@ -344,7 +320,8 @@ void MonoPhotonTreeWriter::Process()
     fMitGPTree.phoSeedTime_a2_  	  = photon->SCluster()->SeedTime();
     fMitGPTree.phoHadOverEm_a2_ 	  = photon->HadOverEm();
     fMitGPTree.phoLeadTimeSpan_a2_  	  = photon->SCluster()->LeadTimeSpan();
-    fMitGPTree.phoSubLeadTimeSpan_a2_  	  = photon->SCluster()->SubLeadTimeSpan();
+    fMitGPTree.phoRoundness_a2_  	  = photon->SCluster()->Roundness();
+    fMitGPTree.phoAngle_a2_  	  = photon->SCluster()->Angle();
     fMitGPTree.phoMipChi2_a2_ = photon->MipChi2();
     fMitGPTree.phoMipTotEnergy_a2_ = photon->MipTotEnergy();
     fMitGPTree.phoMipSlope_a2_ = photon->MipSlope();
@@ -363,7 +340,8 @@ void MonoPhotonTreeWriter::Process()
     //Get the relevant quantities for this photon
     int matchType = -1.;
     float matchPt = -1.;
-    GetPhoMCMatch(photon->Eta(), photon->Phi(), photon->Pt(), matchType, matchPt);
+    if (!fIsData)
+      GetPhoMCMatch(photon->Eta(), photon->Phi(), photon->Pt(), matchType, matchPt);
     float combIso1,combIso2,combIso3;
     unsigned int wVtxInd = 0;
     if (fIsCicPhotonId) {
@@ -405,7 +383,8 @@ void MonoPhotonTreeWriter::Process()
     fMitGPTree.phoSeedTime_a3_  	  = photon->SCluster()->SeedTime();
     fMitGPTree.phoHadOverEm_a3_ 	  = photon->HadOverEm();
     fMitGPTree.phoLeadTimeSpan_a3_  	  = photon->SCluster()->LeadTimeSpan();
-    fMitGPTree.phoSubLeadTimeSpan_a3_  	  = photon->SCluster()->SubLeadTimeSpan();
+    fMitGPTree.phoRoundness_a3_  	  = photon->SCluster()->Roundness();
+    fMitGPTree.phoAngle_a3_  	  = photon->SCluster()->Angle();
     fMitGPTree.phoMipChi2_a3_ = photon->MipChi2();
     fMitGPTree.phoMipTotEnergy_a3_ = photon->MipTotEnergy();
     fMitGPTree.phoMipSlope_a3_ = photon->MipSlope();
@@ -453,18 +432,12 @@ void MonoPhotonTreeWriter::Process()
 
     if(fMitGPTree.ncosmics_ == 0) {
       fMitGPTree.cosmic1_ = cMuon->Mom();
-      fMitGPTree.etaOfSTA_c1_ = cMuon->StandaloneTrk()->Eta();
-      fMitGPTree.phiOfSTA_c1_ = cMuon->StandaloneTrk()->Phi();
     }
     if(fMitGPTree.ncosmics_ == 1) {
       fMitGPTree.cosmic2_ = cMuon->Mom();
-      fMitGPTree.etaOfSTA_c2_ = cMuon->StandaloneTrk()->Eta();
-      fMitGPTree.phiOfSTA_c2_ = cMuon->StandaloneTrk()->Phi();
     }
     if(fMitGPTree.ncosmics_ == 2) {
       fMitGPTree.cosmic3_ = cMuon->Mom();
-      fMitGPTree.etaOfSTA_c3_ = cMuon->StandaloneTrk()->Eta();
-      fMitGPTree.phiOfSTA_c3_ = cMuon->StandaloneTrk()->Phi();
     }
     fMitGPTree.ncosmics_++;
   }
@@ -549,14 +522,15 @@ void MonoPhotonTreeWriter::SlaveBegin()
   ReqEventObject(fPfCandidatesName,   fPfCandidates,  true);
 
   ReqEventObject(fPileUpDenName,   fPileUpDen,    true);
+  ReqEventObject(fEvtSelDataName,  fEvtSelData,   true);  
   if (!fIsData) {
+    ReqBranch(fPileUpName,         fPileUp);
+    ReqBranch(fMCEvInfoName,       fMCEventInfo);
     ReqEventObject(fGenISRPhotonsName,  fGenISRPhotons, false);
     ReqEventObject(fGenRadPhotonsName,  fGenRadPhotons, false);
     ReqEventObject(fGenPhotonsName   ,  fGenPhotons, false);
     ReqEventObject(fGenAllLeptonsName,  fGenAllLeptons, false);
     ReqEventObject(fGenJetsName      ,  fGenJets, true);
-    ReqBranch(fPileUpName,         fPileUp);
-    ReqBranch(fMCEvInfoName,       fMCEventInfo);
   }
 
   //***********************************************************************************************
