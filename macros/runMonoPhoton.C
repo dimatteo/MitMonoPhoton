@@ -434,7 +434,6 @@ void runMonoPhoton(const char *fileset    = "0000",
   beamhalo->SetMaxPhotonEta(2.4);
   beamhalo->SetMinMetEt(100);
 
-  std::cout << "\n\n\n +++ cosmicCleaning->GetOutputName() " << cosmicCleaning->GetOutputName() << std::endl;
   MonoPhotonTreeWriter *phplusmettree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter");
   phplusmettree->SetPhotonsFromBranch(kFALSE);
   phplusmettree->SetPhotonsName(photonCleaningMod->GetOutputName());

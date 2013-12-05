@@ -22,6 +22,7 @@ TString getEnv(const char* name);
 // Signal = Z>nunu selection
 // Lepton = W>lnu selection
 // DiLepton = Z>ll selection
+// EleFake = W>enu selection
 //==================================================================================================
 void makeReducedTree(TString selectionMode = "Signal")
 {
@@ -56,6 +57,16 @@ void makeReducedTree(TString selectionMode = "Signal")
   TFile* pufiledown   = new TFile("PileUpHistograms/MyDataPileupHistogramDown.root","READ");
   TH1D*  putargetdown = (TH1D*) pufiledown -> Get("pileup");
   putargetdown -> Scale(1.0/putargetdown->GetSumOfWeights());
+  // get the k-factors for Wgamma and Zgamma
+  TFile* kfactorfile   = new TFile("KFactors/KFactors.root","READ");
+  TGraphErrors*  zgammakfactor = (TGraphErrors*) kfactorfile -> Get("ZGamma");
+  TGraphErrors*  wgammakfactor = (TGraphErrors*) kfactorfile -> Get("WGamma");
+  // define jet fake rate for photons
+  TFile* jetfakefile   = new TFile("JetFake/theFakeGraph.root","READ");
+  TGraphErrors*  jetfakerate = (TGraphErrors*) jetfakefile -> Get("graphCorr");
+  // define ele fake rate for photons
+  TFile* elefakefile   = new TFile("EleFake/EleFake.root","READ");
+  TGraphErrors*  elefakerate = (TGraphErrors*) elefakefile -> Get("EleFake");
 
   // generate reduced trees
   // loop through the samples and produce the reduced trees
@@ -65,6 +76,10 @@ void makeReducedTree(TString selectionMode = "Signal")
     thisReducer -> SetPUTarget(putarget);
     thisReducer -> SetPUTargetUp(putargetup);
     thisReducer -> SetPUTargetDown(putargetdown);
+    thisReducer -> SetZGammaKFactor(zgammakfactor);
+    thisReducer -> SetWGammaKFactor(wgammakfactor);
+    thisReducer -> SetJetFakeRate(jetfakerate);
+    thisReducer -> SetEleFakeRate(elefakerate);
     thisReducer -> SetInputBaseDir(sampleBaseDir);
     thisReducer -> SetOutput(outfile);
     thisReducer -> SetSelectionMode(selectionMode);

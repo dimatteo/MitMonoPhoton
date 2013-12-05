@@ -1,4 +1,4 @@
-// $Id: runMonoPhoton.C,v 1.31 2013/07/31 22:45:21 dimatteo Exp $
+// $Id: runMonoPhoton.C,v 1.35 2013/10/09 22:37:04 dimatteo Exp $
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TSystem.h>
 #include <TProfile.h>
@@ -18,11 +18,13 @@
 #include "MitPhysics/Mods/interface/MuonIDMod.h"
 #include "MitPhysics/Mods/interface/ElectronIDMod.h"
 #include "MitPhysics/Mods/interface/ElectronCleaningMod.h"
+#include "MitPhysics/Mods/interface/CosmicCleaningMod.h"
 #include "MitPhysics/Mods/interface/PhotonIDMod.h"
 #include "MitPhysics/Mods/interface/PhotonTreeWriter.h"
 #include "MitPhysics/Mods/interface/PhotonCleaningMod.h"
 #include "MitPhysics/Mods/interface/MergeLeptonsMod.h"
 #include "MitPhysics/Mods/interface/JetCorrectionMod.h"
+#include "MitPhysics/Mods/interface/MetCorrectionMod.h"
 #include "MitPhysics/Mods/interface/PhotonMvaMod.h"
 #include "MitPhysics/Mods/interface/MVASystematicsMod.h"
 #include "MitPhysics/Mods/interface/SeparatePileUpMod.h"
@@ -58,7 +60,6 @@ void runMonoPhotonSync(const char *fileset    = "0000",
   } 
   
   TString jsonFile = TString("/home/cmsprod/cms/json/") + TString(json);
-  //TString jsonFile = TString("/home/cmsprod/cms/json/") + TString("Cert_136033-149442_7TeV_Dec22ReReco_Collisions10_JSON_v4.txt");
   Bool_t  isData   = ( (jsonFile.CompareTo("/home/cmsprod/cms/json/~") != 0) );
   
   if (gSystem->Getenv("MIT_PROD_OVERLAP")) {
@@ -70,8 +71,6 @@ void runMonoPhotonSync(const char *fileset    = "0000",
   }
   else {
      sprintf(overlap,"%s", "-1.0");
-    //printf(" OVERLAP file was not properly defined. EXIT!\n");
-    //return;
   } 
 
   printf("\n Initialization worked \n");
@@ -161,21 +160,17 @@ void runMonoPhotonSync(const char *fileset    = "0000",
   }
   else{//MC
     hltModP->AddTrigger("HLT_Photon135_v*",0,999999); 
-    hltModP->AddTrigger("!HLT_Photon135_v*",0,999999); 
-    hltModP->AddTrigger("HLT_Photon70_CaloIdXL_PFMET100*",0,999999); 
-    hltModP->AddTrigger("!HLT_Photon70_CaloIdXL_PFMET100*",0,999999); 
+    hltModP->AddTrigger("HLT_Photon70_CaloIdXL_PFMET100_v*",0,999999); 
   }
     
   hltModP->SetTrigObjsName("MyHltPhotObjs");
   hltModP->SetAbortIfNotAccepted(isData);
-  hltModP->SetPrintTable(kTRUE); // set to true to print HLT table
+  hltModP->SetPrintTable(kFALSE); // set to true to print HLT table
 
   //------------------------------------------------------------------------------------------------
   // split pfcandidates to PFPU and PFnoPU
   //------------------------------------------------------------------------------------------------
   SeparatePileUpMod* SepPUMod = new SeparatePileUpMod;
-  //  SepPUMod->SetUseAllVerteces(kFALSE);
-  // SepPUMod->SetVertexName("OutVtxCiC");
   SepPUMod->SetPFNoPileUpName("pfnopileupcands");
   SepPUMod->SetPFPileUpName("pfpileupcands");
   SepPUMod->SetCheckClosestZVertex(kFALSE);
@@ -198,26 +193,36 @@ void runMonoPhotonSync(const char *fileset    = "0000",
   // Lepton Selection 
   //-----------------------------------
   ElectronIDMod* eleIdMod = new ElectronIDMod;
-  eleIdMod->SetIDType("VBTFWorkingPointLowPtId");
-  eleIdMod->SetIsoType("PFIso");
-  eleIdMod->SetApplyConversionFilterType1(kTRUE);
-  eleIdMod->SetApplyConversionFilterType2(kFALSE);
-  eleIdMod->SetChargeFilter(kFALSE);
-  eleIdMod->SetApplyD0Cut(kTRUE);
-  eleIdMod->SetApplyDZCut(kTRUE);
-  eleIdMod->SetWhichVertex(-1);
-  eleIdMod->SetNExpectedHitsInnerCut(0);
-  eleIdMod->SetGoodElectronsName("GoodElectronsBS");
-  eleIdMod->SetRhoType(RhoUtilities::CMS_RHO_RHOKT6PFJETS);
-   
+  eleIdMod -> SetPtMin(10);  
+  eleIdMod -> SetEtaMax(2.5);
+  eleIdMod -> SetApplyEcalFiducial(true);
+  eleIdMod -> SetIDType("Hgg_LeptonTag_2012IdHCP");  
+  eleIdMod -> SetElectronMVAWeightsSubdet0Pt10To20(TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/ElectronMVAWeights/ElectronID_BDTG_EGamma2012NonTrigV0_Cat1.weights.xml"))));
+  eleIdMod -> SetElectronMVAWeightsSubdet1Pt10To20(TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/ElectronMVAWeights/ElectronID_BDTG_EGamma2012NonTrigV0_Cat2.weights.xml"))));  
+  eleIdMod -> SetElectronMVAWeightsSubdet2Pt10To20(TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/ElectronMVAWeights/ElectronID_BDTG_EGamma2012NonTrigV0_Cat3.weights.xml"))));  
+  eleIdMod -> SetElectronMVAWeightsSubdet0Pt20ToInf(TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/ElectronMVAWeights/ElectronID_BDTG_EGamma2012NonTrigV0_Cat4.weights.xml")))); 
+  eleIdMod -> SetElectronMVAWeightsSubdet1Pt20ToInf(TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/ElectronMVAWeights/ElectronID_BDTG_EGamma2012NonTrigV0_Cat5.weights.xml")))); 
+  eleIdMod -> SetElectronMVAWeightsSubdet2Pt20ToInf(TString((getenv("CMSSW_BASE")+string("/src/MitPhysics/data/ElectronMVAWeights/ElectronID_BDTG_EGamma2012NonTrigV0_Cat6.weights.xml")))); 
+  eleIdMod -> SetWhichVertex(0);
+  eleIdMod -> SetD0Cut(0.02);
+  eleIdMod -> SetDZCut(0.2); //h  
+  eleIdMod -> SetIsoType("PFIso_HggLeptonTag2012HCP"); //h
+  eleIdMod -> SetOutputName("HggLeptonTagElectrons");
+  eleIdMod -> SetRhoType(RhoUtilities::CMS_RHO_RHOKT6PFJETS);
+  eleIdMod -> SetPFNoPileUpName("pfnopileupcands");
+  eleIdMod -> SetInvertNExpectedHitsInnerCut(kFALSE);
+  eleIdMod -> SetNExpectedHitsInnerCut(1);   
+  eleIdMod -> SetApplyConversionFilterType1(kTRUE);
+  eleIdMod -> SetPVName(Names::gkPVBeamSpotBrn);   
+ 
   MuonIDMod* muonIdMod = new MuonIDMod;
   // base kinematics
   muonIdMod -> SetPtMin(10.);
   muonIdMod -> SetEtaCut(2.4);
   // base ID
-  muonIdMod -> SetIDType("Tight");
-  muonIdMod -> SetWhichVertex(-1); // this is a 'hack'.. but hopefully good enough...
-  muonIdMod -> SetD0Cut(0.02);
+  muonIdMod -> SetIDType("muonPOG2012CutBasedIDTight");
+  muonIdMod -> SetWhichVertex(0);
+  muonIdMod -> SetD0Cut(0.2);
   muonIdMod -> SetDZCut(0.5);
   muonIdMod -> SetIsoType("PFIsoBetaPUCorrected"); //h
   muonIdMod -> SetPFIsoCut(0.2); //h
@@ -225,11 +230,29 @@ void runMonoPhotonSync(const char *fileset    = "0000",
   muonIdMod -> SetPFNoPileUpName("pfnopileupcands");
   muonIdMod -> SetPFPileUpName("pfpileupcands");
   muonIdMod -> SetPVName(Names::gkPVBeamSpotBrn); 
+
+  // Special ID for cosmic cleaning
+  MuonIDMod* muonIdModBS = new MuonIDMod;
+  muonIdModBS -> SetPtMin(5.);
+  muonIdModBS -> SetEtaCut(2.4);
+  muonIdModBS -> SetIDType("Tight");
+  muonIdModBS -> SetWhichVertex(-2);
+  muonIdModBS -> SetD0Cut(0.2);
+  muonIdModBS -> SetApplyD0Cut(kTRUE);
+  muonIdModBS -> SetApplyDZCut(kFALSE);
+  muonIdModBS -> SetOutputName("CleanMuonsBS");
+  muonIdModBS -> SetPVName(Names::gkPVBeamSpotBrn); 
   
   ElectronCleaningMod *electronCleaning = new ElectronCleaningMod;
   electronCleaning->SetCleanMuonsName(muonIdMod->GetOutputName());
   electronCleaning->SetGoodElectronsName(eleIdMod->GetOutputName());
   electronCleaning->SetCleanElectronsName("CleanElectrons");
+
+  CosmicCleaningMod *cosmicCleaning = new CosmicCleaningMod;
+  cosmicCleaning->SetCleanMuonsName(muonIdModBS->GetOutputName());
+  cosmicCleaning->SetCosmicsName("CosmicMuons");
+  cosmicCleaning->SetCleanCosmicsName("CleanCosmics");
+  cosmicCleaning->SetMinDeltaR(0.3);
 
   MergeLeptonsMod *merger = new MergeLeptonsMod;
   merger->SetMuonsName(muonIdMod->GetOutputName());
@@ -295,26 +318,135 @@ void runMonoPhotonSync(const char *fileset    = "0000",
   photonIDMod->SetShowerShapeType("2012ShowerShape");
   photonIDMod->Set2012HCP(kTRUE);
 
+  // EGamma medium
+  PhotonIDMod *photonIDModEGMedium = new PhotonIDMod;
+  photonIDModEGMedium->SetPtMin(20.0);
+  photonIDModEGMedium->SetOutputName("GoodPhotonsEGMedium");
+  photonIDModEGMedium->SetIDType("EgammaMedium");
+  photonIDModEGMedium->SetIsoType("NoIso");
+  photonIDModEGMedium->SetApplyElectronVeto(kFALSE);
+  photonIDModEGMedium->SetApplyPixelSeed(kFALSE);
+  photonIDModEGMedium->SetApplyConversionId(kTRUE);
+  photonIDModEGMedium->SetApplyFiduciality(kTRUE);       
+  photonIDModEGMedium->SetIsData(isData);
+  photonIDModEGMedium->SetPhotonsFromBranch(kFALSE);
+  photonIDModEGMedium->SetInputName(photreg->GetOutputName());
+  //get the photon with regression energy  
+  photonIDModEGMedium->DoMCSmear(kTRUE);
+  photonIDModEGMedium->DoDataEneCorr(kTRUE);
+  //------------------------------------------Energy smear and scale--------------------------------------------------------------
+  photonIDModEGMedium->SetMCSmearFactors2012HCP(0.0111,0.0111,0.0107,0.0107,0.0155,0.0194,0.0295,0.0276,0.037,0.0371);
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(190645,190781,0.9964,0.9964,1.0020,1.0020,0.9893,1.0028,0.9871,0.9937,0.9839,0.9958);
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(190782,191042,1.0024,1.0024,1.0079,1.0079,0.9923,1.0058,0.9911,0.9977,0.9886,1.0005);
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(191043,193555,0.9935,0.9935,0.9991,0.9991,0.9861,0.9997,0.9894,0.9960,0.9864,0.9982);
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(193556,194150,0.9920,0.9920,0.9976,0.9976,0.9814,0.9951,0.9896,0.9962,0.9872,0.9990);
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(194151,194532,0.9925,0.9925,0.9981,0.9981,0.9826,0.9963,0.9914,0.9980,0.9874,0.9993);
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(194533,195113,0.9927,0.9927,0.9983,0.9983,0.9844,0.9981,0.9934,0.9999,0.9878,0.9996);
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(195114,195915,0.9929,0.9929,0.9984,0.9984,0.9838,0.9974,0.9942,1.0007,0.9878,0.9997);
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(195916,198115,0.9919,0.9919,0.9975,0.9975,0.9827,0.9964,0.9952,1.0017,0.9869,0.9987);
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(198116,199803,0.9955,0.9955,1.0011,1.0011,0.9859,0.9995,0.9893,0.9959,0.9923,1.0041);
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(199804,200048,0.9967,0.9967,1.0023,1.0023,0.9870,1.0006,0.9893,0.9959,0.9937,1.0055);
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(200049,200151,0.9980,0.9980,1.0036,1.0036,0.9877,1.0012,0.9910,0.9976,0.9980,1.0097);
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(200152,200490,0.9958,0.9958,1.0013,1.0013,0.9868,1.0004,0.9922,0.9988,0.9948,1.0065);
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(200491,200531,0.9979,0.9979,1.0035,1.0035,0.9876,1.0012,0.9915,0.9981,0.9979,1.0096);
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(200532,201656,0.9961,0.9961,1.0017,1.0017,0.9860,0.9996,0.9904,0.9970,0.9945,1.0063);
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(201657,202305,0.9969,0.9969,1.0025,1.0025,0.9866,1.0002,0.9914,0.9980,0.9999,1.0116);
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(202305,203002,0.9982,0.9982,1.0038,1.0038,0.9872,1.0008,0.9934,1.0000,1.0018,1.0135);
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(203003,203984,1.0006,1.0006,1.0061,1.0061,0.9880,1.0017,0.9919,0.9988,0.9992,1.0104);     
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(203985,205085,0.9993,0.9993,1.0048,1.0048,0.9903,1.0040,0.9928,0.9997,0.9987,1.0099);     
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(205086,205310,1.0004,1.0004,1.0059,1.0059,0.9901,1.0037,0.9987,1.0055,1.0091,1.0202);     
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(205311,206207,1.0000,1.0000,1.0055,1.0055,0.9891,1.0028,0.9948,1.0017,1.0032,1.0144);     
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(206208,206483,1.0003,1.0003,1.0058,1.0058,0.9895,1.0032,0.9921,0.9989,1.0056,1.0167);     
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(206484,206597,1.0005,1.0005,1.0060,1.0060,0.9895,1.0032,0.9968,1.0036,1.0046,1.0158);     
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(206598,206896,1.0006,1.0006,1.0061,1.0061,0.9881,1.0017,0.9913,0.9982,1.0050,1.0162);     
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(206897,207220,1.0006,1.0006,1.0061,1.0061,0.9884,1.0021,0.9909,0.9978,1.0053,1.0165);     
+  photonIDModEGMedium->AddEnCorrPerRun2012HCP(207221,208686,1.0006,1.0006,1.0061,1.0061,0.9894,1.0030,0.9951,1.0020,1.0060,1.0172);     
+  //---------------------------------shower shape scale--------------------------------------------------------------------------------
+  photonIDModEGMedium->SetDoShowerShapeScaling(kTRUE);
+  photonIDModEGMedium->SetShowerShapeType("2012ShowerShape");
+  photonIDModEGMedium->Set2012HCP(kTRUE);
+
+  // EGamma loose
+  PhotonIDMod *photonIDModEGLoose = new PhotonIDMod;
+  photonIDModEGLoose->SetPtMin(20.0);
+  photonIDModEGLoose->SetOutputName("GoodPhotonsEGLoose");
+  photonIDModEGLoose->SetIDType("EgammaLoose");
+  photonIDModEGLoose->SetIsoType("NoIso");
+  photonIDModEGLoose->SetApplyElectronVeto(kFALSE);
+  photonIDModEGLoose->SetApplyPixelSeed(kFALSE);
+  photonIDModEGLoose->SetApplyConversionId(kTRUE);
+  photonIDModEGLoose->SetApplyFiduciality(kTRUE);       
+  photonIDModEGLoose->SetIsData(isData);
+  photonIDModEGLoose->SetPhotonsFromBranch(kFALSE);
+  photonIDModEGLoose->SetInputName(photreg->GetOutputName());
+  //get the photon with regression energy  
+  photonIDModEGLoose->DoMCSmear(kTRUE);
+  photonIDModEGLoose->DoDataEneCorr(kTRUE);
+  //------------------------------------------Energy smear and scale--------------------------------------------------------------
+  photonIDModEGLoose->SetMCSmearFactors2012HCP(0.0111,0.0111,0.0107,0.0107,0.0155,0.0194,0.0295,0.0276,0.037,0.0371);
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(190645,190781,0.9964,0.9964,1.0020,1.0020,0.9893,1.0028,0.9871,0.9937,0.9839,0.9958);
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(190782,191042,1.0024,1.0024,1.0079,1.0079,0.9923,1.0058,0.9911,0.9977,0.9886,1.0005);
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(191043,193555,0.9935,0.9935,0.9991,0.9991,0.9861,0.9997,0.9894,0.9960,0.9864,0.9982);
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(193556,194150,0.9920,0.9920,0.9976,0.9976,0.9814,0.9951,0.9896,0.9962,0.9872,0.9990);
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(194151,194532,0.9925,0.9925,0.9981,0.9981,0.9826,0.9963,0.9914,0.9980,0.9874,0.9993);
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(194533,195113,0.9927,0.9927,0.9983,0.9983,0.9844,0.9981,0.9934,0.9999,0.9878,0.9996);
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(195114,195915,0.9929,0.9929,0.9984,0.9984,0.9838,0.9974,0.9942,1.0007,0.9878,0.9997);
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(195916,198115,0.9919,0.9919,0.9975,0.9975,0.9827,0.9964,0.9952,1.0017,0.9869,0.9987);
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(198116,199803,0.9955,0.9955,1.0011,1.0011,0.9859,0.9995,0.9893,0.9959,0.9923,1.0041);
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(199804,200048,0.9967,0.9967,1.0023,1.0023,0.9870,1.0006,0.9893,0.9959,0.9937,1.0055);
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(200049,200151,0.9980,0.9980,1.0036,1.0036,0.9877,1.0012,0.9910,0.9976,0.9980,1.0097);
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(200152,200490,0.9958,0.9958,1.0013,1.0013,0.9868,1.0004,0.9922,0.9988,0.9948,1.0065);
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(200491,200531,0.9979,0.9979,1.0035,1.0035,0.9876,1.0012,0.9915,0.9981,0.9979,1.0096);
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(200532,201656,0.9961,0.9961,1.0017,1.0017,0.9860,0.9996,0.9904,0.9970,0.9945,1.0063);
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(201657,202305,0.9969,0.9969,1.0025,1.0025,0.9866,1.0002,0.9914,0.9980,0.9999,1.0116);
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(202305,203002,0.9982,0.9982,1.0038,1.0038,0.9872,1.0008,0.9934,1.0000,1.0018,1.0135);
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(203003,203984,1.0006,1.0006,1.0061,1.0061,0.9880,1.0017,0.9919,0.9988,0.9992,1.0104);     
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(203985,205085,0.9993,0.9993,1.0048,1.0048,0.9903,1.0040,0.9928,0.9997,0.9987,1.0099);     
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(205086,205310,1.0004,1.0004,1.0059,1.0059,0.9901,1.0037,0.9987,1.0055,1.0091,1.0202);     
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(205311,206207,1.0000,1.0000,1.0055,1.0055,0.9891,1.0028,0.9948,1.0017,1.0032,1.0144);     
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(206208,206483,1.0003,1.0003,1.0058,1.0058,0.9895,1.0032,0.9921,0.9989,1.0056,1.0167);     
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(206484,206597,1.0005,1.0005,1.0060,1.0060,0.9895,1.0032,0.9968,1.0036,1.0046,1.0158);     
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(206598,206896,1.0006,1.0006,1.0061,1.0061,0.9881,1.0017,0.9913,0.9982,1.0050,1.0162);     
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(206897,207220,1.0006,1.0006,1.0061,1.0061,0.9884,1.0021,0.9909,0.9978,1.0053,1.0165);     
+  photonIDModEGLoose->AddEnCorrPerRun2012HCP(207221,208686,1.0006,1.0006,1.0061,1.0061,0.9894,1.0030,0.9951,1.0020,1.0060,1.0172);     
+  //---------------------------------shower shape scale--------------------------------------------------------------------------------
+  photonIDModEGLoose->SetDoShowerShapeScaling(kTRUE);
+  photonIDModEGLoose->SetShowerShapeType("2012ShowerShape");
+  photonIDModEGLoose->Set2012HCP(kTRUE);
+
   PhotonCleaningMod *photonCleaningMod = new PhotonCleaningMod;
   photonCleaningMod->SetCleanElectronsName(electronCleaning->GetOutputName());
   photonCleaningMod->SetGoodPhotonsName(photonIDMod->GetOutputName());
   photonCleaningMod->SetCleanPhotonsName("CleanPhotons");
 
+  // EGamma medium
+  PhotonCleaningMod *photonCleaningModEGMedium = new PhotonCleaningMod;
+  photonCleaningModEGMedium->SetCleanElectronsName(electronCleaning->GetOutputName());
+  photonCleaningModEGMedium->SetGoodPhotonsName(photonIDModEGMedium->GetOutputName());
+  photonCleaningModEGMedium->SetCleanPhotonsName("CleanPhotonsEGMedium");
+
+  // EGamma loose
+  PhotonCleaningMod *photonCleaningModEGLoose = new PhotonCleaningMod;
+  photonCleaningModEGLoose->SetCleanElectronsName(electronCleaning->GetOutputName());
+  photonCleaningModEGLoose->SetGoodPhotonsName(photonIDModEGLoose->GetOutputName());
+  photonCleaningModEGLoose->SetCleanPhotonsName("CleanPhotonsEGLoose");
+
   PublisherMod<PFJet,Jet> *pubJet = new PublisherMod<PFJet,Jet>("JetPub");
   pubJet->SetInputName("AKt5PFJets");
   pubJet->SetOutputName("PubAKt5PFJets");
 
+  //jet-met corrections
   JetCorrectionMod *jetCorr = new JetCorrectionMod;
   if(isData){ 
-    jetCorr->AddCorrectionFromFile(std::string((gSystem->Getenv("CMSSW_BASE") + TString("/src/MitPhysics/data/Summer12_V7_DATA_L1FastJet_AK5PF.txt")).Data())); 
-    jetCorr->AddCorrectionFromFile(std::string((gSystem->Getenv("CMSSW_BASE") + TString("/src/MitPhysics/data/Summer12_V7_DATA_L2Relative_AK5PF.txt")).Data())); 
-    jetCorr->AddCorrectionFromFile(std::string((gSystem->Getenv("CMSSW_BASE") + TString("/src/MitPhysics/data/Summer12_V7_DATA_L3Absolute_AK5PF.txt")).Data())); 
-    jetCorr->AddCorrectionFromFile(std::string((gSystem->Getenv("CMSSW_BASE") + TString("/src/MitPhysics/data/Summer12_V7_DATA_L2L3Residual_AK5PF.txt")).Data())); 
+    jetCorr->AddCorrectionFromFile(std::string((gSystem->Getenv("CMSSW_BASE") + TString("/src/MitPhysics/data/Summer13_V1_DATA_L1FastJet_AK5PF.txt")).Data())); 
+    jetCorr->AddCorrectionFromFile(std::string((gSystem->Getenv("CMSSW_BASE") + TString("/src/MitPhysics/data/Summer13_V1_DATA_L2Relative_AK5PF.txt")).Data())); 
+    jetCorr->AddCorrectionFromFile(std::string((gSystem->Getenv("CMSSW_BASE") + TString("/src/MitPhysics/data/Summer13_V1_DATA_L3Absolute_AK5PF.txt")).Data())); 
+    jetCorr->AddCorrectionFromFile(std::string((gSystem->Getenv("CMSSW_BASE") + TString("/src/MitPhysics/data/Summer13_V1_DATA_L2L3Residual_AK5PF.txt")).Data())); 
   }
   else {
-    jetCorr->AddCorrectionFromFile(std::string((gSystem->Getenv("CMSSW_BASE") + TString("/src/MitPhysics/data/Summer12_V7_MC_L1FastJet_AK5PF.txt")).Data())); 
-    jetCorr->AddCorrectionFromFile(std::string((gSystem->Getenv("CMSSW_BASE") + TString("/src/MitPhysics/data/Summer12_V7_MC_L2Relative_AK5PF.txt")).Data())); 
-    jetCorr->AddCorrectionFromFile(std::string((gSystem->Getenv("CMSSW_BASE") + TString("/src/MitPhysics/data/Summer12_V7_MC_L3Absolute_AK5PF.txt")).Data())); 
+    jetCorr->AddCorrectionFromFile(std::string((gSystem->Getenv("CMSSW_BASE") + TString("/src/MitPhysics/data/Summer13_V1_MC_L1FastJet_AK5PF.txt")).Data())); 
+    jetCorr->AddCorrectionFromFile(std::string((gSystem->Getenv("CMSSW_BASE") + TString("/src/MitPhysics/data/Summer13_V1_MC_L2Relative_AK5PF.txt")).Data())); 
+    jetCorr->AddCorrectionFromFile(std::string((gSystem->Getenv("CMSSW_BASE") + TString("/src/MitPhysics/data/Summer13_V1_MC_L3Absolute_AK5PF.txt")).Data())); 
   }
   jetCorr->SetInputName(pubJet->GetOutputName());
   jetCorr->SetCorrectedName("CorrectedJets");    
@@ -335,61 +467,85 @@ void runMonoPhotonSync(const char *fileset    = "0000",
   theJetCleaning->SetApplyPhotonRemoval(kTRUE);
   theJetCleaning->SetGoodJetsName(theJetID->GetOutputName());
   theJetCleaning->SetCleanJetsName("CleanJets");
+
+  //EGamma medium
+  JetCleaningMod *theJetCleaningEGMedium = new JetCleaningMod;
+  theJetCleaningEGMedium->SetCleanElectronsName(electronCleaning->GetOutputName());
+  theJetCleaningEGMedium->SetCleanMuonsName(muonIdMod->GetOutputName());
+  theJetCleaningEGMedium->SetCleanPhotonsName(photonCleaningModEGMedium->GetOutputName());
+  theJetCleaningEGMedium->SetApplyPhotonRemoval(kTRUE);
+  theJetCleaningEGMedium->SetGoodJetsName(theJetID->GetOutputName());
+  theJetCleaningEGMedium->SetCleanJetsName("CleanJetsEGMedium");
+
+  //EGamma loose
+  JetCleaningMod *theJetCleaningEGLoose = new JetCleaningMod;
+  theJetCleaningEGLoose->SetCleanElectronsName(electronCleaning->GetOutputName());
+  theJetCleaningEGLoose->SetCleanMuonsName(muonIdMod->GetOutputName());
+  theJetCleaningEGLoose->SetCleanPhotonsName(photonCleaningModEGLoose->GetOutputName());
+  theJetCleaningEGLoose->SetApplyPhotonRemoval(kTRUE);
+  theJetCleaningEGLoose->SetGoodJetsName(theJetID->GetOutputName());
+  theJetCleaningEGLoose->SetCleanJetsName("CleanJetsEGLoose");
+
+  MetCorrectionMod *metCorrT0T1Shift = new MetCorrectionMod;
+  metCorrT0T1Shift->SetInputName("PFMet");
+  metCorrT0T1Shift->SetJetsName(pubJet->GetOutputName());    
+  metCorrT0T1Shift->SetCorrectedJetsName(jetCorr->GetOutputName());    
+  metCorrT0T1Shift->SetCorrectedName("PFMetT0T1Shift");   
+  metCorrT0T1Shift->ApplyType0(kTRUE);   
+  metCorrT0T1Shift->ApplyType1(kTRUE);   
+  metCorrT0T1Shift->ApplyShift(kTRUE);   
+  metCorrT0T1Shift->IsData(isData);
+  metCorrT0T1Shift->SetPrint(kFALSE);
         
   //------------------------------------------------------------------------------------------------
   // select events with photon+MET
   //------------------------------------------------------------------------------------------------
   MonoPhotonAnalysisMod         *phplusmet = new MonoPhotonAnalysisMod("MonoPhotonSelector");
+  phplusmet->SetMetFromBranch(kFALSE); 
+  phplusmet->SetInputMetName(metCorrT0T1Shift->GetOutputName()); //corrected met
   phplusmet->SetInputPhotonsName(photonCleaningMod->GetOutputName()); //identified photons
   phplusmet->SetInputElectronsName(electronCleaning->GetOutputName()); //identified electrons
   phplusmet->SetInputMuonsName(muonIdMod->GetOutputName()); //muons
   phplusmet->SetPhotonsFromBranch(kFALSE);
   phplusmet->SetElectronsFromBranch(kFALSE);
   phplusmet->SetMuonsFromBranch(kFALSE);
-  phplusmet->SetMinNumPhotons(0);
+  phplusmet->SetMinNumPhotons(1);
   phplusmet->SetMinNumLeptons(0);
-  phplusmet->SetMinPhotonEt(0);
-  phplusmet->SetMaxPhotonEta(9.4);
+  phplusmet->SetMinPhotonEt(100);
+  phplusmet->SetMaxPhotonEta(2.4);
   phplusmet->SetMinMetEt(0);
-  
-  MonoPhotonAnalysisMod         *dilepton = new MonoPhotonAnalysisMod("MonoPhotonSelector_dilepton");
-  dilepton->SetInputPhotonsName(photonCleaningMod->GetOutputName()); //identified photons
-  dilepton->SetInputElectronsName(electronCleaning->GetOutputName()); //identified electrons
-  dilepton->SetInputMuonsName(muonIdMod->GetOutputName()); //muons
-  dilepton->SetPhotonsFromBranch(kFALSE);
-  dilepton->SetElectronsFromBranch(kFALSE);
-  dilepton->SetMuonsFromBranch(kFALSE);
-  dilepton->SetMinNumPhotons(1);
-  dilepton->SetMinNumLeptons(2);
-  dilepton->SetMinPhotonEt(0);
-  dilepton->SetMaxPhotonEta(2.4);
-  dilepton->SetMinMetEt(0);
 
-  MonoPhotonAnalysisMod         *phfake = new MonoPhotonAnalysisMod("MonoPhotonSelector_phfake");
-  phfake->SetInputPhotonsName(photreg->GetOutputName()); //all photons
-  phfake->SetInputElectronsName(electronCleaning->GetOutputName()); //identified electrons
-  phfake->SetInputMuonsName(muonIdMod->GetOutputName()); //muons
-  phfake->SetPhotonsFromBranch(kFALSE);
-  phfake->SetElectronsFromBranch(kFALSE);
-  phfake->SetMuonsFromBranch(kFALSE);
-  phfake->SetMinNumPhotons(0);
-  phfake->SetMinNumLeptons(0);
-  phfake->SetMinPhotonEt(0);
-  phfake->SetMaxPhotonEta(9.4);
-  phfake->SetMinMetEt(0);
+  //EGamma Medium
+  MonoPhotonAnalysisMod         *phplusmetEGMedium = new MonoPhotonAnalysisMod("MonoPhotonSelectorEGMedium");
+  phplusmetEGMedium->SetMetFromBranch(kFALSE); 
+  phplusmetEGMedium->SetInputMetName(metCorrT0T1Shift->GetOutputName()); //corrected met
+  phplusmetEGMedium->SetInputPhotonsName(photonCleaningModEGMedium->GetOutputName()); //identified photons
+  phplusmetEGMedium->SetInputElectronsName(electronCleaning->GetOutputName()); //identified electrons
+  phplusmetEGMedium->SetInputMuonsName(muonIdMod->GetOutputName()); //muons
+  phplusmetEGMedium->SetPhotonsFromBranch(kFALSE);
+  phplusmetEGMedium->SetElectronsFromBranch(kFALSE);
+  phplusmetEGMedium->SetMuonsFromBranch(kFALSE);
+  phplusmetEGMedium->SetMinNumPhotons(1);
+  phplusmetEGMedium->SetMinNumLeptons(0);
+  phplusmetEGMedium->SetMinPhotonEt(100);
+  phplusmetEGMedium->SetMaxPhotonEta(2.4);
+  phplusmetEGMedium->SetMinMetEt(0);
 
-  MonoPhotonAnalysisMod         *beamhalo = new MonoPhotonAnalysisMod("MonoPhotonSelector_beamhalo");
-  beamhalo->SetInputPhotonsName(photreg->GetOutputName()); //all photons
-  beamhalo->SetInputElectronsName(electronCleaning->GetOutputName()); //identified electrons
-  beamhalo->SetInputMuonsName(muonIdMod->GetOutputName()); //muons
-  beamhalo->SetPhotonsFromBranch(kFALSE);
-  beamhalo->SetElectronsFromBranch(kFALSE);
-  beamhalo->SetMuonsFromBranch(kFALSE);
-  beamhalo->SetMinNumPhotons(1);
-  beamhalo->SetMinNumLeptons(0);
-  beamhalo->SetMinPhotonEt(100);
-  beamhalo->SetMaxPhotonEta(2.4);
-  beamhalo->SetMinMetEt(100);
+  //EGamma Loose
+  MonoPhotonAnalysisMod         *phplusmetEGLoose = new MonoPhotonAnalysisMod("MonoPhotonSelectorEGLoose");
+  phplusmetEGLoose->SetMetFromBranch(kFALSE); 
+  phplusmetEGLoose->SetInputMetName(metCorrT0T1Shift->GetOutputName()); //corrected met
+  phplusmetEGLoose->SetInputPhotonsName(photonCleaningModEGLoose->GetOutputName()); //identified photons
+  phplusmetEGLoose->SetInputElectronsName(electronCleaning->GetOutputName()); //identified electrons
+  phplusmetEGLoose->SetInputMuonsName(muonIdMod->GetOutputName()); //muons
+  phplusmetEGLoose->SetPhotonsFromBranch(kFALSE);
+  phplusmetEGLoose->SetElectronsFromBranch(kFALSE);
+  phplusmetEGLoose->SetMuonsFromBranch(kFALSE);
+  phplusmetEGLoose->SetMinNumPhotons(1);
+  phplusmetEGLoose->SetMinNumLeptons(0);
+  phplusmetEGLoose->SetMinPhotonEt(100);
+  phplusmetEGLoose->SetMaxPhotonEta(2.4);
+  phplusmetEGLoose->SetMinMetEt(0);
 
   MonoPhotonTreeWriter *phplusmettree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter");
   phplusmettree->SetPhotonsFromBranch(kFALSE);
@@ -400,7 +556,8 @@ void runMonoPhotonSync(const char *fileset    = "0000",
   phplusmettree->SetMuonsName(muonIdMod->GetOutputName());
   phplusmettree->SetJetsFromBranch(kFALSE);
   phplusmettree->SetJetsName(theJetCleaning->GetOutputName());
-  phplusmettree->SetCosmicsFromBranch(kTRUE);
+  phplusmettree->SetCosmicsFromBranch(kFALSE);
+  phplusmettree->SetCosmicsName(cosmicCleaning->GetOutputName());
   phplusmettree->SetPVFromBranch(kFALSE);
   phplusmettree->SetPVName(goodPVFilterMod->GetOutputName());
   phplusmettree->SetLeptonsName(merger->GetOutputName());
@@ -408,60 +565,48 @@ void runMonoPhotonSync(const char *fileset    = "0000",
   phplusmettree->SetIsData(isData);
   phplusmettree->SetProcessID(0);
   phplusmettree->SetFillNtupleType(0);
-  
-  MonoPhotonTreeWriter *dileptontree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter_dilepton");
-  dileptontree->SetPhotonsFromBranch(kFALSE);
-  dileptontree->SetPhotonsName(photonCleaningMod->GetOutputName());
-  dileptontree->SetElectronsFromBranch(kFALSE);
-  dileptontree->SetElectronsName(electronCleaning->GetOutputName());
-  dileptontree->SetMuonsFromBranch(kFALSE);
-  dileptontree->SetMuonsName(muonIdMod->GetOutputName());
-  dileptontree->SetJetsFromBranch(kFALSE);
-  dileptontree->SetJetsName(theJetCleaning->GetOutputName());
-  dileptontree->SetCosmicsFromBranch(kTRUE);
-  dileptontree->SetPVFromBranch(kFALSE);
-  dileptontree->SetPVName(goodPVFilterMod->GetOutputName());
-  dileptontree->SetLeptonsName(merger->GetOutputName());
-  dileptontree->SetHltObjsName(hltModP->GetOutputName());
-  dileptontree->SetIsData(isData);
-  dileptontree->SetProcessID(0);
-  dileptontree->SetFillNtupleType(1);//dilepton
 
-  MonoPhotonTreeWriter *phfaketree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter_phfake");
-  phfaketree->SetPhotonsFromBranch(kFALSE);
-  phfaketree->SetPhotonsName(photreg->GetOutputName());
-  phfaketree->SetElectronsFromBranch(kFALSE);
-  phfaketree->SetElectronsName(electronCleaning->GetOutputName());
-  phfaketree->SetMuonsFromBranch(kFALSE);
-  phfaketree->SetMuonsName(muonIdMod->GetOutputName());
-  phfaketree->SetJetsFromBranch(kFALSE);
-  phfaketree->SetJetsName(theJetCleaning->GetOutputName());
-  phfaketree->SetCosmicsFromBranch(kTRUE);
-  phfaketree->SetPVFromBranch(kFALSE);
-  phfaketree->SetPVName(goodPVFilterMod->GetOutputName());
-  phfaketree->SetLeptonsName(merger->GetOutputName());
-  phfaketree->SetHltObjsName(hltModP->GetOutputName());
-  phfaketree->SetIsData(isData);
-  phfaketree->SetProcessID(0);
-  phfaketree->SetFillNtupleType(2);//phfake;
+  //EGamma Medium
+  MonoPhotonTreeWriter *phplusmettreeEGMedium = new MonoPhotonTreeWriter("MonoPhotonTreeWriterEGMedium");
+  phplusmettreeEGMedium->SetPhotonsFromBranch(kFALSE);
+  phplusmettreeEGMedium->SetPhotonsName(photonCleaningModEGMedium->GetOutputName());
+  phplusmettreeEGMedium->SetElectronsFromBranch(kFALSE);
+  phplusmettreeEGMedium->SetElectronsName(electronCleaning->GetOutputName());
+  phplusmettreeEGMedium->SetMuonsFromBranch(kFALSE);
+  phplusmettreeEGMedium->SetMuonsName(muonIdMod->GetOutputName());
+  phplusmettreeEGMedium->SetJetsFromBranch(kFALSE);
+  phplusmettreeEGMedium->SetJetsName(theJetCleaningEGMedium->GetOutputName());
+  phplusmettreeEGMedium->SetCosmicsFromBranch(kFALSE);
+  phplusmettreeEGMedium->SetCosmicsName(cosmicCleaning->GetOutputName());
+  phplusmettreeEGMedium->SetPVFromBranch(kFALSE);
+  phplusmettreeEGMedium->SetPVName(goodPVFilterMod->GetOutputName());
+  phplusmettreeEGMedium->SetLeptonsName(merger->GetOutputName());
+  phplusmettreeEGMedium->SetHltObjsName(hltModP->GetOutputName());
+  phplusmettreeEGMedium->SetIsData(isData);
+  phplusmettreeEGMedium->SetProcessID(0);
+  phplusmettreeEGMedium->SetFillNtupleType(0);
+  phplusmettreeEGMedium->SetIsCicPhotonId(kFALSE); //save the Egamma variables
 
-  MonoPhotonTreeWriter *beamhalotree = new MonoPhotonTreeWriter("MonoPhotonTreeWriter_beamhalo");
-  beamhalotree->SetPhotonsFromBranch(kFALSE);
-  beamhalotree->SetPhotonsName(photreg->GetOutputName());
-  beamhalotree->SetElectronsFromBranch(kFALSE);
-  beamhalotree->SetElectronsName(electronCleaning->GetOutputName());
-  beamhalotree->SetMuonsFromBranch(kFALSE);
-  beamhalotree->SetMuonsName(muonIdMod->GetOutputName());
-  beamhalotree->SetJetsFromBranch(kFALSE);
-  beamhalotree->SetJetsName(theJetCleaning->GetOutputName());
-  beamhalotree->SetCosmicsFromBranch(kTRUE);
-  beamhalotree->SetPVFromBranch(kFALSE);
-  beamhalotree->SetPVName(goodPVFilterMod->GetOutputName());
-  beamhalotree->SetLeptonsName(merger->GetOutputName());
-  beamhalotree->SetHltObjsName(hltModP->GetOutputName());
-  beamhalotree->SetIsData(isData);
-  beamhalotree->SetProcessID(0);
-  beamhalotree->SetFillNtupleType(3);//beamhalo
+  //EGamma Loose
+  MonoPhotonTreeWriter *phplusmettreeEGLoose = new MonoPhotonTreeWriter("MonoPhotonTreeWriterEGLoose");
+  phplusmettreeEGLoose->SetPhotonsFromBranch(kFALSE);
+  phplusmettreeEGLoose->SetPhotonsName(photonCleaningModEGLoose->GetOutputName());
+  phplusmettreeEGLoose->SetElectronsFromBranch(kFALSE);
+  phplusmettreeEGLoose->SetElectronsName(electronCleaning->GetOutputName());
+  phplusmettreeEGLoose->SetMuonsFromBranch(kFALSE);
+  phplusmettreeEGLoose->SetMuonsName(muonIdMod->GetOutputName());
+  phplusmettreeEGLoose->SetJetsFromBranch(kFALSE);
+  phplusmettreeEGLoose->SetJetsName(theJetCleaningEGLoose->GetOutputName());
+  phplusmettreeEGLoose->SetCosmicsFromBranch(kFALSE);
+  phplusmettreeEGLoose->SetCosmicsName(cosmicCleaning->GetOutputName());
+  phplusmettreeEGLoose->SetPVFromBranch(kFALSE);
+  phplusmettreeEGLoose->SetPVName(goodPVFilterMod->GetOutputName());
+  phplusmettreeEGLoose->SetLeptonsName(merger->GetOutputName());
+  phplusmettreeEGLoose->SetHltObjsName(hltModP->GetOutputName());
+  phplusmettreeEGLoose->SetIsData(isData);
+  phplusmettreeEGLoose->SetProcessID(0);
+  phplusmettreeEGLoose->SetFillNtupleType(0);
+  phplusmettreeEGLoose->SetIsCicPhotonId(kFALSE); //save the Egamma variables
 
   //------------------------------------------------------------------------------------------------
   // making analysis chain
@@ -477,31 +622,36 @@ void runMonoPhotonSync(const char *fileset    = "0000",
   // simple object id modules
   photreg          ->Add(SepPUMod); 
   SepPUMod         ->Add(muonIdMod);
-  muonIdMod        ->Add(eleIdMod);
+  muonIdMod        ->Add(muonIdModBS);
+  muonIdModBS      ->Add(cosmicCleaning);
+  cosmicCleaning   ->Add(eleIdMod);
   eleIdMod         ->Add(electronCleaning);
   electronCleaning ->Add(merger);
   merger           ->Add(photonIDMod);
-  photonIDMod      ->Add(photonCleaningMod);
-  photonCleaningMod->Add(pubJet);
+  photonIDMod      ->Add(photonIDModEGMedium);
+  photonIDModEGMedium ->Add(photonIDModEGLoose);
+  photonIDModEGLoose ->Add(photonCleaningMod);
+  photonCleaningMod  ->Add(photonCleaningModEGMedium);
+  photonCleaningModEGMedium ->Add(photonCleaningModEGLoose);
+  photonCleaningModEGLoose->Add(pubJet);
   pubJet           ->Add(jetCorr);
-  jetCorr          ->Add(theJetID);
+  jetCorr          ->Add(metCorrT0T1Shift);
+  metCorrT0T1Shift ->Add(theJetID);
   theJetID         ->Add(theJetCleaning);
+  theJetCleaning         ->Add(theJetCleaningEGMedium);
+  theJetCleaningEGMedium         ->Add(theJetCleaningEGLoose);
    
   // Gamma+met selection
-  theJetCleaning   ->Add(phplusmet);
+  theJetCleaningEGLoose   ->Add(phplusmet);
   phplusmet        ->Add(phplusmettree);
   
-  // Dilepton selection
-  theJetCleaning   ->Add(dilepton);
-  dilepton         ->Add(dileptontree);
+  // EGamma Medium
+  theJetCleaningEGLoose   ->Add(phplusmetEGMedium);
+  phplusmetEGMedium         ->Add(phplusmettreeEGMedium);
 
-  // Fake photon selection
-  theJetCleaning   ->Add(phfake);
-  phfake           ->Add(phfaketree);
-
-  // Beam Halo selection
-  theJetCleaning   ->Add(beamhalo);
-  beamhalo         ->Add(beamhalotree);
+  // EGamma Loose
+  theJetCleaningEGLoose   ->Add(phplusmetEGLoose);
+  phplusmetEGLoose         ->Add(phplusmettreeEGLoose);
 
   //------------------------------------------------------------------------------------------------
   // setup analysis
@@ -525,14 +675,9 @@ void runMonoPhotonSync(const char *fileset    = "0000",
     d = c->FindDataset(bookstr,dataset,fileset,false);
   else 
     d = c->FindDataset(bookstr,skimdataset.Data(),fileset,false);
-  //ana->AddDataset(d);
-  //signal
-  //ana->AddFile("/mnt/hadoop/cms/store/user/paus/filefi/031/s12-addmpho-md3_d2-v7a/CCD71B15-3C01-E211-A4E0-848F69FD294C.root");
-  //fake photons
-  ana->AddFile("/mnt/hadoop/cms/store/user/paus/filefi/031/s12-zjets-ptz100-v7a/FE5D99F0-A873-E211-A8BF-002618943923.root");
-  ana->AddFile("/mnt/hadoop/cms/store/user/paus/filefi/031/s12-zjets-ptz100-v7a/BAA051FB-A573-E211-8B91-002618943862.root");
-  ana->AddFile("/mnt/hadoop/cms/store/user/paus/filefi/031/s12-zjets-ptz100-v7a/3EE09ED4-A273-E211-A62B-003048FFD760.root");
-  ana->AddFile("/mnt/hadoop/cms/store/user/paus/filefi/031/s12-zjets-ptz100-v7a/0813BE62-AD73-E211-AE30-003048679166.root");
+  ana->AddDataset(d);
+  //ana->AddFile("/mnt/hadoop/cms/store/user/paus/filefi/032/s12-zjets-ptz100-v7a/3239E223-0073-E211-AC53-0026189438A0.root");
+  //ana->AddFile("/mnt/hadoop/cms/store/user/paus/filefi/031/s12-wgptg130-v7a/5EB298D3-0625-E211-971A-E41F131817D8.root");
 
   //------------------------------------------------------------------------------------------------
   // organize output
