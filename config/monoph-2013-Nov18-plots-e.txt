@@ -1,0 +1,50 @@
+#==============================================================================================================================================================
+# dataset (version, name)                        skim           legend for plot                 cross sec.(pb)    scale   overlap  JSON file
+#==============================================================================================================================================================
+#==============================================================================================================================================================
+#Summer2013
+#==============================================================================================================================================================
+#=   MC   =====================================================================================================================================================
+t2mit/filefi/032   s12-qcdht100-250-v7a          noskim         QCD                             1.036E7           1.0     -1.0     ~  
+t2mit/filefi/032   s12-qcdht250-500-v7a          noskim         ~                               276000.0          1.0     -1.0     ~  
+t2mit/filefi/032   s12-qcdht500-1000-v7a         noskim         ~                               8426.0            1.0     -1.0     ~  
+t2mit/filefi/032   s12-qcdht1000-v7a             noskim         ~                               204.0             1.0     -1.0     ~  
+##t2mit/filefi/032   s12-2pibo10_25-v7a            noskim         #gamma#gamma                    236.4             1.0     -1.0     ~  
+##t2mit/filefi/032   s12-2pibo25_250-v7a           noskim         ~                               25.41             1.0     -1.0     ~  
+##t2mit/filefi/032   s12-2pibo250-v7a              noskim         ~                               0.0108            1.0     -1.0     ~  
+t2mit/filefi/032   s12-2pibx10_25-v7a            noskim         #gamma#gamma                    424.8             1.0     -1.0     ~  
+t2mit/filefi/032   s12-2pibx25_250-v7a           noskim         ~                               15.54             1.0     -1.0     ~  
+t2mit/filefi/032   s12-2pibx250-v7a              noskim         ~                               0.0011805         1.0     -1.0     ~  
+t2mit/filefi/032   s12-zgllgptg130-v7a           noskim         Z#gamma#rightarrowll#gamma      0.0478            1.0     -1.0     ~
+t2mit/filefi/032   s12-pj50_80-v7a               noskim         #gamma+jets                     3322.309          1.0     -1.0     ~
+t2mit/filefi/032   s12-pj80_120-v7a              noskim         ~                               558.2865          1.0     -1.0     ~
+t2mit/filefi/032   s12-pj120_170-v7a             noskim         ~                               108.0068          1.0     -1.0     ~
+t2mit/filefi/032   s12-pj170_300-v7a             noskim         ~                               30.12207          1.0     -1.0     ~
+t2mit/filefi/032   s12-pj300_470-v7a             noskim         ~                               2.138632          1.0     -1.0     ~
+t2mit/filefi/032   s12-pj470_800-v7a             noskim         ~                               0.2119244         1.0     -1.0     ~
+t2mit/filefi/032   s12-pj800_1400-v7a            noskim         ~                               0.007077847       1.0     -1.0     ~
+t2mit/filefi/032   s12-pj1400_1800-v7a           noskim         ~                               0.000045103       1.0     -1.0     ~
+t2mit/filefi/032   s12-pj1800-v7a                noskim         ~                               0.000001867       1.0     -1.0     ~
+t2mit/filefi/032   s12-zjets-ptz100-v7a          noskim         Zj#rightarrow#nu#nuj            64.32             1.0     -1.0     ~  
+t2mit/filefi/032   s12-ttj-v1-v7a                noskim         t#bar{t}                        245.8             1.0     -1.0     ~  
+t2mit/filefi/032   s12-sch-v7a                   noskim         top                             3.79              1.0     -1.0     ~
+t2mit/filefi/032   s12-schb-v7a                  noskim         ~                               1.76              1.0     -1.0     ~
+t2mit/filefi/032   s12-tch-v7a                   noskim         ~                               56.4              1.0     -1.0     ~
+t2mit/filefi/032   s12-tchb-v7a                  noskim         ~                               30.7              1.0     -1.0     ~
+t2mit/filefi/032   s12-wtop-dr-v7a               noskim	        ~                               11.1              1.0     -1.0     ~
+t2mit/filefi/032   s12-wtopb-dr-v7a              noskim	        ~                               11.1              1.0     -1.0     ~
+t2mit/filefi/032   s12-wjets-ptw100-v7a          noskim         Wj#rightarrowl#nuj              221.3             1.0     -1.0     ~  
+#t2mit/filefi/032   jetfakes                       noskim        j#rightarrow#gamma~fake         1.0                1.0      -1.0     ~  
+#t2mit/filefi/032   elefakes                      noskim         e#rightarrow#gamma~fake         1.0                1.0      -1.0     ~  
+t2mit/filefi/032   s12-wgptg130-v7a              noskim         W#gamma#rightarrowl#nu#gamma    0.2571            1.0      -1.0     ~  
+t2mit/filefi/032   s12-zgptg130-v7c              noskim         Z#gamma#rightarrow#nu#nu#gamma  0.074             1.0      -1.0     ~  
+#==============================================================================================================================================================
+#=  DATA  =====================================================================================================================================================
+t2mit/filefi/032   r12a-pho-j22-v1               noskim         data                            -1.0              1.0     -1.0     Cert_190456-208686_8TeV_22Jan2013ReReco_Collisions12_JSON.txt
+t2mit/filefi/032   r12b-sph-j22-v1               noskim         data                            -1.0              1.0     -1.0     Cert_190456-208686_8TeV_22Jan2013ReReco_Collisions12_JSON.txt
+t2mit/filefi/032   r12c-sph-j22-v1               noskim         data                            -1.0              1.0     -1.0     Cert_190456-208686_8TeV_22Jan2013ReReco_Collisions12_JSON.txt
+t2mit/filefi/032   r12d-sph-j22-v1               noskim         data                            -1.0              1.0     -1.0     Cert_190456-208686_8TeV_22Jan2013ReReco_Collisions12_JSON.txt
+t2mit/filefi/032   r12a-phh-j22-v1               noskim         data                            -1.0              1.0     -1.0     Cert_190456-208686_8TeV_22Jan2013ReReco_Collisions12_JSON.txt
+t2mit/filefi/032   r12b-phh-j22-v1               noskim         data                            -1.0              1.0     -1.0     Cert_190456-208686_8TeV_22Jan2013ReReco_Collisions12_JSON.txt
+t2mit/filefi/032   r12c-phh-j22-v1               noskim         data                            -1.0              1.0     -1.0     Cert_190456-208686_8TeV_22Jan2013ReReco_Collisions12_JSON.txt
+t2mit/filefi/032   r12d-phh-j22-v1               noskim         data                            -1.0              1.0     -1.0     Cert_190456-208686_8TeV_22Jan2013ReReco_Collisions12_JSON.txt
