@@ -23,6 +23,7 @@ TString getEnv(const char* name);
 // Lepton = W>lnu selection
 // DiLepton = Z>ll selection
 // EleFake = W>enu selection
+// BHStudy = Z>nunu selection + relaxed BH cuts
 //==================================================================================================
 void makeReducedTree(TString selectionMode = "Signal")
 {
@@ -33,6 +34,13 @@ void makeReducedTree(TString selectionMode = "Signal")
   TString anaCfg = getEnv("MIT_ANA_CFG");
   TString prdCfg = getEnv("MIT_PROD_CFG");
 
+  // initialize BH study flag
+  bool isBHStudy = kFALSE;
+  if (selectionMode = "BHStudy") {
+    isBHStudy = kTRUE;
+    selectionMode = "Signal";
+  }    
+
   // define samples
   TaskSamples* samples = new TaskSamples(prdCfg.Data(),hstDir.Data());
   samples->SetNameTxt(anaCfg.Data());
@@ -42,7 +50,9 @@ void makeReducedTree(TString selectionMode = "Signal")
   for (UInt_t iSample=0; iSample < *samples->NSamples(); iSample++) listOfSamples.push_back(samples->GetSample(iSample));  
   
   // define outfile
-  TString outfileName = prdCfg + "_reduced_" + selectionMode + ".root";
+  TString outfileName = prdCfg + "_reducedEG_" + selectionMode + ".root";
+  if (isBHStudy)
+    outfileName = prdCfg + "_reducedEG_BHStudy.root";
   TFile* outfile = new TFile(outfileName,"RECREATE");
   // define infolder
   TString sampleBaseDir = *samples->Dir();
@@ -83,7 +93,10 @@ void makeReducedTree(TString selectionMode = "Signal")
     thisReducer -> SetInputBaseDir(sampleBaseDir);
     thisReducer -> SetOutput(outfile);
     thisReducer -> SetSelectionMode(selectionMode);
+    thisReducer -> SetBHStudy(isBHStudy);
+    thisReducer -> SetEGSelection(kTRUE);    
     thisReducer -> SetLumi(19789.);
+    thisReducer -> InitResoFunctions();
     thisReducer -> MakeTree();
     delete thisReducer;
     

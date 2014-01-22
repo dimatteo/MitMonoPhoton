@@ -49,21 +49,27 @@ void makeTablesLepton()
   vector<const Sample*> listOfDatasets;
   for (UInt_t iSample=0; iSample < *samples->NDataSamples(); iSample++) listOfDatasets.push_back(samples->GetDataSample(iSample));
   // define infolder
-  TString inFileName =  "../monoph-2013-Nov18_reduced_Lepton.root";
+  TString inFileName =  "../monoph-2013-Dec13_reducedTest_Lepton.root";
   std::cout << "inFileName " << inFileName << std::endl;
   
   //Make the tables
-  //Default cut
-  //TString thisCut = "*(phoEt > 160 && metCor > 140 && nlep == 0 && nalljets < 2)";
+  // -- CiC cuts --
   //==Ele only check ele veto==
   //TString thisCut = "*(abs(TMath::ACos(TMath::Cos(phoPhi-bosonPhi))) > 2 && metBosCor > 140 && phoEt > 160 && nlep == 1 && lep1Mass < 0.05 && phoMetDeltaPhi > 0.5 && ((abs(TMath::ACos(TMath::Cos(lep1Phi-phoPhi))) < 2.9 && nalljets == 0) || (nalljets == 1 && jetMetDeltaPhi > 0.5 && jetMetDeltaPhi < 2.65 && phoJetDeltaPhi < 2.9)))";
   //==Mu cut==
-  TString thisCut = "*(abs(TMath::ACos(TMath::Cos(phoPhi-bosonPhi))) > 2 && metBosCor > 140 && phoEt > 160 && nlep == 1 && lep1Mass > 0.05 && phoMetDeltaPhi > 0.5 && (nalljets == 0 || (nalljets == 1 && jetMetDeltaPhi > 0.5 && jetMetDeltaPhi < 2.65 && phoJetDeltaPhi < 2.9)))";
-  thisCut += "*(metFilterWord == 1023 || metFilterWord == 511)";
+  //TString thisCut = "*(abs(TMath::ACos(TMath::Cos(phoPhi-bosonPhi))) > 2 && metBosCor > 140 && phoEt > 160 && nlep == 1 && lep1Mass > 0.05 && phoMetDeltaPhi > 0.5 && (nalljets == 0 || (nalljets == 1 && jetMetDeltaPhi > 0.5 && jetMetDeltaPhi < 2.65 && phoJetDeltaPhi < 2.9)))";
   //==All cut==
   //TString thisCut = "*(abs(TMath::ACos(TMath::Cos(phoPhi-bosonPhi))) > 2 && metBosCor > 140 && phoEt > 160 && nlep == 1 && phoMetDeltaPhi > 0.5 && (";
   //thisCut += "(lep1Mass < 0.05 && ((abs(TMath::ACos(TMath::Cos(lep1Phi-phoPhi))) < 2.9 && nalljets == 0) || (nalljets == 1 && jetMetDeltaPhi > 0.5 && jetMetDeltaPhi < 2.65 && phoJetDeltaPhi < 2.9))) || ";
   //thisCut += "(lep1Mass > 0.05 && (nalljets == 0 || (nalljets == 1 && jetMetDeltaPhi > 0.5 && jetMetDeltaPhi < 2.65 && phoJetDeltaPhi < 2.9)))))";
+
+
+  // -- EG cuts --
+  TString thisCut = "*(phoEt > 145 && metCor > 140 && nlep >= 1 && nalljets < 2)";
+  thisCut += "*(metMin > 125 && phoWorstIso < 1.5)";
+  // -- MET filters w.o. beam halo filters --
+  thisCut += "*(metFilterWord == 1023 || metFilterWord == 511 || metFilterWord == 255)";
+
   cout << "table in control region" << endl;
   makeTable("nphotons", thisCut, "nphotons", "nphotons", "", 
                listOfSamples, listOfDatasets, inFileName,

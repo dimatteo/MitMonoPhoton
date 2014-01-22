@@ -48,15 +48,22 @@ void makeTables()
   for (UInt_t iSample=0; iSample < *samples->NSamples(); iSample++) listOfSamples.push_back(samples->GetSample(iSample));  
   vector<const Sample*> listOfDatasets;
   for (UInt_t iSample=0; iSample < *samples->NDataSamples(); iSample++) listOfDatasets.push_back(samples->GetDataSample(iSample));
-  // define infolder
-  TString inFileName = "../monoph-2013-Nov18_reduced_Signal.root";
+  // define sample
+  TString inFileName = "../monoph-2013-Dec13_reducedTest_Signal.root";
   std::cout << "inFileName " << inFileName << std::endl;
   
   //Make the tables
-  //Default cut
-  //TString thisCut = "*(phoEt > 160 && metCor > 140 && nlep == 0 && nalljets < 2)";
-  TString thisCut = "*(phoEt > 160 && metCor > 140 && nlep == 0 && phoMetDeltaPhi > 0.5 && (nalljets == 0 || (nalljets == 1 && jetMetDeltaPhi > 0.5 && jetMetDeltaPhi < 2.65 && phoJetDeltaPhi < 2.9)))";
-  thisCut += "*(metFilterWord == 1023 || metFilterWord == 511)";
+  // -- EG cuts --
+  TString thisCut  = "*(phoEt > 145 && metCor > 140 && nlep == 0 && nalljets < 2 && phoMetDeltaPhi > 0.5)";
+  thisCut += "*(phoWorstIso < 1.5 && metMin > 125)";
+  
+  // -- CiC cuts --
+  //TString thisCut = "*(phoEt > 160 && metCor > 140 && nlep == 0 && phoMetDeltaPhi > 0.5 && (nalljets == 0 || (nalljets == 1 && jetMetDeltaPhi > 0.5 && jetMetDeltaPhi < 2.65 && phoJetDeltaPhi < 2.9)))";
+
+  // -- MET filters with beam halo tight filters --
+  //thisCut += "*(metFilterWord == 1023 || metFilterWord == 511)";
+  // -- MET filters w.o. beam halo filters --
+  thisCut += "*(metFilterWord == 1023 || metFilterWord == 511 || metFilterWord == 255)";
   cout << "table in blinded control region" << endl;
   makeTable("nphotons", thisCut, "nphotons", "nphotons", "", 
                listOfSamples, listOfDatasets, inFileName,
@@ -108,7 +115,6 @@ void makeTable(TString myVar, TString myCut, TString myName, TString myAxisNameX
   // prepare the cut
   if (isBlind) myCut += "*(phoMetDeltaPhi < 2.9)";     
   else  myCut += "*(phoMetDeltaPhi > 2)";
-  //if (isBlind) myCut += "*(met < 200)";        
   // prepare the Y axis lable
   if (xlowVec != 0) myAxisNameY = "Events/" + myAxisNameY;
   else {
@@ -144,7 +150,7 @@ void makeTable(TString myVar, TString myCut, TString myName, TString myAxisNameX
     for (int iBin = 1; iBin <= nBins; iBin++) hdata->SetBinError  (iBin,hdata->GetBinError(iBin)/hdata->GetBinWidth(iBin));
     for (int iBin = 1; iBin <= nBins; iBin++) hdata->SetBinContent(iBin,hdata->GetBinContent(iBin)/hdata->GetBinWidth(iBin));
   }
-       
+  
   int theHistCounter = 0;
   // loop through the samples and produce the plots
   for (UInt_t iSample=0; iSample < listOfSamples.size(); iSample++) {
@@ -175,8 +181,6 @@ void makeTable(TString myVar, TString myCut, TString myName, TString myAxisNameX
     TString thisScale = Form("%f *", *(listOfSamples.at(iSample)->Scale()));
     if (isFirstOfSerie) tree[iSample] -> Draw(myVar + " >> " + TString(hist[theHistCounter] -> GetName()),thisScale + "hlt_weight*evt_weight*kf_weight*pu_weight" + myCut,"goff");
     else tree[iSample] -> Draw(myVar + " >>+ " + TString(hist[theHistCounter] -> GetName()),thisScale + "hlt_weight*evt_weight*kf_weight*pu_weight" + myCut,"goff");
-    //if (isFirstOfSerie) tree[iSample] -> Draw(myVar + " >> " + TString(hist[theHistCounter] -> GetName()),thisScale + "evt_weight*pu_weight" + myCut,"goff");
-    //else tree[iSample] -> Draw(myVar + " >>+ " + TString(hist[theHistCounter] -> GetName()),thisScale + "evt_weight*pu_weight" + myCut,"goff");
     
     //add the systematic uncertainty
     for (int iBin = 1; iBin <= nBins; iBin++) {
