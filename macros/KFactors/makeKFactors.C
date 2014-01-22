@@ -1,7 +1,8 @@
 //This macro creates the TGraphs necessary to account for
 //the photon pt dependent k-factors for Zgamma and Wgamma
 //source of calculation is
-//https://indico.cern.ch/getFile.py/access?contribId=0&resId=0&materialId=slides&confId=283118
+//AN 12/439
+
 
 void makeKFactors(){
   
@@ -15,21 +16,21 @@ void makeKFactors(){
 
   //Stuff for ZGamma
   float ZGammaVal[nBins] = 
-  {1.721, 1.615, 1.565, 1.548, 1.605, 1.839};
+  {1.320, 1.430, 1.499, 1.528, 1.642, 1.880};
   float ZGammaStat[nBins] = 
-  {0.031, 0.023, 0.009, 0.014, 0.014, 0.048};
+  {0.013, 0.008, 0.007, 0.006, 0.010, 0.045};
   float ZGammaSyst[nBins] = 
-  {0.116, 0.122, 0.156, 0.168, 0.230, 0.578};
+  {0.108, 0.137, 0.178, 0.194, 0.319, 0.911};
   TGraphErrors* ZGamma = new TGraphErrors(nBins);
   ZGamma -> SetName("ZGamma");
   
   //Stuff for WGamma
   float WGammaVal[nBins] = 
-  {1.310, 1.267, 1.281, 1.449, 1.534, 1.953};
+  {1.527, 1.546, 1.642, 1.675, 1.830, 1.982};
   float WGammaStat[nBins] = 
-  {0.152, 0.069, 0.132, 0.051, 0.031, 0.080};
+  {0.059, 0.031, 0.036, 0.006, 0.011, 0.057};
   float WGammaSyst[nBins] = 
-  {0.240, 0.184, 0.196, 0.319, 0.360, 1.104};
+  {0.251, 0.289, 0.305, 0.383, 0.746, 1.643};
   TGraphErrors* WGamma = new TGraphErrors(nBins);
   WGamma -> SetName("WGamma");
 
