@@ -205,6 +205,14 @@ class MitGPTree {
     else if(type == 1) tree_ = dynamic_cast<TTree*>(f_->FindObjectAny("MPhoTreeLepton"));
     else if(type == 2) tree_ = dynamic_cast<TTree*>(f_->FindObjectAny("MPhoTreePhFake"));
     else if(type == 3) tree_ = dynamic_cast<TTree*>(f_->FindObjectAny("MPhoTreeBeamHalo"));
+    else if(type == 4) {
+      TDirectory* dir_ = dynamic_cast<TDirectory*>(f_->FindObjectAny("MonoPhotonTreeWriterEGMedium"));
+      tree_ = dynamic_cast<TTree*>(dir_->Get("MPhoTree"));
+    }
+    else if(type == 5) {
+      TDirectory* dir_ = dynamic_cast<TDirectory*>(f_->FindObjectAny("MonoPhotonTreeWriterEGLoose"));
+      tree_ = dynamic_cast<TTree*>(dir_->Get("MPhoTree"));
+    }
     else               tree_ = dynamic_cast<TTree*>(f_->FindObjectAny("tree"));
     assert(tree_);
   }

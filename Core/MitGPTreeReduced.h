@@ -34,6 +34,8 @@ class MitGPTreeReduced {
   float          metBosCorPhi_;
   float          metSig_;
   int            metFilterWord_;
+  float          metMin_;
+  float          metMinProb_;
 
   int            nphotons_;
   float          phoEt_;
@@ -42,8 +44,15 @@ class MitGPTreeReduced {
   float          phoCombIso1_; 
   float          phoCombIso2_; 
   float          phoCombIso3_; 
+  float          phoWorstIso_; 
   float          phoR9_; 
   bool           phoHasPixelSeed_; 
+  float          phoSeedTime_;
+  float          phoCoviEtaiEta_;
+  float          phoCoviPhiiPhi_;
+  float          phoMipTotEnergy_; 
+  float          phoRoundness_; 
+  float          phoAngle_; 
 
   float          phoMetDeltaPhi_;
   float          jetMetDeltaPhi_;
@@ -135,6 +144,8 @@ class MitGPTreeReduced {
     tree_->Branch("metBosCorPhi" , &metBosCorPhi_ ,   "metBosCorPhi/F");
     tree_->Branch("metSig"       , &metSig_       ,   "metSig/F");
     tree_->Branch("metFilterWord", &metFilterWord_,   "metFilterWord/I");
+    tree_->Branch("metMin"       , &metMin_       ,   "metMin/F");
+    tree_->Branch("metMinProb"   , &metMinProb_   ,   "metMinProb/F");
   
     tree_->Branch("nphotons"        , &nphotons_        ,   "nphotons/i");
     tree_->Branch("phoEt"           , &phoEt_           ,   "phoEt/F");
@@ -143,8 +154,15 @@ class MitGPTreeReduced {
     tree_->Branch("phoCombIso1"     , &phoCombIso1_     ,   "phoCombIso1/F"); 
     tree_->Branch("phoCombIso2"     , &phoCombIso2_     ,   "phoCombIso2/F"); 
     tree_->Branch("phoCombIso3"     , &phoCombIso3_     ,   "phoCombIso3/F"); 
+    tree_->Branch("phoWorstIso"     , &phoWorstIso_     ,   "phoWorstIso/F"); 
     tree_->Branch("phoR9"           , &phoR9_           ,   "phoR9/F"); 
     tree_->Branch("phoHasPixelSeed" , &phoHasPixelSeed_ ,   "phoHasPixelSeed/b"); 
+    tree_->Branch("phoSeedTime"     , &phoSeedTime_     ,   "phoSeedTime/F"); 
+    tree_->Branch("phoCoviEtaiEta"  , &phoCoviEtaiEta_  ,   "phoCoviEtaiEta/F"); 
+    tree_->Branch("phoCoviPhiiPhi"  , &phoCoviPhiiPhi_  ,   "phoCoviPhiiPhi/F"); 
+    tree_->Branch("phoMipTotEnergy" , &phoMipTotEnergy_ ,   "phoMipTotEnergy/F"); 
+    tree_->Branch("phoRoundness"    , &phoRoundness_    ,   "phoRoundness/F"); 
+    tree_->Branch("phoAngle"        , &phoAngle_        ,   "phoAngle/F"); 
 
     tree_->Branch("phoMetDeltaPhi", &phoMetDeltaPhi_,   "phoMetDeltaPhi/F");
     tree_->Branch("jetMetDeltaPhi", &jetMetDeltaPhi_,   "jetMetDeltaPhi/F");
@@ -212,6 +230,8 @@ class MitGPTreeReduced {
     tree_->SetBranchAddress("metBosCorPhi" , &metBosCorPhi_);
     tree_->SetBranchAddress("metSig"       , &metSig_    );
     tree_->SetBranchAddress("metFilterWord", &metFilterWord_);
+    tree_->SetBranchAddress("metMin"       , &metMin_       );
+    tree_->SetBranchAddress("metMinProb"   , &metMinProb_   );
   
     tree_->SetBranchAddress("nphotons"       , &nphotons_);
     tree_->SetBranchAddress("phoEt"          , &phoEt_     );
@@ -220,8 +240,15 @@ class MitGPTreeReduced {
     tree_->SetBranchAddress("phoCombIso1"    , &phoCombIso1_); 
     tree_->SetBranchAddress("phoCombIso2"    , &phoCombIso2_); 
     tree_->SetBranchAddress("phoCombIso3"    , &phoCombIso3_); 
+    tree_->SetBranchAddress("phoWorstIso"    , &phoWorstIso_); 
     tree_->SetBranchAddress("phoR9"          , &phoR9_); 
     tree_->SetBranchAddress("phoHasPixelSeed", &phoHasPixelSeed_); 
+    tree_->SetBranchAddress("phoSeedTime"    , &phoSeedTime_    ); 
+    tree_->SetBranchAddress("phoCoviEtaiEta" , &phoCoviEtaiEta_ ); 
+    tree_->SetBranchAddress("phoCoviPhiiPhi" , &phoCoviPhiiPhi_ ); 
+    tree_->SetBranchAddress("phoMipTotEnergy", &phoMipTotEnergy_); 
+    tree_->SetBranchAddress("phoRoundness"   , &phoRoundness_   ); 
+    tree_->SetBranchAddress("phoAngle"       , &phoAngle_       ); 
   
     tree_->SetBranchAddress("phoMetDeltaPhi", &phoMetDeltaPhi_ );
     tree_->SetBranchAddress("jetMetDeltaPhi", &jetMetDeltaPhi_ );
@@ -289,6 +316,8 @@ MitGPTreeReduced::InitVariables(){
   metBosCorPhi_= -100.;
   metSig_= -1.;
   metFilterWord_ = -1;
+  metMin_= -1.;
+  metMinProb_ = -1.;
 
   nphotons_ = 0;
   phoEt_ = -1.;
@@ -297,8 +326,15 @@ MitGPTreeReduced::InitVariables(){
   phoCombIso1_ = -1.;
   phoCombIso2_ = -1.; 
   phoCombIso3_ = -1.;
+  phoWorstIso_ = -1.;
   phoR9_ = -1.;
   phoHasPixelSeed_ = false;
+  phoSeedTime_ = -100.; 
+  phoCoviEtaiEta_ = -100.; 
+  phoCoviPhiiPhi_ = -100.;
+  phoMipTotEnergy_ = -100.;
+  phoRoundness_ = -100.;
+  phoAngle_ = -100.;
   
   phoMetDeltaPhi_ = -100.;
   jetMetDeltaPhi_ = -100.;
